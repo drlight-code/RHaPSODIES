@@ -14,6 +14,8 @@ vista_use_package( VistaCoreLibs "HEAD" REQUIRED FIND_DEPENDENCIES )
 # Including the source files of all source subfolders recursively
 include( "src/_SourceFiles.cmake" )
 
+include_directories( "src/" )
+
 add_executable( RHaPSODemo ${ProjectSources} )
 target_link_libraries( RHaPSODemo
 	${VISTA_USE_PACKAGE_LIBRARIES} # contains all libraries from vista_use_package() calls

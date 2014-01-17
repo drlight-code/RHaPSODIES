@@ -5,6 +5,7 @@ set( RelativeSourceGroup "source" )
 
 set( DirFiles
 	main.cpp
+  RHaPSODemo.cpp
 	_SourceFiles.cmake
 )
 set( DirFiles_SourceGroup "${RelativeSourceGroup}" )
