@@ -5,12 +5,13 @@
 using rhapsodies::RHaPSODemo;
 
 int main(int argc, char** argv) {
-  std::cout << "RHaPSODIES Demo Application -- for the SWAAARM!!"
+  std::cout << std::endl
+            << "RHaPSODIES Demo Application -- for the SWAAARM!!"
             << std::endl;
 
-  RHaPSODemo demo(argc, argv);
+  RHaPSODemo demo;
 
-  if(!demo.Initialize()) {
+  if(!demo.Initialize(argc, argv)) {
     std::cerr << "failed to initialize RHaPSODemo. Aborting!"
               << std::endl;
     return -1;

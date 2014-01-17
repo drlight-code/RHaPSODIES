@@ -25,12 +25,15 @@
 #ifndef _RHAPSODIES_RHAPSODEMO
 #define _RHAPSODIES_RHAPSODEMO
 
+class VistaSystem;
+
 namespace rhapsodies {
   class RHaPSODemo {
+    VistaSystem *m_pSystem;
 
   public:
-    RHaPSODemo(int argc, char** argv);
-    bool Initialize();
+    RHaPSODemo();
+    bool Initialize(int argc, char** argv);
     bool Run();
   };
 }
