@@ -181,9 +181,12 @@ namespace rhapsodies {
 				  << vMode.getResolutionX() << "x"
 				  << vMode.getResolutionY() << std::endl;
 		std::cout << "fps: " << vMode.getFps() << std::endl;
+		PrintPixelFormat(vMode.getPixelFormat());
+	}
 
+	void HandTracker::PrintPixelFormat(openni::PixelFormat pf) {
 		std::string sPFormat = "unknown";
-		switch(vMode.getPixelFormat()) {
+		switch(pf) {
 		case openni::PIXEL_FORMAT_DEPTH_1_MM:
 			sPFormat = "DEPTH_1_MM";
 			break;
@@ -212,10 +215,8 @@ namespace rhapsodies {
 			sPFormat = "JPEG";
 			break;
 		}
-
 		std::cout << "pixel format: " << sPFormat << std::endl;
 	}
-
 
 	void HandTracker::PrintStreamInfo(const openni::VideoStream& stream) {
 		// camera settings
@@ -228,6 +229,8 @@ namespace rhapsodies {
 				  << "resolution: x=" << vm.getResolutionX()
 				  << " y=" << vm.getResolutionY() << std::endl
 				  << "fps: " << vm.getFps() << std::endl;
+		
+		PrintPixelFormat(vm.getPixelFormat());
 
 		int originx=0, originy=0, width=0, height=0;
 		stream.getCropping(&originx, &originy, &width, &height);

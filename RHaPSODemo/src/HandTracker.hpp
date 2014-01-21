@@ -31,9 +31,10 @@ namespace rhapsodies {
 	  openni::Device m_oDevice;
 	  openni::VideoStream m_oDStream, m_oCStream;
 
-	  void PrintVideoModes(openni::SensorType type);
-	  void PrintVideoMode(const openni::VideoMode &vMode);
-	  void PrintStreamInfo(const openni::VideoStream& stream);
+	  void PrintVideoModes(openni::SensorType);
+	  void PrintVideoMode(const openni::VideoMode&);
+	  void PrintStreamInfo(const openni::VideoStream&);
+	  void PrintPixelFormat(openni::PixelFormat);
 
   public:
 	  bool Initialize();

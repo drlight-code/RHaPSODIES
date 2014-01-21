@@ -80,9 +80,6 @@ namespace rhapsodies {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
 		float afUV[] = {
 			0.0f, 0.0f,
 			1.0f, 0.0f,
