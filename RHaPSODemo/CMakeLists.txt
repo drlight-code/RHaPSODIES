@@ -9,6 +9,7 @@ include( VistaCommon )
 
 vista_set_version( RHaPSODemo HEAD HEAD 0 1 0 svn_rev )
 vista_use_package( VistaCoreLibs "HEAD" REQUIRED FIND_DEPENDENCIES )
+vista_use_package( OpenNI2 REQUIRED )
 
 
 # Including the source files of all source subfolders recursively
