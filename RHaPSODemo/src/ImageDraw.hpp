@@ -1,6 +1,5 @@
 /*============================================================================*/
-/*                              ViSTA VR toolkit                              */
-/*               Copyright (c) 1997-2013 RWTH Aachen University               */
+/*                  Copyright (c) 2014 RWTH Aachen University                 */
 /*============================================================================*/
 /*                                  License                                   */
 /*                                                                            */
@@ -22,35 +21,35 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_RHAPSODEMO
-#define _RHAPSODIES_RHAPSODEMO
+#ifndef _RHAPSODIES_IMAGERENDERNODE
+#define _RHAPSODIES_IMAGERENDERNODE
 
-class VistaSystem;
-class VistaTransformNode;
-class VistaOpenGLNode;
+#include <GL/gl.h>
+
+#include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 
 namespace rhapsodies {
-	class ImageDraw;
 	class ShaderRegistry;
 
-	class RHaPSODemo {
-		VistaSystem *m_pSystem;
-	
-		VistaTransformNode *m_pTransformNode;
+	class ImageDraw : public IVistaOpenGLDraw {
+		GLuint m_vaId;
+		GLuint m_vbVertId;
+		GLuint m_vbUVId;
 
-		VistaOpenGLNode *m_pRawImageGLNode;
-		ImageDraw *m_pRawImageDraw;
+		GLuint m_texId;
+		unsigned int m_texWidth;
+		unsigned int m_texHeight;
+		unsigned char *m_texData;
 
 		ShaderRegistry *m_pShaderReg;
-		
-		bool RegisterShaders();
-		bool CreateScene();
 
 	public:
-		RHaPSODemo();
-		bool Initialize(int argc, char** argv);
-		bool Run();
-	};
+		ImageDraw(ShaderRegistry *pShaderReg);
+		~ImageDraw();
+
+		virtual bool Do();
+		virtual bool GetBoundingBox(VistaBoundingBox &bb);
+  };
 }
 
-#endif // _RHAPSODIES_RHAPSODEMO
+#endif // _RHAPSODIES_IMAGERENDERNODE

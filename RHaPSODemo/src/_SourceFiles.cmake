@@ -5,7 +5,9 @@ set( RelativeSourceGroup "source" )
 
 set( DirFiles
 	main.cpp
-  RHaPSODemo.cpp
+	RHaPSODemo.cpp
+  	ImageDraw.cpp
+  	ShaderRegistry.cpp
 	_SourceFiles.cmake
 )
 set( DirFiles_SourceGroup "${RelativeSourceGroup}" )
