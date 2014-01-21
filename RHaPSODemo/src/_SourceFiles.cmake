@@ -8,6 +8,7 @@ set( DirFiles
 	RHaPSODemo.cpp
   	ImageDraw.cpp
   	ShaderRegistry.cpp
+  	HandTracker.cpp
 	_SourceFiles.cmake
 )
 set( DirFiles_SourceGroup "${RelativeSourceGroup}" )

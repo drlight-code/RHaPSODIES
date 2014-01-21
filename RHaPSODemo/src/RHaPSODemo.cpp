@@ -40,6 +40,7 @@
 
 #include <ImageDraw.hpp>
 #include <ShaderRegistry.hpp>
+#include <HandTracker.hpp>
 
 #include "RHaPSODemo.hpp"
 
@@ -60,7 +61,8 @@ namespace rhapsodies {
 /*============================================================================*/
 	RHaPSODemo::RHaPSODemo() :
 		m_pSystem(new VistaSystem),
-		m_pShaderReg(new ShaderRegistry) {
+		m_pShaderReg(new ShaderRegistry),
+		m_pTracker(new HandTracker) {
 	}
 
 /*============================================================================*/
@@ -97,6 +99,9 @@ namespace rhapsodies {
 
 		glewInit();
 
+		if(!InitTracker())
+			success = false;
+
 		if(!RegisterShaders())
 			success = false;
 
@@ -104,6 +109,10 @@ namespace rhapsodies {
 			success = false;
 
 		return success;
+	}
+
+	bool RHaPSODemo::InitTracker() {
+		return m_pTracker->Initialize();
 	}
 
 	bool RHaPSODemo::RegisterShaders() {

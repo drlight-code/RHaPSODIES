@@ -1,6 +1,5 @@
 /*============================================================================*/
-/*                              ViSTA VR toolkit                              */
-/*               Copyright (c) 1997-2013 RWTH Aachen University               */
+/*                  Copyright (c) 2014 RWTH Aachen University                 */
 /*============================================================================*/
 /*                                  License                                   */
 /*                                                                            */
@@ -22,39 +21,20 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_RHAPSODEMO
-#define _RHAPSODIES_RHAPSODEMO
+#ifndef _RHAPSODIES_HANDTRACKER
+#define _RHAPSODIES_HANDTRACKER
 
-class VistaSystem;
-class VistaTransformNode;
-class VistaOpenGLNode;
-
-namespace rhapsodies {
-	class ImageDraw;
-	class ShaderRegistry;
-	class HandTracker;
-
-	class RHaPSODemo {
-		VistaSystem *m_pSystem;
-	
-		VistaTransformNode *m_pTransformNode;
-
-		VistaOpenGLNode *m_pRawImageGLNode;
-		ImageDraw *m_pRawImageDraw;
-
-		ShaderRegistry *m_pShaderReg;
-
-		HandTracker *m_pTracker;
-		
-		bool InitTracker();
-		bool RegisterShaders();
-		bool CreateScene();
-
-	public:
-		RHaPSODemo();
-		bool Initialize(int argc, char** argv);
-		bool Run();
-	};
+namespace openni {
+	class VideoStream;
 }
 
-#endif // _RHAPSODIES_RHAPSODEMO
+namespace rhapsodies {
+  class HandTracker {
+	  void PrintStreamInfo(const openni::VideoStream& stream);
+
+  public:
+	  bool Initialize();
+  };
+}
+
+#endif // _RHAPSODIES_HANDTRACKER
