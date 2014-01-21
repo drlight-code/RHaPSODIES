@@ -105,8 +105,6 @@ namespace rhapsodies {
 	bool ImageDraw::Do() {
 		glUseProgram(m_pShaderReg->GetProgram("textured"));
 
-		glDisable(GL_CULL_FACE);
-
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbVertId);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
