@@ -54,6 +54,8 @@ namespace rhapsodies {
 		RHaPSODemo();
 		bool Initialize(int argc, char** argv);
 		bool Run();
+
+		static const std::string sRDIniFile;
 	};
 }
 

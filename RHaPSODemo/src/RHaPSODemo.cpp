@@ -47,8 +47,8 @@
 /*============================================================================*/
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
 /*============================================================================*/
-namespace {
-	const std::string gRDIniFile = "configfiles/rhapsodemo.ini";
+namespace rhapsodies {
+	const std::string RHaPSODemo::sRDIniFile = "configfiles/rhapsodemo.ini";
 }
 
 /*============================================================================*/
@@ -78,19 +78,19 @@ namespace rhapsodies {
 		m_pSystem->SetIniFile(
 			oProf.GetTheProfileString("APPLICATION", "MAININI",
 									  "vista.ini",
-									  gRDIniFile) );
+									  sRDIniFile) );
 		m_pSystem->SetDisplayIniFile(
 			oProf.GetTheProfileString("APPLICATION", "DISPLAYINI",
 									  "vista.ini",
-									  gRDIniFile) );
+									  sRDIniFile) );
 		m_pSystem->SetClusterIniFile(
 			oProf.GetTheProfileString("APPLICATION", "CLUSTERINI",
 									  "vista.ini",
-									  gRDIniFile) );
+									  sRDIniFile) );
 		m_pSystem->SetInteractionIniFile(
 			oProf.GetTheProfileString("APPLICATION", "INTERACTIONINI",
 									  "vista.ini",
-									  gRDIniFile) );
+									  sRDIniFile) );
 
 
 		if(!m_pSystem->Init(argc, argv)) {
