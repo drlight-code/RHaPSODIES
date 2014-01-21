@@ -24,12 +24,15 @@
 #ifndef _RHAPSODIES_HANDTRACKER
 #define _RHAPSODIES_HANDTRACKER
 
-namespace openni {
-	class VideoStream;
-}
+#include <OpenNI.h>
 
 namespace rhapsodies {
   class HandTracker {
+	  openni::Device m_oDevice;
+	  openni::VideoStream m_oDStream, m_oCStream;
+
+	  void PrintVideoModes(openni::SensorType type);
+	  void PrintVideoMode(const openni::VideoMode &vMode);
 	  void PrintStreamInfo(const openni::VideoStream& stream);
 
   public:

@@ -34,6 +34,10 @@
 /*============================================================================*/
 /* LOCAL VARS AND FUNCS                                                       */
 /*============================================================================*/
+namespace {
+
+}
+
 
 namespace rhapsodies {
 /*============================================================================*/
@@ -49,9 +53,6 @@ namespace rhapsodies {
 
 		const char* deviceURI = openni::ANY_DEVICE;
 
-		openni::Device device;
-		openni::VideoStream depth, color;
-
 		rc = openni::OpenNI::initialize();
 
 		if(rc != openni::STATUS_OK) {
@@ -60,7 +61,7 @@ namespace rhapsodies {
 			return false;
 		}
 
-		rc = device.open(deviceURI);
+		rc = m_oDevice.open(deviceURI);
 		if (rc != openni::STATUS_OK)
 		{
 			std::cerr << "HandTracker: Device open failed:"
@@ -69,19 +70,25 @@ namespace rhapsodies {
 			openni::OpenNI::shutdown();
 			return false;
 		}
-		std::cout << "device opened: " << device.getDeviceInfo().getName()
+		std::cout << "device opened: " << m_oDevice.getDeviceInfo().getName()
 				  << std::endl;
 
-		rc = depth.create(device, openni::SENSOR_DEPTH);
+
+		// enumerate video modes
+		PrintVideoModes(openni::SENSOR_DEPTH);
+		PrintVideoModes(openni::SENSOR_COLOR);
+
+
+		rc = m_oDStream.create(m_oDevice, openni::SENSOR_DEPTH);
 		if (rc == openni::STATUS_OK)
 		{
-			rc = depth.start();
+			rc = m_oDStream.start();
 			if (rc != openni::STATUS_OK)
 			{
 				std::cerr << "HandTracker: Couldn't start depth stream:"
 						  << std::endl << openni::OpenNI::getExtendedError()
 						  << std::endl;
-				depth.destroy();
+				m_oDStream.destroy();
 			}
 		}
 		else
@@ -91,16 +98,16 @@ namespace rhapsodies {
 					  << std::endl;
 		}
 
-		rc = color.create(device, openni::SENSOR_COLOR);
+		rc = m_oCStream.create(m_oDevice, openni::SENSOR_COLOR);
 		if (rc == openni::STATUS_OK)
 		{
-			rc = color.start();
+			rc = m_oCStream.start();
 			if (rc != openni::STATUS_OK)
 			{
 				std::cerr << "HandTracker: Couldn't start color stream:"
 						  << std::endl << openni::OpenNI::getExtendedError()
 						  << std::endl;
-				color.destroy();
+				m_oCStream.destroy();
 			}
 		}
 		else
@@ -110,7 +117,7 @@ namespace rhapsodies {
 					  << std::endl;
 		}
 
-		if (!depth.isValid() || !color.isValid())
+		if (!m_oDStream.isValid() || !m_oCStream.isValid())
 		{
 			std::cerr << "HandTracker: No valid streams. Aborting." << std::endl;
 			openni::OpenNI::shutdown();
@@ -118,14 +125,71 @@ namespace rhapsodies {
 		}
 
 		std::cout << "==================================================" << std::endl;
-		std::cout << "depth stream info" << std::endl;
-		PrintStreamInfo(depth);
-		std::cout << "color stream info" << std::endl;
-		PrintStreamInfo(color);
+		std::cout << "* depth stream info" << std::endl;
+		PrintStreamInfo(m_oDStream);
+		std::cout << "* color stream info" << std::endl;
+		PrintStreamInfo(m_oCStream);
 		std::cout << "==================================================" << std::endl;
 
 		return true;
 	}
+
+	void HandTracker::PrintVideoModes(openni::SensorType type) {
+		const openni::SensorInfo *pSInfo = 
+			m_oDevice.getSensorInfo(type);
+
+		const openni::Array<openni::VideoMode> &aModes =
+			pSInfo->getSupportedVideoModes();
+
+		std::cout << "available video modes:" << std::endl
+				  << "----------------------------------" << std::endl;
+		for(int i = 0; i < aModes.getSize() ; i++) {
+			const openni::VideoMode &vMode = aModes[i];
+			std::cout << "* video mode " << i << ":" << std::endl;
+			PrintVideoMode(vMode);			
+		}
+	}
+
+	void HandTracker::PrintVideoMode(const openni::VideoMode &vMode) {
+		std::cout << "resolution: "
+				  << vMode.getResolutionX() << "x"
+				  << vMode.getResolutionY() << std::endl;
+		std::cout << "fps: " << vMode.getFps() << std::endl;
+
+		std::string sPFormat = "unknown";
+		switch(vMode.getPixelFormat()) {
+		case openni::PIXEL_FORMAT_DEPTH_1_MM:
+			sPFormat = "DEPTH_1_MM";
+			break;
+		case openni::PIXEL_FORMAT_DEPTH_100_UM:
+			sPFormat = "DEPTH_100_UM";
+			break;
+		case openni::PIXEL_FORMAT_SHIFT_9_2:
+			sPFormat = "SHIFT_9_2";
+			break;
+		case openni::PIXEL_FORMAT_SHIFT_9_3:
+			sPFormat = "SHIFT_9_3";
+			break;
+		case openni::PIXEL_FORMAT_RGB888:
+			sPFormat = "RGB888";
+			break;
+		case openni::PIXEL_FORMAT_YUV422:
+			sPFormat = "YUV422";
+			break;
+		case openni::PIXEL_FORMAT_GRAY8:
+			sPFormat = "GRAY8";
+			break;
+		case openni::PIXEL_FORMAT_GRAY16:
+			sPFormat = "GRAY16";
+			break;
+		case openni::PIXEL_FORMAT_JPEG:
+			sPFormat = "JPEG";
+			break;
+		}
+
+		std::cout << "pixel format: " << sPFormat << std::endl;
+	}
+
 
 	void HandTracker::PrintStreamInfo(const openni::VideoStream& stream) {
 		// camera settings
@@ -135,24 +199,24 @@ namespace rhapsodies {
 		// video mode
 		openni::VideoMode vm = stream.getVideoMode();
 		std::cout << "video mode:" << std::endl
-							<< "resolution: x=" << vm.getResolutionX()
-							<< " y=" << vm.getResolutionY() << std::endl
-							<< "fps: " << vm.getFps() << std::endl;
+				  << "resolution: x=" << vm.getResolutionX()
+				  << " y=" << vm.getResolutionY() << std::endl
+				  << "fps: " << vm.getFps() << std::endl;
 
 		int originx=0, originy=0, width=0, height=0;
 		stream.getCropping(&originx, &originy, &width, &height);
 		std::cout << "cropping: originx=" << originx
-							<< " originy=" << originy
-							<< " width=" << width
-							<< " height=" << height << std::endl;
+				  << " originy=" << originy
+				  << " width=" << width
+				  << " height=" << height << std::endl;
 
 		std::cout << "fov: h=" << stream.getHorizontalFieldOfView()
-							<< " v=" << stream.getVerticalFieldOfView()
-							<< std::endl;
+				  << " v=" << stream.getVerticalFieldOfView()
+				  << std::endl;
 
 		std::cout << "pixel values: min=" << stream.getMinPixelValue()
-							<< " max=" << stream.getMaxPixelValue()
-							<< std::endl;
+				  << " max=" << stream.getMaxPixelValue()
+				  << std::endl;
 
 		std::cout << "mirror: " << stream.getMirroringEnabled() << std::endl;
 	}
