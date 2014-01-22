@@ -39,6 +39,7 @@
 #include <VistaKernel/EventManager/VistaSystemEvent.h>
 
 #include <ImageDraw.hpp>
+#include <ImageDrawUpdater.hpp>
 #include <ShaderRegistry.hpp>
 #include <HandTracker.hpp>
 
@@ -68,7 +69,6 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-
 	bool RHaPSODemo::Initialize(int argc, char** argv) {
 		bool success = true;
 
@@ -99,14 +99,9 @@ namespace rhapsodies {
 
 		glewInit();
 
-		if(!InitTracker())
-			success = false;
-
-		if(!RegisterShaders())
-			success = false;
-
-		if(!CreateScene())
-			success = false;
+		success &= InitTracker();
+   		success &= RegisterShaders();
+		success &= CreateScene();
 
 		return success;
 	}
@@ -125,7 +120,6 @@ namespace rhapsodies {
 		vec_shaders.push_back("vert_textured");		
 		vec_shaders.push_back("frag_textured");		
 		m_pShaderReg->RegisterProgram("textured", vec_shaders);
-		m_pShaderReg->RegisterUniform("textured", "mat_mvp");
 
 		return true;
 	}
@@ -134,21 +128,21 @@ namespace rhapsodies {
 		VistaSceneGraph *pSG = m_pSystem->GetGraphicsManager()->GetSceneGraph();
 
 		// create global scene transform
-		m_pTransformNode = pSG->NewTransformNode(pSG->GetRoot());
+		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
+		m_pSceneTransform->Translate(0, 0, -1);
 
-		m_pRawImageDraw = new ImageDraw(m_pShaderReg);
-		m_pRawImageGLNode = pSG->NewOpenGLNode(m_pTransformNode, m_pRawImageDraw);
-		m_pTransformNode->AddChild(m_pRawImageGLNode);
-
-		m_pTransformNode->Translate(0, 0, -1);
+		m_sDrawColor.pTransform = pSG->NewTransformNode(m_pSceneTransform);
+		m_sDrawColor.pImageDraw = new ImageDraw(m_pShaderReg);
+		m_sDrawColor.pGLNode = 
+			pSG->NewOpenGLNode(m_sDrawColor.pTransform, 
+							   m_sDrawColor.pImageDraw);
+		m_sDrawColor.pTransform->AddChild(m_sDrawColor.pGLNode);
+		m_sDrawColor.pImageDrawUpdater =
+			new ImageDrawUpdater(&m_pTracker->GetDepthStream(),
+								 m_sDrawColor.pImageDraw);
 
 		VistaDisplayManager *pDM = m_pSystem->GetDisplayManager();
 
-		// pDM->GetDisplaySystem()->GetDisplaySystemProperties()->
-		// 	SetViewerPosition(VistaVector3D(0,0,1));
-		// pDM->GetDisplaySystem()->GetReferenceFrame()->
-		// 	SetTranslation(VistaVector3D(0,0,10));
-		
 		return true;
 	}
 

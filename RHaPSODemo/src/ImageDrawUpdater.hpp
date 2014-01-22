@@ -1,6 +1,5 @@
 /*============================================================================*/
-/*                              ViSTA VR toolkit                              */
-/*               Copyright (c) 1997-2013 RWTH Aachen University               */
+/*                  Copyright (c) 2014 RWTH Aachen University                 */
 /*============================================================================*/
 /*                                  License                                   */
 /*                                                                            */
@@ -22,46 +21,25 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_RHAPSODEMO
-#define _RHAPSODIES_RHAPSODEMO
+#ifndef _RHAPSODIES_IMAGEDRAWUPDATER
+#define _RHAPSODIES_IMAGEDRAWUPDATER
 
-class VistaSystem;
-class VistaTransformNode;
-class VistaOpenGLNode;
+#include <OpenNI.h>
 
 namespace rhapsodies {
 	class ImageDraw;
-	class ImageDrawUpdater;
-	class ShaderRegistry;
-	class HandTracker;
 
-	class RHaPSODemo {
-		struct ImageDrawQuad {
-			VistaTransformNode *pTransform;
-			VistaOpenGLNode *pGLNode;
-			ImageDraw *pImageDraw;
-			ImageDrawUpdater *pImageDrawUpdater;
-		};
-
-		VistaSystem *m_pSystem;
-		ShaderRegistry *m_pShaderReg;
-		HandTracker *m_pTracker;
-
-		VistaTransformNode *m_pSceneTransform;
-
-		ImageDrawQuad m_sDrawColor;
-		
-		bool InitTracker();
-		bool RegisterShaders();
-		bool CreateScene();
+	class ImageDrawUpdater :
+		public openni::VideoStream::NewFrameListener 
+	{
+		ImageDraw *m_pImageDraw;
 
 	public:
-		RHaPSODemo();
-		bool Initialize(int argc, char** argv);
-		bool Run();
+		ImageDrawUpdater(openni::VideoStream *pStream,
+						 ImageDraw *pDraw);
 
-		static const std::string sRDIniFile;
-	};
+		void onNewFrame(openni::VideoStream &);
+  };
 }
 
-#endif // _RHAPSODIES_RHAPSODEMO
+#endif // _RHAPSODIES_IMAGEDRAWUPDATER

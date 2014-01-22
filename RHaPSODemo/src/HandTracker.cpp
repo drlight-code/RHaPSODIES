@@ -84,10 +84,25 @@ namespace rhapsodies {
 		PrintVideoModes(openni::SENSOR_DEPTH);
 		PrintVideoModes(openni::SENSOR_COLOR);
 
+
+		VistaProfiler oProf;
+		int resX = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_X",
+										  640, RHaPSODemo::sRDIniFile);
+		int resY = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_Y",
+										  480, RHaPSODemo::sRDIniFile);
+
+
 		// create depth videostream
 		rc = m_oDStream.create(m_oDevice, openni::SENSOR_DEPTH);
 		if (rc == openni::STATUS_OK)
 		{
+			// set depth stream format
+			openni::VideoMode vMode;
+			vMode.setResolution(resX, resY);
+			vMode.setFps(30);
+			vMode.setPixelFormat(openni::PIXEL_FORMAT_DEPTH_1_MM);
+			m_oDStream.setVideoMode(vMode);
+
 			rc = m_oDStream.start();
 			if (rc != openni::STATUS_OK)
 			{
@@ -108,6 +123,13 @@ namespace rhapsodies {
 		rc = m_oCStream.create(m_oDevice, openni::SENSOR_COLOR);
 		if (rc == openni::STATUS_OK)
 		{
+			// set color stream format
+			openni::VideoMode vMode;
+			vMode.setResolution(resX, resY);
+			vMode.setFps(30);
+			vMode.setPixelFormat(openni::PIXEL_FORMAT_RGB888);
+			m_oCStream.setVideoMode(vMode);
+
 			rc = m_oCStream.start();
 			if (rc != openni::STATUS_OK)
 			{
@@ -131,25 +153,6 @@ namespace rhapsodies {
 			return false;
 		}
 
-		VistaProfiler oProf;
-		int resX = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_X",
-										  640, RHaPSODemo::sRDIniFile);
-		int resY = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_Y",
-										  480, RHaPSODemo::sRDIniFile);
-
-		// set depth stream format
-		openni::VideoMode vMode;
-		vMode.setResolution(resX, resY);
-		vMode.setFps(30);
-		vMode.setPixelFormat(openni::PIXEL_FORMAT_DEPTH_1_MM);
-		m_oDStream.setVideoMode(vMode);
-
-		// set color stream format
-		vMode.setResolution(resX, resY);
-		vMode.setFps(30);
-		vMode.setPixelFormat(openni::PIXEL_FORMAT_RGB888);
-		m_oCStream.setVideoMode(vMode);
-
 		std::cout << "==================================================" << std::endl;
 		std::cout << "* depth stream info" << std::endl;
 		PrintStreamInfo(m_oDStream);
@@ -158,6 +161,14 @@ namespace rhapsodies {
 		std::cout << "==================================================" << std::endl;
 
 		return true;
+	}
+
+	openni::VideoStream& HandTracker::GetDepthStream() {
+		return m_oDStream;
+	}
+	
+	openni::VideoStream& HandTracker::GetColorStream() {
+		return m_oCStream;
 	}
 
 	void HandTracker::PrintVideoModes(openni::SensorType type) {

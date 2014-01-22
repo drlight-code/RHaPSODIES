@@ -21,27 +21,38 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_HANDTRACKER
-#define _RHAPSODIES_HANDTRACKER
+#include <iostream>
 
-#include <OpenNI.h>
+#include "ImageDrawUpdater.hpp"
+
+/*============================================================================*/
+/* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
+/*============================================================================*/
+
+/*============================================================================*/
+/* LOCAL VARS AND FUNCS                                                       */
+/*============================================================================*/
 
 namespace rhapsodies {
-  class HandTracker {
-	  openni::Device m_oDevice;
-	  openni::VideoStream m_oDStream, m_oCStream;
+/*============================================================================*/
+/* CONSTRUCTORS / DESTRUCTOR                                                  */
+/*============================================================================*/
+	ImageDrawUpdater::ImageDrawUpdater(openni::VideoStream *pStream,
+									   ImageDraw *pDraw) :
+		m_pImageDraw(pDraw) 
+	{
+		std::cout << "added frame listener to video stream!"
+				  << std::endl;
+		pStream->addNewFrameListener(this);
+	}
 
-	  void PrintVideoModes(openni::SensorType);
-	  void PrintVideoMode(const openni::VideoMode&);
-	  void PrintStreamInfo(const openni::VideoStream&);
-	  void PrintPixelFormat(openni::PixelFormat);
-
-  public:
-	  bool Initialize();
-
-	  openni::VideoStream& GetDepthStream();
-	  openni::VideoStream& GetColorStream();
-  };
+/*============================================================================*/
+/* IMPLEMENTATION                                                             */
+/*============================================================================*/
+	void ImageDrawUpdater::onNewFrame (openni::VideoStream &) {
+		// std::cout << "new frame buddy!" << std::endl;
+		// std::cout << "i'm not your buddy, guy!" << std::endl;
+		// std::cout << "i'm not your guy, friend!" << std::endl;
+		// std::cout << "i'm not your friend, buddy!" << std::endl;
+	}
 }
-
-#endif // _RHAPSODIES_HANDTRACKER
