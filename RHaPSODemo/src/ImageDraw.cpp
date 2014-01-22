@@ -100,6 +100,8 @@ namespace rhapsodies {
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
 	bool ImageDraw::Do() {
+		glBindTexture(GL_TEXTURE_2D, m_texId);
+
 		glUseProgram(m_pShaderReg->GetProgram("textured"));
 
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbVertId);
@@ -111,6 +113,8 @@ namespace rhapsodies {
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+		glUseProgram(0);
 	}
 	
 	bool ImageDraw::GetBoundingBox(VistaBoundingBox &bb) {
