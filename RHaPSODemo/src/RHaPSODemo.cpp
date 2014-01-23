@@ -63,7 +63,14 @@ namespace rhapsodies {
 	RHaPSODemo::RHaPSODemo() :
 		m_pSystem(new VistaSystem),
 		m_pShaderReg(new ShaderRegistry),
-		m_pTracker(new HandTracker) {
+		m_pTracker(new HandTracker),
+		m_camWidth(640), m_camHeight(480) {
+	}
+
+	RHaPSODemo::~RHaPSODemo() {
+		delete m_pTracker;
+		delete m_pShaderReg;
+		delete m_pSystem;
 	}
 
 /*============================================================================*/
@@ -72,6 +79,19 @@ namespace rhapsodies {
 	bool RHaPSODemo::Initialize(int argc, char** argv) {
 		bool success = true;
 
+		success &= ParseConfig();
+
+		success &= m_pSystem->Init(argc, argv);
+		glewInit();
+
+		success &= InitTracker();
+   		success &= RegisterShaders();
+		success &= CreateScene();
+
+		return success;
+	}
+
+	bool RHaPSODemo::ParseConfig() {
 		VistaProfiler oProf;
 
 		// read the ini file names from dispatch ini
@@ -92,22 +112,18 @@ namespace rhapsodies {
 									  "vista.ini",
 									  sRDIniFile) );
 
+		// read camera parameters
+		m_camWidth  = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_X",
+											 640, RHaPSODemo::sRDIniFile);
+		m_camHeight = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_Y",
+											 480, RHaPSODemo::sRDIniFile);
 
-		if(!m_pSystem->Init(argc, argv)) {
-			success = false;
-		}
-
-		glewInit();
-
-		success &= InitTracker();
-   		success &= RegisterShaders();
-		success &= CreateScene();
-
-		return success;
+		return true;
 	}
 
 	bool RHaPSODemo::InitTracker() {
-		return m_pTracker->Initialize();
+		return m_pTracker->Initialize(m_camWidth,
+									  m_camHeight);
 	}
 
 	bool RHaPSODemo::RegisterShaders() {
@@ -132,7 +148,8 @@ namespace rhapsodies {
 		m_pSceneTransform->Translate(0, 0, -1);
 
 		m_sDrawColor.pTransform = pSG->NewTransformNode(m_pSceneTransform);
-		m_sDrawColor.pImageDraw = new ImageDraw(m_pShaderReg);
+		m_sDrawColor.pImageDraw = new ImageDraw(m_camWidth, m_camHeight,
+												m_pShaderReg);
 		m_sDrawColor.pGLNode = 
 			pSG->NewOpenGLNode(m_sDrawColor.pTransform, 
 							   m_sDrawColor.pImageDraw);
@@ -140,8 +157,6 @@ namespace rhapsodies {
 		m_sDrawColor.pImageDrawUpdater =
 			new ImageDrawUpdater(&m_pTracker->GetDepthStream(),
 								 m_sDrawColor.pImageDraw);
-
-		VistaDisplayManager *pDM = m_pSystem->GetDisplayManager();
 
 		return true;
 	}

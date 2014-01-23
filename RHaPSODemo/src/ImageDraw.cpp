@@ -21,11 +21,13 @@
 /*============================================================================*/
 // $Id: $
 
+#include <cstring>
 #include <iostream>
 
 #include <GL/glew.h>
 
 #include <VistaMath/VistaBoundingBox.h>
+#include <VistaInterProcComm/Concurrency/VistaMutex.h>
 
 #include <ShaderRegistry.hpp>
 
@@ -43,11 +45,68 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	ImageDraw::ImageDraw(ShaderRegistry *pShaderReg) :
-		m_pShaderReg(pShaderReg) 
+	ImageDraw::ImageDraw(int width, int height,
+						 ShaderRegistry *pShaderReg) :
+		m_pShaderReg(pShaderReg),
+		m_pDrawMutex(new VistaMutex),
+		m_pboIndex(0),
+		m_texUpdate(false),
+		m_texWidth(width),
+		m_texHeight(height)
 	{
 		glGenVertexArrays(1, &m_vaId);
 		glBindVertexArray(m_vaId);
+
+		unsigned char *texData =
+			new unsigned char[m_texWidth*m_texHeight*3];
+
+		// fill with raster pattern
+		int raster_offset = 10;
+		for(int i = 0; i < m_texWidth*m_texHeight*3; i++) {
+			int px = i/3;
+			if( i%3 == 0 && 
+				(px%m_texWidth%raster_offset == 0 || 
+				 px/m_texWidth%raster_offset==0) )
+				texData[i] = 255;
+		}
+
+		glGenBuffers(2, m_pboIds);
+
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
+					 m_pboIds[1-m_pboIndex]);
+		glBufferData(GL_PIXEL_UNPACK_BUFFER,
+					 m_texWidth*m_texHeight*3,
+					 0, GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
+					 m_pboIds[m_pboIndex]);
+		glBufferData(GL_PIXEL_UNPACK_BUFFER,
+					 m_texWidth*m_texHeight*3,
+					 texData, GL_DYNAMIC_DRAW);
+		delete texData;
+
+		glGenTextures(1, &m_texId);
+
+		m_pDrawMutex->Lock();
+
+		glBindTexture(GL_TEXTURE_2D, m_texId);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
+					 m_texWidth, m_texHeight, 0, GL_RGB,
+					 GL_UNSIGNED_BYTE, 0);
+
+		m_pPBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
+		   					 GL_WRITE_ONLY);
+
+		glTexParameteri(GL_TEXTURE_2D,
+						GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,
+						GL_TEXTURE_MIN_FILTER, GL_LINEAR/*_MIPMAP_LINEAR*/);
+		//glGenerateMipmap(GL_TEXTURE_2D);
+
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+		m_pDrawMutex->Unlock();
+
 
 		const GLfloat afCoords[] = {
 			-1.0f, -1.0f, 0.0f,
@@ -55,45 +114,22 @@ namespace rhapsodies {
 			-1.0f,  1.0f, 0.0f,
 			1.0f,  1.0f, 0.0f
 		};
-
 		glGenBuffers(1, &m_vbVertId);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbVertId);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(afCoords), afCoords, GL_STATIC_DRAW);
 
-		glGenTextures(1, &m_texId);
-
-		m_texWidth  = 128;
-		m_texHeight = 128;
-		m_texData = new unsigned char[m_texWidth*m_texHeight*3];
-
-		for(int i = 0; i < m_texWidth*m_texHeight*3; i++) {
-			m_texData[i] = i/3%128*2;
-		}
-
-		glBindTexture(GL_TEXTURE_2D, m_texId);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
-					 m_texWidth, m_texHeight, 0, GL_BGR,
-					 GL_UNSIGNED_BYTE, m_texData);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		float afUV[] = {
+		const GLfloat afUV[] = {
 			0.0f, 0.0f,
 			1.0f, 0.0f,
 			0.0f, 1.0f,
 			1.0f, 1.0f
 		};
-
 		glGenBuffers(1, &m_vbUVId);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbUVId);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(afUV), afUV, GL_STATIC_DRAW);
 	}
 
 	ImageDraw::~ImageDraw() {
-		delete m_texData;
 	}
 
 /*============================================================================*/
@@ -101,6 +137,29 @@ namespace rhapsodies {
 /*============================================================================*/
 	bool ImageDraw::Do() {
 		glBindTexture(GL_TEXTURE_2D, m_texId);
+
+		m_pDrawMutex->Lock();
+		if(m_texUpdate) {
+			m_texUpdate = false;
+
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
+						 m_pboIds[m_pboIndex]);
+			glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+
+			// glTexSubImage2D(GL_TEXTURE_2D, 0, 
+			// 				0, 0, m_texWidth, m_texHeight,
+			// 				GL_RGB, GL_UNSIGNED_BYTE, 0);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
+						 m_texWidth, m_texHeight, 0, GL_RGB,
+						 GL_UNSIGNED_BYTE, 0);
+
+			m_pboIndex = 1-m_pboIndex;
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
+						 m_pboIds[m_pboIndex]);
+			m_pPBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
+								 GL_WRITE_ONLY);
+		}
+		m_pDrawMutex->Unlock();
 
 		glUseProgram(m_pShaderReg->GetProgram("textured"));
 
@@ -121,5 +180,16 @@ namespace rhapsodies {
 		bb.SetBounds( VistaVector3D(-1.0, -1.0, 0.0),
 					  VistaVector3D( 1.0,  1.0, 0.0) );
 		return true;
+	}
+
+	bool ImageDraw::FillPBOFromBuffer(const void* pData,
+									  int width, int height) {
+		m_pDrawMutex->Lock();
+
+		// we assume RGB888 memory layout here!
+		memcpy(m_pPBO, pData, width*height*3);
+		m_texUpdate = true;
+
+		m_pDrawMutex->Unlock();
 	}
 }

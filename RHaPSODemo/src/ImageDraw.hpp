@@ -28,27 +28,40 @@
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 
+class VistaMutex;
+
 namespace rhapsodies {
 	class ShaderRegistry;
 
 	class ImageDraw : public IVistaOpenGLDraw {
 		GLuint m_vaId;
+
 		GLuint m_vbVertId;
 		GLuint m_vbUVId;
+
+		GLuint m_pboIds[2];
+		unsigned char m_pboIndex;
+		void *m_pPBO;
 
 		GLuint m_texId;
 		unsigned int m_texWidth;
 		unsigned int m_texHeight;
-		unsigned char *m_texData;
+		bool m_texUpdate;
 
 		ShaderRegistry *m_pShaderReg;
 
+		VistaMutex *m_pDrawMutex;
+
 	public:
-		ImageDraw(ShaderRegistry *pShaderReg);
+		ImageDraw(int width, int height,
+				  ShaderRegistry *pShaderReg);
 		~ImageDraw();
 
 		virtual bool Do();
 		virtual bool GetBoundingBox(VistaBoundingBox &bb);
+
+		bool FillPBOFromBuffer(const void*,
+							   int width, int height);
   };
 }
 

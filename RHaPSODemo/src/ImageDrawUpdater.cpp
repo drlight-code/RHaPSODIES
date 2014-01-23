@@ -23,6 +23,8 @@
 
 #include <iostream>
 
+#include <ImageDraw.hpp>
+
 #include "ImageDrawUpdater.hpp"
 
 /*============================================================================*/
@@ -46,13 +48,39 @@ namespace rhapsodies {
 		pStream->addNewFrameListener(this);
 	}
 
+	ImageDrawUpdater::~ImageDrawUpdater() {}
+
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	void ImageDrawUpdater::onNewFrame (openni::VideoStream &) {
-		// std::cout << "new frame buddy!" << std::endl;
-		// std::cout << "i'm not your buddy, guy!" << std::endl;
-		// std::cout << "i'm not your guy, friend!" << std::endl;
-		// std::cout << "i'm not your friend, buddy!" << std::endl;
+	void ImageDrawUpdater::onNewFrame(openni::VideoStream &stream) {
+		openni::VideoFrameRef frame;
+		stream.readFrame(&frame);
+
+		if(stream.getVideoMode().getPixelFormat() ==
+		   openni::PIXEL_FORMAT_RGB888) {
+			m_pImageDraw->FillPBOFromBuffer(frame.getData(),
+											frame.getWidth(),
+											frame.getHeight());
+		}
+		else if(stream.getVideoMode().getPixelFormat() ==
+				openni::PIXEL_FORMAT_DEPTH_1_MM) {
+			// for now we allocate an RGB888 array for the texture
+			// @todo is there a more clever way to do this?!
+
+			unsigned short* pData = (unsigned short*)(frame.getData());
+
+			unsigned int depthbufsize = frame.getWidth()*frame.getHeight();
+			unsigned char buf[3*depthbufsize];
+
+			for(int i = 0; i < depthbufsize; i++) {
+				buf[3*i] = buf[3*i+1] = buf[3*i+2] =
+					255 - pData[i] / 40;
+			}
+			m_pImageDraw->FillPBOFromBuffer(buf,
+											frame.getWidth(),
+											frame.getHeight());
+			
+		}
 	}
 }

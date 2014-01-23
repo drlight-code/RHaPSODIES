@@ -37,8 +37,9 @@ namespace rhapsodies {
 	public:
 		ImageDrawUpdater(openni::VideoStream *pStream,
 						 ImageDraw *pDraw);
+		virtual ~ImageDrawUpdater();
 
-		void onNewFrame(openni::VideoStream &);
+		virtual void onNewFrame(openni::VideoStream &);
   };
 }
 

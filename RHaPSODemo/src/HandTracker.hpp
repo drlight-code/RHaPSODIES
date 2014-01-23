@@ -30,6 +30,7 @@ namespace rhapsodies {
   class HandTracker {
 	  openni::Device m_oDevice;
 	  openni::VideoStream m_oDStream, m_oCStream;
+	  int m_camWidth, m_camHeight;
 
 	  void PrintVideoModes(openni::SensorType);
 	  void PrintVideoMode(const openni::VideoMode&);
@@ -37,7 +38,7 @@ namespace rhapsodies {
 	  void PrintPixelFormat(openni::PixelFormat);
 
   public:
-	  bool Initialize();
+	  bool Initialize(int width, int height);
 
 	  openni::VideoStream& GetDepthStream();
 	  openni::VideoStream& GetColorStream();

@@ -51,8 +51,11 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	bool HandTracker::Initialize() {
-		bool success=true;
+	bool HandTracker::Initialize(int width, int height) {
+		m_camWidth = width;
+		m_camHeight = height;
+
+		bool success = true;
 		openni::Status rc = openni::STATUS_OK;
 
 		const char* deviceURI = openni::ANY_DEVICE;
@@ -84,21 +87,13 @@ namespace rhapsodies {
 		PrintVideoModes(openni::SENSOR_DEPTH);
 		PrintVideoModes(openni::SENSOR_COLOR);
 
-
-		VistaProfiler oProf;
-		int resX = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_X",
-										  640, RHaPSODemo::sRDIniFile);
-		int resY = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_Y",
-										  480, RHaPSODemo::sRDIniFile);
-
-
 		// create depth videostream
 		rc = m_oDStream.create(m_oDevice, openni::SENSOR_DEPTH);
 		if (rc == openni::STATUS_OK)
 		{
 			// set depth stream format
 			openni::VideoMode vMode;
-			vMode.setResolution(resX, resY);
+			vMode.setResolution(m_camWidth, m_camHeight);
 			vMode.setFps(30);
 			vMode.setPixelFormat(openni::PIXEL_FORMAT_DEPTH_1_MM);
 			m_oDStream.setVideoMode(vMode);
@@ -125,7 +120,7 @@ namespace rhapsodies {
 		{
 			// set color stream format
 			openni::VideoMode vMode;
-			vMode.setResolution(resX, resY);
+			vMode.setResolution(m_camWidth, m_camHeight);
 			vMode.setFps(30);
 			vMode.setPixelFormat(openni::PIXEL_FORMAT_RGB888);
 			m_oCStream.setVideoMode(vMode);

@@ -32,10 +32,13 @@ class VistaOpenGLNode;
 namespace rhapsodies {
 	class ImageDraw;
 	class ImageDrawUpdater;
+	class DrawMutexHandler;
 	class ShaderRegistry;
 	class HandTracker;
 
 	class RHaPSODemo {
+		int m_camWidth, m_camHeight;
+
 		struct ImageDrawQuad {
 			VistaTransformNode *pTransform;
 			VistaOpenGLNode *pGLNode;
@@ -55,8 +58,12 @@ namespace rhapsodies {
 		bool RegisterShaders();
 		bool CreateScene();
 
+		bool ParseConfig();
+
 	public:
 		RHaPSODemo();
+		~RHaPSODemo();
+
 		bool Initialize(int argc, char** argv);
 		bool Run();
 
