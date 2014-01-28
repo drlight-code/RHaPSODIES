@@ -148,12 +148,9 @@ namespace rhapsodies {
 						 m_pboIds[m_pboIndex]);
 			glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 
-			// glTexSubImage2D(GL_TEXTURE_2D, 0, 
-			// 				0, 0, m_texWidth, m_texHeight,
-			// 				GL_RGB, GL_UNSIGNED_BYTE, 0);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
-						 m_texWidth, m_texHeight, 0, GL_RGB,
-						 GL_UNSIGNED_BYTE, 0);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 
+							0, 0, m_texWidth, m_texHeight,
+							GL_RGB, GL_UNSIGNED_BYTE, 0);
 
 			m_pboIndex = 1-m_pboIndex;
 			glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
