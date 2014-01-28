@@ -27,22 +27,22 @@
 #include <OpenNI.h>
 
 namespace rhapsodies {
-  class HandTracker {
-	  openni::Device m_oDevice;
-	  openni::VideoStream m_oDStream, m_oCStream;
-	  int m_camWidth, m_camHeight;
+	class HandTracker {
+		openni::Device m_oDevice;
+		openni::VideoStream m_oDStream, m_oCStream;
+		int m_camWidth, m_camHeight;
 
-	  void PrintVideoModes(openni::SensorType);
-	  void PrintVideoMode(const openni::VideoMode&);
-	  void PrintStreamInfo(const openni::VideoStream&);
-	  void PrintPixelFormat(openni::PixelFormat);
+		void PrintVideoModes(openni::SensorType);
+		void PrintVideoMode(const openni::VideoMode&);
+		void PrintStreamInfo(const openni::VideoStream&);
+		void PrintPixelFormat(openni::PixelFormat);
 
-  public:
-	  bool Initialize(int width, int height);
+	public:
+		bool Initialize(int width, int height);
 
-	  openni::VideoStream& GetDepthStream();
-	  openni::VideoStream& GetColorStream();
-  };
+		openni::VideoStream& GetDepthStream();
+		openni::VideoStream& GetColorStream();
+	};
 }
 
 #endif // _RHAPSODIES_HANDTRACKER

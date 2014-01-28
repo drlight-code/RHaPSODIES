@@ -46,7 +46,7 @@ namespace rhapsodies {
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
 	ImagePBOOpenGLDraw::ImagePBOOpenGLDraw(int width, int height,
-						 ShaderRegistry *pShaderReg) :
+										   ShaderRegistry *pShaderReg) :
 		m_pShaderReg(pShaderReg),
 		m_pDrawMutex(new VistaMutex),
 		m_pboIndex(0),
@@ -182,7 +182,7 @@ namespace rhapsodies {
 	}
 
 	bool ImagePBOOpenGLDraw::FillPBOFromBuffer(const void* pData,
-									  int width, int height) {
+											   int width, int height) {
 		m_pDrawMutex->Lock();
 
 		// we assume RGB888 memory layout here!
