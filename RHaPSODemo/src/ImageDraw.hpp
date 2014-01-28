@@ -21,48 +21,32 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_IMAGERENDERNODE
-#define _RHAPSODIES_IMAGERENDERNODE
+#ifndef _RHAPSODIES_IMAGEDRAW
+#define _RHAPSODIES_IMAGEDRAW
 
-#include <GL/gl.h>
-
-#include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
-
-class VistaMutex;
+class VistaSceneGraph;
+class VistaTransformNode;
+class VistaOpenGLNode;
+class VistaGroupNode;
 
 namespace rhapsodies {
+	class ImagePBOOpenGLDraw;
 	class ShaderRegistry;
 
-	class ImageDraw : public IVistaOpenGLDraw {
-		GLuint m_vaId;
-
-		GLuint m_vbVertId;
-		GLuint m_vbUVId;
-
-		GLuint m_pboIds[2];
-		unsigned char m_pboIndex;
-		void *m_pPBO;
-
-		GLuint m_texId;
-		unsigned int m_texWidth;
-		unsigned int m_texHeight;
-		bool m_texUpdate;
-
-		ShaderRegistry *m_pShaderReg;
-
-		VistaMutex *m_pDrawMutex;
+	class ImageDraw {
+		VistaTransformNode *m_pTransform;
+		ImagePBOOpenGLDraw *m_pOGLDraw;
+		VistaOpenGLNode *m_pOGLNode;
 
 	public:
-		ImageDraw(int width, int height,
-				  ShaderRegistry *pShaderReg);
-		~ImageDraw();
+		ImageDraw(VistaGroupNode *pParentNode,
+				  VistaSceneGraph *pSG,
+				  ShaderRegistry *pShaderReg,
+				  int width, int height);
 
-		virtual bool Do();
-		virtual bool GetBoundingBox(VistaBoundingBox &bb);
-
-		bool FillPBOFromBuffer(const void*,
-							   int width, int height);
-  };
+		ImagePBOOpenGLDraw *GetImagePBODraw();
+		VistaTransformNode *GetTransformNode();
+	};
 }
 
-#endif // _RHAPSODIES_IMAGERENDERNODE
+#endif // _RHAPSODIES_IMAGEDRAW

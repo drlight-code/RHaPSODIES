@@ -1,6 +1,5 @@
 /*============================================================================*/
-/*                              ViSTA VR toolkit                              */
-/*               Copyright (c) 1997-2013 RWTH Aachen University               */
+/*                  Copyright (c) 2014 RWTH Aachen University                 */
 /*============================================================================*/
 /*                                  License                                   */
 /*                                                                            */
@@ -22,48 +21,48 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_RHAPSODEMO
-#define _RHAPSODIES_RHAPSODEMO
+#ifndef _RHAPSODIES_IMAGEPBOOPENGLDRAW
+#define _RHAPSODIES_IMAGEPBOOPENGLDRAW
 
-class VistaSystem;
-class VistaTransformNode;
-class VistaOpenGLNode;
-class CameraFrameHandler;
+#include <GL/gl.h>
+
+#include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
+
+class VistaMutex;
 
 namespace rhapsodies {
-	class ImageDraw;
 	class ShaderRegistry;
-	class HandTracker;
 
-	class RHaPSODemo {
-		int m_camWidth, m_camHeight;
+	class ImagePBOOpenGLDraw : public IVistaOpenGLDraw {
+		GLuint m_vaId;
 
-		VistaSystem *m_pSystem;
+		GLuint m_vbVertId;
+		GLuint m_vbUVId;
+
+		GLuint m_pboIds[2];
+		unsigned char m_pboIndex;
+		void *m_pPBO;
+
+		GLuint m_texId;
+		unsigned int m_texWidth;
+		unsigned int m_texHeight;
+		bool m_texUpdate;
+
 		ShaderRegistry *m_pShaderReg;
-		HandTracker *m_pTracker;
 
-		VistaTransformNode *m_pSceneTransform;
-
-		ImageDraw *m_pColorDraw;
-		ImageDraw *m_pDepthDraw;
-		CameraFrameHandler *m_pColorFrameHandler;
-		CameraFrameHandler *m_pDepthFrameHandler;
-		
-		bool InitTracker();
-		bool RegisterShaders();
-		bool CreateScene();
-
-		bool ParseConfig();
+		VistaMutex *m_pDrawMutex;
 
 	public:
-		RHaPSODemo();
-		~RHaPSODemo();
+		ImagePBOOpenGLDraw(int width, int height,
+						   ShaderRegistry *pShaderReg);
+		~ImagePBOOpenGLDraw();
 
-		bool Initialize(int argc, char** argv);
-		bool Run();
+		virtual bool Do();
+		virtual bool GetBoundingBox(VistaBoundingBox &bb);
 
-		static const std::string sRDIniFile;
+		bool FillPBOFromBuffer(const void*,
+							   int width, int height);
 	};
 }
 
-#endif // _RHAPSODIES_RHAPSODEMO
+#endif // _RHAPSODIES_IMAGEPBOOPENGLDRAW

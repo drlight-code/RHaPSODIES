@@ -119,11 +119,11 @@ namespace rhapsodies {
 		if (rc == openni::STATUS_OK)
 		{
 			// set color stream format
-			openni::VideoMode vMode;
-			vMode.setResolution(m_camWidth, m_camHeight);
-			vMode.setFps(30);
-			vMode.setPixelFormat(openni::PIXEL_FORMAT_RGB888);
-			m_oCStream.setVideoMode(vMode);
+			// openni::VideoMode vMode;
+			// vMode.setResolution(m_camWidth, m_camHeight);
+			// vMode.setFps(30);
+			// vMode.setPixelFormat(openni::PIXEL_FORMAT_RGB888);
+			// m_oCStream.setVideoMode(vMode);
 
 			rc = m_oCStream.start();
 			if (rc != openni::STATUS_OK)

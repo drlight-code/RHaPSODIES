@@ -21,26 +21,26 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_IMAGEDRAWUPDATER
-#define _RHAPSODIES_IMAGEDRAWUPDATER
+#ifndef _RHAPSODIES_CAMERAFRAMEHANDLER
+#define _RHAPSODIES_CAMERAFRAMEHANDLER
 
 #include <OpenNI.h>
 
 namespace rhapsodies {
-	class ImageDraw;
+	class ImagePBOOpenGLDraw;
 
-	class ImageDrawUpdater :
-		public openni::VideoStream::NewFrameListener 
-	{
-		ImageDraw *m_pImageDraw;
-
+	class CameraFrameHandler :
+		public openni::VideoStream::NewFrameListener {
+		ImagePBOOpenGLDraw *m_pDraw;
+		openni::VideoStream *m_pStream;
+		unsigned char *m_pBuffer;
+	  
 	public:
-		ImageDrawUpdater(openni::VideoStream *pStream,
-						 ImageDraw *pDraw);
-		virtual ~ImageDrawUpdater();
-
+		CameraFrameHandler(openni::VideoStream *pStream,
+						   ImagePBOOpenGLDraw *pDraw);
+		virtual ~CameraFrameHandler();
 		virtual void onNewFrame(openni::VideoStream &);
-  };
+	};
 }
 
-#endif // _RHAPSODIES_IMAGEDRAWUPDATER
+#endif // _RHAPSODIES_CAMERAFRAMEHANDLER

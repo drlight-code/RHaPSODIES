@@ -7,7 +7,8 @@ set( DirFiles
 	main.cpp
 	RHaPSODemo.cpp
   	ImageDraw.cpp
-  	ImageDrawUpdater.cpp
+	ImagePBOOpenGLDraw.cpp
+	CameraFrameHandler.cpp
   	ShaderRegistry.cpp
   	HandTracker.cpp
 	_SourceFiles.cmake

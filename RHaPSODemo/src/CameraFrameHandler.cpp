@@ -23,9 +23,9 @@
 
 #include <iostream>
 
-#include <ImageDraw.hpp>
+#include <ImagePBOOpenGLDraw.hpp>
 
-#include "ImageDrawUpdater.hpp"
+#include "CameraFrameHandler.hpp"
 
 /*============================================================================*/
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
@@ -39,48 +39,47 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	ImageDrawUpdater::ImageDrawUpdater(openni::VideoStream *pStream,
-									   ImageDraw *pDraw) :
-		m_pImageDraw(pDraw) 
-	{
-		std::cout << "added frame listener to video stream!"
-				  << std::endl;
+	CameraFrameHandler::CameraFrameHandler(openni::VideoStream *pStream,
+										   ImagePBOOpenGLDraw *pDraw) :
+		m_pStream(pStream),
+		m_pDraw(pDraw) {
+		openni::VideoMode vm = pStream->getVideoMode();
+		if(vm.getPixelFormat() == openni::PIXEL_FORMAT_DEPTH_1_MM) {
+			m_pBuffer =	new unsigned char[vm.getResolutionX()*
+										  vm.getResolutionY()*3];
+		}
 		pStream->addNewFrameListener(this);
 	}
 
-	ImageDrawUpdater::~ImageDrawUpdater() {}
+	CameraFrameHandler::~CameraFrameHandler() {
+		openni::VideoMode vm = m_pStream->getVideoMode();
+		if(vm.getPixelFormat() == openni::PIXEL_FORMAT_DEPTH_1_MM) {
+			delete [] m_pBuffer;
+		}
+		m_pStream->removeNewFrameListener(this);
+	}
 
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	void ImageDrawUpdater::onNewFrame(openni::VideoStream &stream) {
+	void CameraFrameHandler::onNewFrame(openni::VideoStream &) {
 		openni::VideoFrameRef frame;
-		stream.readFrame(&frame);
+		m_pStream->readFrame(&frame);
 
-		if(stream.getVideoMode().getPixelFormat() ==
-		   openni::PIXEL_FORMAT_RGB888) {
-			m_pImageDraw->FillPBOFromBuffer(frame.getData(),
-											frame.getWidth(),
-											frame.getHeight());
-		}
-		else if(stream.getVideoMode().getPixelFormat() ==
-				openni::PIXEL_FORMAT_DEPTH_1_MM) {
-			// for now we allocate an RGB888 array for the texture
-			// @todo is there a more clever way to do this?!
+		const void *pPBOData = frame.getData();
 
-			unsigned short* pData = (unsigned short*)(frame.getData());
-
-			unsigned int depthbufsize = frame.getWidth()*frame.getHeight();
-			unsigned char buf[3*depthbufsize];
-
-			for(int i = 0; i < depthbufsize; i++) {
-				buf[3*i] = buf[3*i+1] = buf[3*i+2] =
+		if(frame.getVideoMode().getPixelFormat() == 
+		   openni::PIXEL_FORMAT_DEPTH_1_MM) {
+			unsigned short* pData = (unsigned short*)frame.getData();
+			for(int i = 0; i < frame.getWidth()*frame.getHeight(); i++) {
+				m_pBuffer[3*i] = m_pBuffer[3*i+1] = m_pBuffer[3*i+2] =
 					255 - pData[i] / 40;
 			}
-			m_pImageDraw->FillPBOFromBuffer(buf,
-											frame.getWidth(),
-											frame.getHeight());
-			
+			pPBOData = m_pBuffer;
 		}
+
+		m_pDraw->FillPBOFromBuffer(pPBOData,
+								   frame.getWidth(),
+								   frame.getHeight());
 	}
 }

@@ -39,7 +39,7 @@
 #include <VistaKernel/EventManager/VistaSystemEvent.h>
 
 #include <ImageDraw.hpp>
-#include <ImageDrawUpdater.hpp>
+#include <CameraFrameHandler.hpp>
 #include <ShaderRegistry.hpp>
 #include <HandTracker.hpp>
 
@@ -68,6 +68,8 @@ namespace rhapsodies {
 	}
 
 	RHaPSODemo::~RHaPSODemo() {
+		delete m_pColorDraw;
+		delete m_pDepthDraw;
 		delete m_pTracker;
 		delete m_pShaderReg;
 		delete m_pSystem;
@@ -88,6 +90,13 @@ namespace rhapsodies {
    		success &= RegisterShaders();
 		success &= CreateScene();
 
+		m_pColorFrameHandler = new CameraFrameHandler(
+			&m_pTracker->GetColorStream(),
+			m_pColorDraw->GetImagePBODraw());
+		m_pDepthFrameHandler = new CameraFrameHandler(
+			&m_pTracker->GetDepthStream(),
+			m_pDepthDraw->GetImagePBODraw());
+	
 		return success;
 	}
 
@@ -145,18 +154,15 @@ namespace rhapsodies {
 
 		// create global scene transform
 		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
-		m_pSceneTransform->Translate(0, 0, -1);
+		m_pSceneTransform->Translate(0, 0, -1.3);
 
-		m_sDrawColor.pTransform = pSG->NewTransformNode(m_pSceneTransform);
-		m_sDrawColor.pImageDraw = new ImageDraw(m_camWidth, m_camHeight,
-												m_pShaderReg);
-		m_sDrawColor.pGLNode = 
-			pSG->NewOpenGLNode(m_sDrawColor.pTransform, 
-							   m_sDrawColor.pImageDraw);
-		m_sDrawColor.pTransform->AddChild(m_sDrawColor.pGLNode);
-		m_sDrawColor.pImageDrawUpdater =
-			new ImageDrawUpdater(&m_pTracker->GetDepthStream(),
-								 m_sDrawColor.pImageDraw);
+		m_pColorDraw = new ImageDraw(m_pSceneTransform, pSG,
+									 m_pShaderReg, m_camWidth, m_camHeight);
+		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pSG,
+									 m_pShaderReg, m_camWidth, m_camHeight);
+
+		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-1.1,0,0));
+		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(1.1,0,0));
 
 		return true;
 	}
