@@ -72,8 +72,14 @@ namespace rhapsodies {
 		   openni::PIXEL_FORMAT_DEPTH_1_MM) {
 			unsigned short* pData = (unsigned short*)frame.getData();
 			for(int i = 0; i < frame.getWidth()*frame.getHeight(); i++) {
-				m_pBuffer[3*i] = m_pBuffer[3*i+1] = m_pBuffer[3*i+2] =
-					255 - pData[i] / 40;
+				if(pData[i] > 0) {
+					m_pBuffer[3*i] = m_pBuffer[3*i+1] = m_pBuffer[3*i+2] =
+						255 - pData[i] / 40;
+				}
+				else {
+					m_pBuffer[3*i] = 200;
+					m_pBuffer[3*i+1] = m_pBuffer[3*i+2] = 0;
+				}
 			}
 			pPBOData = m_pBuffer;
 		}
