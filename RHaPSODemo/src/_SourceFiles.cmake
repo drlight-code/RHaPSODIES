@@ -7,8 +7,10 @@ set( DirFiles
 	main.cpp
 	RHaPSODemo.cpp
   	ImageDraw.cpp
+	TexturedQuadGLDraw.cpp
 	ImagePBOOpenGLDraw.cpp
-	CameraFrameHandler.cpp
+	CameraFrameDepthHandler.cpp
+	CameraFrameColorHandler.cpp
   	ShaderRegistry.cpp
   	HandTracker.cpp
 	_SourceFiles.cmake

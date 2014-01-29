@@ -39,7 +39,9 @@
 #include <VistaKernel/EventManager/VistaSystemEvent.h>
 
 #include <ImageDraw.hpp>
-#include <CameraFrameHandler.hpp>
+#include <ImagePBOOpenGLDraw.hpp>
+#include <CameraFrameColorHandler.hpp>
+#include <CameraFrameDepthHandler.hpp>
 #include <ShaderRegistry.hpp>
 #include <HandTracker.hpp>
 
@@ -90,13 +92,6 @@ namespace rhapsodies {
    		success &= RegisterShaders();
 		success &= CreateScene();
 
-		m_pColorFrameHandler = new CameraFrameHandler(
-			&m_pTracker->GetColorStream(),
-			m_pColorDraw->GetImagePBODraw());
-		m_pDepthFrameHandler = new CameraFrameHandler(
-			&m_pTracker->GetDepthStream(),
-			m_pDepthDraw->GetImagePBODraw());
-	
 		return success;
 	}
 
@@ -156,12 +151,17 @@ namespace rhapsodies {
 		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
 		m_pSceneTransform->Translate(0, 0, -1.3);
 
-		m_pColorDraw = new ImageDraw(m_pSceneTransform, pSG,
-									 m_pShaderReg, m_camWidth, m_camHeight);
-		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pSG,
-									 m_pShaderReg, m_camWidth, m_camHeight);
-
+		ImagePBOOpenGLDraw *pPBODraw = 
+			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pColorFrameHandler = new CameraFrameColorHandler(
+			&m_pTracker->GetColorStream(), pPBODraw);
 		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-1.1,0,0));
+
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pDepthFrameHandler = new CameraFrameDepthHandler(
+			&m_pTracker->GetDepthStream(), pPBODraw);
 		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(1.1,0,0));
 
 		return true;

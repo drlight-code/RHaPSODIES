@@ -21,11 +21,16 @@
 /*============================================================================*/
 // $Id: $
 
+#include <cstring>
 #include <iostream>
 
-#include <ImagePBOOpenGLDraw.hpp>
+#include <GL/glew.h>
 
-#include "CameraFrameHandler.hpp"
+#include <VistaMath/VistaBoundingBox.h>
+
+#include <ShaderRegistry.hpp>
+
+#include "TexturedQuadGLDraw.hpp"
 
 /*============================================================================*/
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
@@ -39,53 +44,68 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	CameraFrameHandler::CameraFrameHandler(openni::VideoStream *pStream,
-										   ImagePBOOpenGLDraw *pDraw) :
-		m_pStream(pStream),
-		m_pDraw(pDraw) {
-		openni::VideoMode vm = pStream->getVideoMode();
-		if(vm.getPixelFormat() == openni::PIXEL_FORMAT_DEPTH_1_MM) {
-			m_pBuffer =	new unsigned char[vm.getResolutionX()*
-										  vm.getResolutionY()*3];
-		}
-		pStream->addNewFrameListener(this);
+	TexturedQuadGLDraw::TexturedQuadGLDraw(ShaderRegistry *pShaderReg) :
+		m_pShaderReg(pShaderReg)
+	{
+		glGenVertexArrays(1, &m_vaId);
+		glBindVertexArray(m_vaId);
+
+		const GLfloat afCoords[] = {
+			-1.0f, -1.0f, 0.0f,
+			1.0f, -1.0f, 0.0f,
+			-1.0f,  1.0f, 0.0f,
+			1.0f,  1.0f, 0.0f
+		};
+		glGenBuffers(1, &m_vbVertId);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbVertId);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(afCoords), afCoords, GL_STATIC_DRAW);
+
+		const GLfloat afUV[] = {
+			0.0f, 1.0f,
+			1.0f, 1.0f,
+			0.0f, 0.0f,
+			1.0f, 0.0f,
+		};
+		glGenBuffers(1, &m_vbUVId);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbUVId);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(afUV), afUV, GL_STATIC_DRAW);
+
+		glGenTextures(1, &m_texId);
+		glBindTexture(GL_TEXTURE_2D, m_texId);
 	}
 
-	CameraFrameHandler::~CameraFrameHandler() {
-		openni::VideoMode vm = m_pStream->getVideoMode();
-		if(vm.getPixelFormat() == openni::PIXEL_FORMAT_DEPTH_1_MM) {
-			delete [] m_pBuffer;
-		}
-		m_pStream->removeNewFrameListener(this);
+	TexturedQuadGLDraw::~TexturedQuadGLDraw() {
 	}
 
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	void CameraFrameHandler::onNewFrame(openni::VideoStream &) {
-		openni::VideoFrameRef frame;
-		m_pStream->readFrame(&frame);
+	bool TexturedQuadGLDraw::Do() {
+		glEnable(GL_CULL_FACE);
 
-		const void *pPBOData = frame.getData();
+		glBindVertexArray(m_vaId);
 
-		if(frame.getVideoMode().getPixelFormat() == 
-		   openni::PIXEL_FORMAT_DEPTH_1_MM) {
-			unsigned short* pData = (unsigned short*)frame.getData();
-			for(int i = 0; i < frame.getWidth()*frame.getHeight(); i++) {
-				if(pData[i] > 0) {
-					m_pBuffer[3*i] = m_pBuffer[3*i+1] = m_pBuffer[3*i+2] =
-						255 - pData[i] / 40;
-				}
-				else {
-					m_pBuffer[3*i] = 200;
-					m_pBuffer[3*i+1] = m_pBuffer[3*i+2] = 0;
-				}
-			}
-			pPBOData = m_pBuffer;
-		}
+		glBindTexture(GL_TEXTURE_2D, m_texId);
+		UpdateTexture();
 
-		m_pDraw->FillPBOFromBuffer(pPBOData,
-								   frame.getWidth(),
-								   frame.getHeight());
+		glUseProgram(m_pShaderReg->GetProgram("textured"));
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbVertId);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbUVId);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+		glUseProgram(0);
+	}
+
+	bool TexturedQuadGLDraw::GetBoundingBox(VistaBoundingBox &bb) {
+		bb.SetBounds( VistaVector3D(-1.0, -1.0, 0.0),
+					  VistaVector3D( 1.0,  1.0, 0.0) );
+		return true;
 	}
 }

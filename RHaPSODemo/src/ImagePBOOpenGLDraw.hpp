@@ -26,39 +26,30 @@
 
 #include <GL/gl.h>
 
-#include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
+#include <TexturedQuadGLDraw.hpp>
 
 class VistaMutex;
 
 namespace rhapsodies {
 	class ShaderRegistry;
 
-	class ImagePBOOpenGLDraw : public IVistaOpenGLDraw {
-		GLuint m_vaId;
-
-		GLuint m_vbVertId;
-		GLuint m_vbUVId;
-
+	class ImagePBOOpenGLDraw : public TexturedQuadGLDraw {
 		GLuint m_pboIds[2];
 		unsigned char m_pboIndex;
 		void *m_pPBO;
 
-		GLuint m_texId;
 		unsigned int m_texWidth;
 		unsigned int m_texHeight;
 		bool m_texUpdate;
-
-		ShaderRegistry *m_pShaderReg;
 
 		VistaMutex *m_pDrawMutex;
 
 	public:
 		ImagePBOOpenGLDraw(int width, int height,
 						   ShaderRegistry *pShaderReg);
-		~ImagePBOOpenGLDraw();
+		virtual ~ImagePBOOpenGLDraw();
 
-		virtual bool Do();
-		virtual bool GetBoundingBox(VistaBoundingBox &bb);
+		virtual void UpdateTexture();
 
 		bool FillPBOFromBuffer(const void*,
 							   int width, int height);

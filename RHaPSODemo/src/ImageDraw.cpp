@@ -41,22 +41,31 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	ImageDraw::ImageDraw(VistaGroupNode *pParentNode,
-						 VistaSceneGraph *pSG,
-						 ShaderRegistry *pShaderReg,
-						 int width, int height) {
+
+	/**
+	 * ImageDraw constructor
+	 *
+	 * The IVistaOpenGLDraw object ownership is transferred to the ImageDraw!
+	 * @todo: look into unique_ptr and move semantics to express this in code.
+	 */ 
+ 	ImageDraw::ImageDraw(VistaGroupNode *pParentNode,
+						 IVistaOpenGLDraw *pOGLDraw,
+						 VistaSceneGraph *pSG) :
+		m_pOGLDraw(pOGLDraw) {
 		m_pTransform = pSG->NewTransformNode(pParentNode);
-		m_pOGLDraw = new ImagePBOOpenGLDraw(width, height,
-											pShaderReg);
 		m_pOGLNode = pSG->NewOpenGLNode(m_pTransform, 
 										m_pOGLDraw);
 		m_pTransform->AddChild(m_pOGLNode);
 	}
 
+ 	ImageDraw::~ImageDraw() {
+		delete m_pOGLDraw;
+	}
+
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	ImagePBOOpenGLDraw *ImageDraw::GetImagePBODraw() {
+	IVistaOpenGLDraw *ImageDraw::GetGLDraw() {
 		return m_pOGLDraw;
 	}
 

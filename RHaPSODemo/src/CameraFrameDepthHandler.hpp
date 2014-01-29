@@ -1,6 +1,5 @@
 /*============================================================================*/
-/*                              ViSTA VR toolkit                              */
-/*               Copyright (c) 1997-2013 RWTH Aachen University               */
+/*                  Copyright (c) 2014 RWTH Aachen University                 */
 /*============================================================================*/
 /*                                  License                                   */
 /*                                                                            */
@@ -22,49 +21,26 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_RHAPSODEMO
-#define _RHAPSODIES_RHAPSODEMO
+#ifndef _RHAPSODIES_CAMERAFRAMEDEPTHHANDLER
+#define _RHAPSODIES_CAMERAFRAMEDEPTHHANDLER
 
-class VistaSystem;
-class VistaTransformNode;
-class VistaOpenGLNode;
-class CameraFrameColorHandler;
-class CameraFrameDepthHandler;
+#include <OpenNI.h>
 
 namespace rhapsodies {
-	class ImageDraw;
-	class ShaderRegistry;
-	class HandTracker;
+	class ImagePBOOpenGLDraw;
 
-	class RHaPSODemo {
-		int m_camWidth, m_camHeight;
-
-		VistaSystem *m_pSystem;
-		ShaderRegistry *m_pShaderReg;
-		HandTracker *m_pTracker;
-
-		VistaTransformNode *m_pSceneTransform;
-
-		ImageDraw *m_pColorDraw;
-		ImageDraw *m_pDepthDraw;
-		CameraFrameColorHandler *m_pColorFrameHandler;
-		CameraFrameDepthHandler *m_pDepthFrameHandler;
-		
-		bool InitTracker();
-		bool RegisterShaders();
-		bool CreateScene();
-
-		bool ParseConfig();
+	class CameraFrameDepthHandler :
+		public openni::VideoStream::NewFrameListener {
+		ImagePBOOpenGLDraw *m_pDraw;
+		openni::VideoStream *m_pStream;
+		unsigned char *m_pBuffer;
 
 	public:
-		RHaPSODemo();
-		~RHaPSODemo();
-
-		bool Initialize(int argc, char** argv);
-		bool Run();
-
-		static const std::string sRDIniFile;
+		CameraFrameDepthHandler(openni::VideoStream *pStream,
+								ImagePBOOpenGLDraw *pDraw);
+		virtual ~CameraFrameDepthHandler();
+		virtual void onNewFrame(openni::VideoStream &);
 	};
 }
 
-#endif // _RHAPSODIES_RHAPSODEMO
+#endif // _RHAPSODIES_CAMERAFRAMEDEPTHHANDLER

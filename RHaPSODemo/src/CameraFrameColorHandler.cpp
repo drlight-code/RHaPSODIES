@@ -21,29 +21,44 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_IMAGEDRAW
-#define _RHAPSODIES_IMAGEDRAW
+#include <iostream>
 
-class VistaSceneGraph;
-class VistaTransformNode;
-class VistaOpenGLNode;
-class VistaGroupNode;
+#include <ImagePBOOpenGLDraw.hpp>
+
+#include "CameraFrameColorHandler.hpp"
+
+/*============================================================================*/
+/* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
+/*============================================================================*/
+
+/*============================================================================*/
+/* LOCAL VARS AND FUNCS                                                       */
+/*============================================================================*/
 
 namespace rhapsodies {
-	class ImageDraw {
-		VistaTransformNode *m_pTransform;
-		IVistaOpenGLDraw   *m_pOGLDraw;
-		VistaOpenGLNode    *m_pOGLNode;
+/*============================================================================*/
+/* CONSTRUCTORS / DESTRUCTOR                                                  */
+/*============================================================================*/
+	CameraFrameColorHandler::CameraFrameColorHandler(openni::VideoStream *pStream,
+													 ImagePBOOpenGLDraw *pDraw) :
+		m_pStream(pStream),
+		m_pDraw(pDraw) {
+		pStream->addNewFrameListener(this);
+	}
 
-	public:
-		ImageDraw(VistaGroupNode *pParentNode,
-				  IVistaOpenGLDraw *pOGLDraw,
-				  VistaSceneGraph *pSG);
-		~ImageDraw();
+	CameraFrameColorHandler::~CameraFrameColorHandler() {
+		m_pStream->removeNewFrameListener(this);
+	}
 
-		IVistaOpenGLDraw *GetGLDraw();
-		VistaTransformNode *GetTransformNode();
-	};
+/*============================================================================*/
+/* IMPLEMENTATION                                                             */
+/*============================================================================*/
+	void CameraFrameColorHandler::onNewFrame(openni::VideoStream &) {
+		openni::VideoFrameRef frame;
+		m_pStream->readFrame(&frame);
+
+		m_pDraw->FillPBOFromBuffer(frame.getData(),
+								   frame.getWidth(),
+								   frame.getHeight());
+	}
 }
-
-#endif // _RHAPSODIES_IMAGEDRAW

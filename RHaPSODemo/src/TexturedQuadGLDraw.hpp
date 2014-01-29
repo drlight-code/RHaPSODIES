@@ -1,6 +1,5 @@
 /*============================================================================*/
-/*                              ViSTA VR toolkit                              */
-/*               Copyright (c) 1997-2013 RWTH Aachen University               */
+/*                  Copyright (c) 2014 RWTH Aachen University                 */
 /*============================================================================*/
 /*                                  License                                   */
 /*                                                                            */
@@ -22,49 +21,31 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_RHAPSODEMO
-#define _RHAPSODIES_RHAPSODEMO
+#ifndef _RHAPSODIES_TEXTUREDQUADGLDRAW
+#define _RHAPSODIES_TEXTUREDQUADGLDRAW
 
-class VistaSystem;
-class VistaTransformNode;
-class VistaOpenGLNode;
-class CameraFrameColorHandler;
-class CameraFrameDepthHandler;
+#include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 
 namespace rhapsodies {
-	class ImageDraw;
 	class ShaderRegistry;
-	class HandTracker;
 
-	class RHaPSODemo {
-		int m_camWidth, m_camHeight;
+	class TexturedQuadGLDraw : public IVistaOpenGLDraw {
+		GLuint m_vaId;
+		GLuint m_vbVertId;
+		GLuint m_vbUVId;
+		GLuint m_texId;
 
-		VistaSystem *m_pSystem;
 		ShaderRegistry *m_pShaderReg;
-		HandTracker *m_pTracker;
-
-		VistaTransformNode *m_pSceneTransform;
-
-		ImageDraw *m_pColorDraw;
-		ImageDraw *m_pDepthDraw;
-		CameraFrameColorHandler *m_pColorFrameHandler;
-		CameraFrameDepthHandler *m_pDepthFrameHandler;
-		
-		bool InitTracker();
-		bool RegisterShaders();
-		bool CreateScene();
-
-		bool ParseConfig();
 
 	public:
-		RHaPSODemo();
-		~RHaPSODemo();
+		TexturedQuadGLDraw(ShaderRegistry *pShaderReg);
+		virtual ~TexturedQuadGLDraw();
 
-		bool Initialize(int argc, char** argv);
-		bool Run();
+		virtual bool Do();
+		virtual bool GetBoundingBox(VistaBoundingBox &bb);
 
-		static const std::string sRDIniFile;
+		virtual void UpdateTexture()=0;
 	};
 }
 
-#endif // _RHAPSODIES_RHAPSODEMO
+#endif // _RHAPSODIES_TEXTUREDQUADGLDRAW
