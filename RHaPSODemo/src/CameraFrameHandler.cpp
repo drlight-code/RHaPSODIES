@@ -21,40 +21,46 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_IMAGEPBOOPENGLDRAW
-#define _RHAPSODIES_IMAGEPBOOPENGLDRAW
+#include <CameraFrameHandler.hpp>
 
-#include <GL/gl.h>
+/*============================================================================*/
+/* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
+/*============================================================================*/
 
-#include <TexturedQuadGLDraw.hpp>
-
-class VistaMutex;
+/*============================================================================*/
+/* LOCAL VARS AND FUNCS                                                       */
+/*============================================================================*/
 
 namespace rhapsodies {
-	class ShaderRegistry;
+/*============================================================================*/
+/* CONSTRUCTORS / DESTRUCTOR                                                  */
+/*============================================================================*/
+	CameraFrameHandler::CameraFrameHandler(openni::VideoStream *pStream,
+										   ImagePBOOpenGLDraw *pDraw) :
+		m_pStream(pStream),
+		m_pDraw(pDraw),
+		m_bEnabled(false) {
+	}
 
-	class ImagePBOOpenGLDraw : public TexturedQuadGLDraw {
-		GLuint m_pboIds[2];
-		unsigned char m_pboIndex;
-		void *m_pPBO;
+	CameraFrameHandler::~CameraFrameHandler() {
+		if(m_bEnabled)
+			m_pStream->removeNewFrameListener(this);
+	}
 
-		unsigned int m_texWidth;
-		unsigned int m_texHeight;
-		bool m_texUpdate;
+/*============================================================================*/
+/* IMPLEMENTATION                                                             */
+/*============================================================================*/
+	bool CameraFrameHandler::Enable(bool bEnable) {
+		if(bEnable)
+			m_pStream->addNewFrameListener(this);
+		else
+			m_pStream->removeNewFrameListener(this);
+		m_bEnabled = bEnable;
 
-		VistaMutex *m_pDrawMutex;
-
-	public:
-		ImagePBOOpenGLDraw(int width, int height,
-						   ShaderRegistry *pShaderReg,
-						   VistaMutex *pDrawMutex);
-		virtual ~ImagePBOOpenGLDraw();
-
-		virtual void UpdateTexture();
-
-		bool FillPBOFromBuffer(const void*,
-							   int width, int height);
-	};
+		return true;
+	}
+	
+	ImagePBOOpenGLDraw *CameraFrameHandler::GetPBODraw() {
+		return m_pDraw;
+	}
 }
-
-#endif // _RHAPSODIES_IMAGEPBOOPENGLDRAW

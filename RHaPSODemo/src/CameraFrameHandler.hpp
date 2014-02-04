@@ -1,6 +1,5 @@
 /*============================================================================*/
-/*                              ViSTA VR toolkit                              */
-/*               Copyright (c) 1997-2013 RWTH Aachen University               */
+/*                  Copyright (c) 2014 RWTH Aachen University                 */
 /*============================================================================*/
 /*                                  License                                   */
 /*                                                                            */
@@ -22,56 +21,29 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_RHAPSODEMO
-#define _RHAPSODIES_RHAPSODEMO
+#ifndef _RHAPSODIES_CAMERAFRAMEHANDLER
+#define _RHAPSODIES_CAMERAFRAMEHANDLER
 
-class VistaMutex;
-class VistaSystem;
-class VistaTransformNode;
-class VistaOpenGLNode;
-class CameraFrameColorHandler;
-class CameraFrameDepthHandler;
+#include <OpenNI.h>
 
 namespace rhapsodies {
-	class ImageDraw;
-	class ShaderRegistry;
-	class HandTracker;
-	class DrawMutexHandler;
+	class ImagePBOOpenGLDraw;
 
-	class RHaPSODemo {
-		int m_camWidth, m_camHeight;
-
-		VistaSystem *m_pSystem;
-		ShaderRegistry *m_pShaderReg;
-		HandTracker *m_pTracker;
-
-		VistaTransformNode *m_pSceneTransform;
-		VistaTransformNode *m_pDiagramTransform;
-
-		ImageDraw *m_pDiagramDraw;
-		ImageDraw *m_pColorDraw;
-		ImageDraw *m_pDepthDraw;
-		CameraFrameColorHandler *m_pColorFrameHandler;
-		CameraFrameDepthHandler *m_pDepthFrameHandler;
-
-		VistaMutex *m_pDrawMutex;
-		DrawMutexHandler *m_pMutexHandler;
-		
-		bool InitTracker();
-		bool RegisterShaders();
-		bool CreateScene();
-
-		bool ParseConfig();
+	class CameraFrameHandler :
+		public openni::VideoStream::NewFrameListener {
+		ImagePBOOpenGLDraw *m_pDraw;
+		openni::VideoStream *m_pStream;
+		bool m_bEnabled;
 
 	public:
-		RHaPSODemo();
-		~RHaPSODemo();
+		CameraFrameHandler(openni::VideoStream *pStream,
+						   ImagePBOOpenGLDraw *pDraw);
+		virtual ~CameraFrameHandler();
 
-		bool Initialize(int argc, char** argv);
-		bool Run();
+		bool Enable(bool bEnable);
 
-		static const std::string sRDIniFile;
-	};
+		ImagePBOOpenGLDraw *GetPBODraw();
+  };
 }
 
-#endif // _RHAPSODIES_RHAPSODEMO
+#endif // _RHAPSODIES_CAMERAFRAMEHANDLER

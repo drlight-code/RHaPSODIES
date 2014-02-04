@@ -23,6 +23,10 @@
 
 #include <iostream>
 
+#include <Vfl2DDiagrams/Diagrams/V2dDiagramDefault.h>
+#include <Vfl2DDiagrams/V2dDiagramTextureVista.h>
+#include <Vfl2DDiagrams/Data/V2dDataSeriesTypes.h>
+
 #include <ImagePBOOpenGLDraw.hpp>
 
 #include "CameraFrameDepthHandler.hpp"
@@ -41,39 +45,76 @@ namespace rhapsodies {
 /*============================================================================*/
 	CameraFrameDepthHandler::CameraFrameDepthHandler(openni::VideoStream *pStream,
 													 ImagePBOOpenGLDraw *pDraw) :
-		m_pStream(pStream),
-		m_pDraw(pDraw) {
+		CameraFrameHandler(pStream, pDraw) {
+		m_pDiagram = new V2dDiagramDefault(
+			V2dDiagramDefault::AT_NOMINAL,
+			V2dDiagramDefault::AT_CONTINUOUS,
+			V2dDiagramDefault::DT_BARS_VERTICAL);
+		m_pDiagramTexture = new V2dDiagramTextureVista(1024, m_pDiagram);
+
+		m_pDataSeries = new V2dDataSeriesFloatOverString();
+		m_pDataSeries->SetName("depth histogram");
+		m_pDataSeries->AddDataPoint("fake", 0.0f);
+		
+		m_pDiagram->AddData(m_pDataSeries);
+
 		openni::VideoMode vm = pStream->getVideoMode();
 		m_pBuffer =	new unsigned char[vm.getResolutionX()*
 									  vm.getResolutionY()*3];
-		pStream->addNewFrameListener(this);
 	}
 
 	CameraFrameDepthHandler::~CameraFrameDepthHandler() {
 		delete [] m_pBuffer;
-		m_pStream->removeNewFrameListener(this);
+		delete m_pDataSeries;
+		delete m_pDiagramTexture;
+		delete m_pDiagram;
 	}
 
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	void CameraFrameDepthHandler::onNewFrame(openni::VideoStream &) {
+	void CameraFrameDepthHandler::onNewFrame(openni::VideoStream &stream) {
 		openni::VideoFrameRef frame;
-		m_pStream->readFrame(&frame);
+		stream.readFrame(&frame);
+
+		int nBins = 15;
+		int zeroes = 0;
+		int aBins[nBins];
+		int minVal = stream.getMinPixelValue()+1;
+		int maxVal = stream.getMaxPixelValue();
+		int binWidth = (maxVal - minVal) / nBins;
 
 		unsigned short* pData = (unsigned short*)frame.getData();
 		for(int i = 0; i < frame.getWidth()*frame.getHeight(); i++) {
-			if(pData[i] > 0) {
-				m_pBuffer[3*i] = m_pBuffer[3*i+1] = /*m_pBuffer[3*i+2] =*/
-					255 - pData[i] / 40;
+			unsigned short val = pData[i];
+
+			// convert to RGB888 buffer
+			if(val > 0) {
+				m_pBuffer[3*i] = m_pBuffer[3*i+1] = 
+					255 - val / 40;
 			}
 			else {
 				m_pBuffer[3*i] = 200;
 				m_pBuffer[3*i+1] = m_pBuffer[3*i+2] = 0;
 			}
+			// calculate histogram
+			if(val == 0)
+				zeroes++;
+			else {
+				aBins[(val-1)/binWidth]++;
+			}			
 		}
-		m_pDraw->FillPBOFromBuffer(m_pBuffer,
-								   frame.getWidth(),
-								   frame.getHeight());
+		m_pDataSeries->AddDataPoint("0", zeroes);
+		for(int i = 0; i < nBins; i++) {
+			m_pDataSeries->AddDataPoint("bin", aBins[i]);
+		}
+		
+		GetPBODraw()->FillPBOFromBuffer(m_pBuffer,
+										frame.getWidth(),
+										frame.getHeight());
+	}
+
+	V2dDiagramTextureVista *CameraFrameDepthHandler::GetDiagramTexture() {
+		return m_pDiagramTexture;
 	}
 }

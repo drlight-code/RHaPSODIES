@@ -24,16 +24,10 @@
 #ifndef _RHAPSODIES_CAMERAFRAMECOLORHANDLER
 #define _RHAPSODIES_CAMERAFRAMECOLORHANDLER
 
-#include <OpenNI.h>
+#include <CameraFrameHandler.hpp>
 
 namespace rhapsodies {
-	class ImagePBOOpenGLDraw;
-
-	class CameraFrameColorHandler :
-		public openni::VideoStream::NewFrameListener {
-		ImagePBOOpenGLDraw *m_pDraw;
-		openni::VideoStream *m_pStream;
-	  
+	class CameraFrameColorHandler : public CameraFrameHandler {
 	public:
 		CameraFrameColorHandler(openni::VideoStream *pStream,
 								ImagePBOOpenGLDraw *pDraw);

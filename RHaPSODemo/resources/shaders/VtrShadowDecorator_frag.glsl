@@ -1,5 +1,6 @@
 /*============================================================================*/
-/*                  Copyright (c) 2014 RWTH Aachen University                 */
+/*                                 VistaFlowLib                               */
+/*               Copyright (c) 1998-2011 RWTH Aachen University               */
 /*============================================================================*/
 /*                                  License                                   */
 /*                                                                            */
@@ -19,43 +20,55 @@
 /*                                Contributors                                */
 /*                                                                            */
 /*============================================================================*/
-// $Id: $
+// $Id: VtrShadowDecorator_frag.glsl 34582 2013-04-16 11:22:17Z sf458740 $
+/*============================================================================*/
+/* UNIFORM VARIABLES														  */
+/*============================================================================*/
+uniform int u_iWidth;
+uniform int u_iHeight;
+uniform int u_iShadowSize;
 
-#include <iostream>
+uniform ivec2 u_v2ShadowDir;
+uniform ivec2 u_v2Offset;
 
-#include <ImagePBOOpenGLDraw.hpp>
+uniform vec4 u_v4TextColor;
+uniform vec4 u_v4ShadowColor;
 
-#include "CameraFrameColorHandler.hpp"
+uniform sampler2D texSamplerTMU0;
 
 /*============================================================================*/
-/* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
+/* SHADER MAIN																  */
 /*============================================================================*/
+void main(void)
+{
+	vec2 v2Cood = gl_FragCoord.xy - u_v2Offset;
+	
+	vec4 v4Color = texture2D( texSamplerTMU0, vec2( v2Cood.x/u_iWidth, v2Cood.y/u_iHeight ) );
+	float fAlpha = v4Color.a;
 
-/*============================================================================*/
-/* LOCAL VARS AND FUNCS                                                       */
-/*============================================================================*/
-
-namespace rhapsodies {
-/*============================================================================*/
-/* CONSTRUCTORS / DESTRUCTOR                                                  */
-/*============================================================================*/
-	CameraFrameColorHandler::CameraFrameColorHandler(openni::VideoStream *pStream,
-													 ImagePBOOpenGLDraw *pDraw) :
-		CameraFrameHandler(pStream, pDraw) {
+	v2Cood -= u_v2ShadowDir;
+	
+	float fSum = 0;
+	for(int x = -u_iShadowSize+1; x < u_iShadowSize; ++x)
+	{
+		for(int y = -u_iShadowSize+1; y < u_iShadowSize; ++y)
+		{
+			if(x*x + y*y < u_iShadowSize*u_iShadowSize)
+			{
+				float fX = (v2Cood.x+x) / u_iWidth;
+				float fY = (v2Cood.y+y) / u_iHeight;
+				fSum += texture2D( texSamplerTMU0, vec2( fX, fY ) ).a;
+			}
+		}
 	}
+	
+	fSum = clamp( fSum/(4*u_iShadowSize*u_iShadowSize), 0.0, 1.0 );
+	
+	v4Color = mix( u_v4ShadowColor*fSum, u_v4TextColor*v4Color, fAlpha );
 
-	CameraFrameColorHandler::~CameraFrameColorHandler() {
-	}
-
-/*============================================================================*/
-/* IMPLEMENTATION                                                             */
-/*============================================================================*/
-	void CameraFrameColorHandler::onNewFrame(openni::VideoStream &stream) {
-		openni::VideoFrameRef frame;
-		stream.readFrame(&frame);
-
-		GetPBODraw()->FillPBOFromBuffer(frame.getData(),
-										frame.getWidth(),
-										frame.getHeight());
-	}
+	//gl_FragColor = vec4( gl_FragCoord.x/u_iWidth, gl_FragCoord.y/u_iHeight, 0.0f, 1.0f);
+	gl_FragColor = v4Color;
 }
+/*============================================================================*/
+/* END OF FILE																  */
+/*============================================================================*/

@@ -1,5 +1,6 @@
 /*============================================================================*/
-/*                  Copyright (c) 2014 RWTH Aachen University                 */
+/*                                 VistaFlowLib                               */
+/*               Copyright (c) 1998-2011 RWTH Aachen University               */
 /*============================================================================*/
 /*                                  License                                   */
 /*                                                                            */
@@ -19,43 +20,52 @@
 /*                                Contributors                                */
 /*                                                                            */
 /*============================================================================*/
-// $Id: $
+// $Id: VtrHaloDecorator_frag.glsl 34582 2013-04-16 11:22:17Z sf458740 $
+/*============================================================================*/
+/* UNIFORM VARIABLES														  */
+/*============================================================================*/
+uniform int u_iWidth;
+uniform int u_iHeight;
+uniform int u_iHaloSize;
 
-#include <iostream>
+uniform vec4 u_v4TextColor;
+uniform vec4 u_v4HaloColor;
 
-#include <ImagePBOOpenGLDraw.hpp>
-
-#include "CameraFrameColorHandler.hpp"
+uniform sampler2D texSamplerTMU0;
 
 /*============================================================================*/
-/* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
+/* SHADER MAIN																  */
 /*============================================================================*/
-
-/*============================================================================*/
-/* LOCAL VARS AND FUNCS                                                       */
-/*============================================================================*/
-
-namespace rhapsodies {
-/*============================================================================*/
-/* CONSTRUCTORS / DESTRUCTOR                                                  */
-/*============================================================================*/
-	CameraFrameColorHandler::CameraFrameColorHandler(openni::VideoStream *pStream,
-													 ImagePBOOpenGLDraw *pDraw) :
-		CameraFrameHandler(pStream, pDraw) {
+void main(void)
+{
+	vec2 v2Cood = gl_FragCoord.xy - vec2(u_iHaloSize);
+	
+	float fAlpha = 0;
+	for(int x = -u_iHaloSize+1; x < u_iHaloSize; ++x)
+	{
+		for(int y = -u_iHaloSize+1; y < u_iHaloSize; ++y)
+		{
+			if(x*x + y*y < u_iHaloSize*u_iHaloSize)
+			{
+				float fX = (v2Cood.x+x) / u_iWidth;
+				float fY = (v2Cood.y+y) / u_iHeight;
+				fAlpha += texture2D( texSamplerTMU0, vec2( fX, fY ) ).a;
+			}
+		}
 	}
+	
+	fAlpha = clamp( fAlpha, 0.0, 1.0 );
 
-	CameraFrameColorHandler::~CameraFrameColorHandler() {
-	}
-
-/*============================================================================*/
-/* IMPLEMENTATION                                                             */
-/*============================================================================*/
-	void CameraFrameColorHandler::onNewFrame(openni::VideoStream &stream) {
-		openni::VideoFrameRef frame;
-		stream.readFrame(&frame);
-
-		GetPBODraw()->FillPBOFromBuffer(frame.getData(),
-										frame.getWidth(),
-										frame.getHeight());
-	}
+	vec4 v4Color = texture2D( texSamplerTMU0, vec2( v2Cood.x/u_iWidth, v2Cood.y/u_iHeight ) );
+	
+	float f = 1 - v4Color.a;
+	
+	v4Color = mix( u_v4TextColor*v4Color, u_v4HaloColor, f );
+	
+	v4Color.a   *= fAlpha;
+	//vec4 v4Color = vec4( gl_FragCoord.x/u_iWidth, gl_FragCoord.y/u_iHeight, 0.0f, 1.0f);
+	gl_FragColor = v4Color;
 }
+/*============================================================================*/
+/* END OF FILE																  */
+/*============================================================================*/

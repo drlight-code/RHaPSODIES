@@ -21,40 +21,42 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_IMAGEPBOOPENGLDRAW
-#define _RHAPSODIES_IMAGEPBOOPENGLDRAW
+#include <iostream>
 
-#include <GL/gl.h>
+#include <VistaInterProcComm/Concurrency/VistaMutex.h>
+#include <VistaKernel/EventManager/VistaEvent.h>
+#include <VistaKernel/EventManager/VistaSystemEvent.h>
 
-#include <TexturedQuadGLDraw.hpp>
+#include "DrawMutexHandler.hpp"
 
-class VistaMutex;
+/*============================================================================*/
+/* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
+/*============================================================================*/
+
+/*============================================================================*/
+/* LOCAL VARS AND FUNCS                                                       */
+/*============================================================================*/
 
 namespace rhapsodies {
-	class ShaderRegistry;
-
-	class ImagePBOOpenGLDraw : public TexturedQuadGLDraw {
-		GLuint m_pboIds[2];
-		unsigned char m_pboIndex;
-		void *m_pPBO;
-
-		unsigned int m_texWidth;
-		unsigned int m_texHeight;
-		bool m_texUpdate;
-
-		VistaMutex *m_pDrawMutex;
-
-	public:
-		ImagePBOOpenGLDraw(int width, int height,
-						   ShaderRegistry *pShaderReg,
-						   VistaMutex *pDrawMutex);
-		virtual ~ImagePBOOpenGLDraw();
-
-		virtual void UpdateTexture();
-
-		bool FillPBOFromBuffer(const void*,
-							   int width, int height);
-	};
+/*============================================================================*/
+/* CONSTRUCTORS / DESTRUCTOR                                                  */
+/*============================================================================*/
+	DrawMutexHandler::DrawMutexHandler(VistaMutex *pMutex) :
+		m_pMutex(pMutex) {
+	}
+	
+/*============================================================================*/
+/* IMPLEMENTATION                                                             */
+/*============================================================================*/
+	void DrawMutexHandler::Notify(const VistaEvent *pEvent) {
+		// we handle only system events
+		if(pEvent->GetType() == VistaSystemEvent::GetTypeId()) {
+			if(pEvent->GetId() == VistaSystemEvent::VSE_PREGRAPHICS) {
+				m_pMutex->Lock();
+			}
+			else if(pEvent->GetId() == VistaSystemEvent::VSE_POSTGRAPHICS) {
+				m_pMutex->Unlock();
+			}				
+		}
+	}
 }
-
-#endif // _RHAPSODIES_IMAGEPBOOPENGLDRAW

@@ -23,6 +23,8 @@
 
 #include <GL/glew.h>
 
+#include <VistaInterProcComm/Concurrency/VistaMutex.h>
+
 #include <VistaTools/VistaProfiler.h>
 
 #include <VistaKernel/VistaSystem.h>
@@ -38,12 +40,20 @@
 #include <VistaKernel/EventManager/VistaEventManager.h>
 #include <VistaKernel/EventManager/VistaSystemEvent.h>
 
+#include <VflTextRendering/VtrFontManager.h>
+#include <VistaOGLExt/VistaShaderRegistry.h>
+
+#include <Vfl2DDiagrams/V2dGlobalConfig.h>
+#include <Vfl2DDiagrams/Diagrams/V2dDiagramDefault.h>
+#include <Vfl2DDiagrams/V2dDiagramTextureVista.h>
+
 #include <ImageDraw.hpp>
 #include <ImagePBOOpenGLDraw.hpp>
 #include <CameraFrameColorHandler.hpp>
 #include <CameraFrameDepthHandler.hpp>
 #include <ShaderRegistry.hpp>
 #include <HandTracker.hpp>
+#include <DrawMutexHandler.hpp>
 
 #include "RHaPSODemo.hpp"
 
@@ -66,6 +76,7 @@ namespace rhapsodies {
 		m_pSystem(new VistaSystem),
 		m_pShaderReg(new ShaderRegistry),
 		m_pTracker(new HandTracker),
+		m_pDrawMutex(new VistaMutex),
 		m_camWidth(640), m_camHeight(480) {
 	}
 
@@ -87,6 +98,10 @@ namespace rhapsodies {
 
 		success &= m_pSystem->Init(argc, argv);
 		glewInit();
+
+		VtrFontManager::GetInstance()->SetFontDirectory("resources/fonts/");
+		VistaShaderRegistry::GetInstance().AddSearchDirectory("resources/shaders/");
+		V2dGlobalConfig::GetInstance()->SetDefaultFont("FreeSans.ttf");
 
 		success &= InitTracker();
    		success &= RegisterShaders();
@@ -147,22 +162,40 @@ namespace rhapsodies {
 	bool RHaPSODemo::CreateScene() {
 		VistaSceneGraph *pSG = m_pSystem->GetGraphicsManager()->GetSceneGraph();
 
+		// pre/post draw event observer for draw lock mutex
+		m_pMutexHandler = new DrawMutexHandler(m_pDrawMutex);
+		m_pSystem->GetEventManager()->RegisterObserver(
+			m_pMutexHandler, VistaSystemEvent::GetTypeId());
+
 		// create global scene transform
 		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
-		m_pSceneTransform->Translate(0, 0, -1.3);
+		m_pSceneTransform->Translate(0, 0, -2.2);
 
+		// ImageDraw for color image
 		ImagePBOOpenGLDraw *pPBODraw = 
-			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
+								   m_pShaderReg, m_pDrawMutex);
 		m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pColorFrameHandler = new CameraFrameColorHandler(
 			&m_pTracker->GetColorStream(), pPBODraw);
-		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-1.1,0,0));
+		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,0,0));
 
-		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		// ImageDraw for depth image
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
+										  m_pShaderReg, m_pDrawMutex);
 		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pDepthFrameHandler = new CameraFrameDepthHandler(
 			&m_pTracker->GetDepthStream(), pPBODraw);
-		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(1.1,0,0));
+		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,0,0));
+
+		// ImageDraw for histogram
+		m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
+									   m_pDepthFrameHandler->GetDiagramTexture(),
+									   pSG);
+		m_pDiagramDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,0,0));
+
+		m_pColorFrameHandler->Enable(true);
+		m_pDepthFrameHandler->Enable(true);
 
 		return true;
 	}
@@ -170,5 +203,4 @@ namespace rhapsodies {
 	bool RHaPSODemo::Run() {
 		return m_pSystem->Run();
 	}
-
 }

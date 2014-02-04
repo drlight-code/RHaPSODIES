@@ -24,22 +24,33 @@
 #ifndef _RHAPSODIES_CAMERAFRAMEDEPTHHANDLER
 #define _RHAPSODIES_CAMERAFRAMEDEPTHHANDLER
 
-#include <OpenNI.h>
+#include <CameraFrameHandler.hpp>
+
+// @todo forward declare the data series, mon!
+#include <Vfl2DDiagrams/Data/V2dDataSeriesTypes.h>
+
+class V2dDiagramDefault;
+class V2dDiagramTextureVista;
 
 namespace rhapsodies {
 	class ImagePBOOpenGLDraw;
 
 	class CameraFrameDepthHandler :
-		public openni::VideoStream::NewFrameListener {
-		ImagePBOOpenGLDraw *m_pDraw;
-		openni::VideoStream *m_pStream;
+		public CameraFrameHandler {
 		unsigned char *m_pBuffer;
+
+		V2dDiagramDefault *m_pDiagram;
+		V2dDiagramTextureVista *m_pDiagramTexture;
+		V2dDataSeriesFloatOverString *m_pDataSeries;
 
 	public:
 		CameraFrameDepthHandler(openni::VideoStream *pStream,
 								ImagePBOOpenGLDraw *pDraw);
 		virtual ~CameraFrameDepthHandler();
+
 		virtual void onNewFrame(openni::VideoStream &);
+
+		V2dDiagramTextureVista *GetDiagramTexture();
 	};
 }
 

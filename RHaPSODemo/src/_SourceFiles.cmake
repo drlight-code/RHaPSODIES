@@ -9,8 +9,10 @@ set( DirFiles
   	ImageDraw.cpp
 	TexturedQuadGLDraw.cpp
 	ImagePBOOpenGLDraw.cpp
+	CameraFrameHandler.cpp
 	CameraFrameDepthHandler.cpp
 	CameraFrameColorHandler.cpp
+	DrawMutexHandler.cpp
   	ShaderRegistry.cpp
   	HandTracker.cpp
 	_SourceFiles.cmake

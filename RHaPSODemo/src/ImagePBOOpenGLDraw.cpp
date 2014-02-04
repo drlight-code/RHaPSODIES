@@ -43,9 +43,10 @@ namespace rhapsodies {
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
 	ImagePBOOpenGLDraw::ImagePBOOpenGLDraw(int width, int height,
-										   ShaderRegistry *pShaderReg) :
+										   ShaderRegistry *pShaderReg,
+										   VistaMutex *pDrawMutex) :
 		TexturedQuadGLDraw(pShaderReg),
-		m_pDrawMutex(new VistaMutex),
+		m_pDrawMutex(pDrawMutex),
 		m_pboIndex(0),
 		m_texUpdate(false),
 		m_texWidth(width),
@@ -64,6 +65,8 @@ namespace rhapsodies {
 				texData[i] = 255;
 		}
 
+
+		m_pDrawMutex->Lock();
 		glGenBuffers(2, m_pboIds);
 
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
@@ -93,6 +96,7 @@ namespace rhapsodies {
 
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
+		m_pDrawMutex->Unlock();
 	}
 
 	ImagePBOOpenGLDraw::~ImagePBOOpenGLDraw() {
@@ -119,6 +123,7 @@ namespace rhapsodies {
 						 m_pboIds[m_pboIndex]);
 			m_pPBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
 								 GL_WRITE_ONLY);
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 		}
 		m_pDrawMutex->Unlock();
 	}
