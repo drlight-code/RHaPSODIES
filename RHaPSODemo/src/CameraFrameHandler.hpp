@@ -41,6 +41,7 @@ namespace rhapsodies {
 		virtual ~CameraFrameHandler();
 
 		bool Enable(bool bEnable);
+		bool isEnabled();
 
 		ImagePBOOpenGLDraw *GetPBODraw();
   };

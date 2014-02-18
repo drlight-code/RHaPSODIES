@@ -21,42 +21,27 @@
 /*============================================================================*/
 // $Id: $
 
-#include <iostream>
+#ifndef _RHAPSODIES_DRAWMUTEXUPDATER
+#define _RHAPSODIES_DRAWMUTEXUPDATER
 
-#include <VistaInterProcComm/Concurrency/VistaMutex.h>
-#include <VistaKernel/EventManager/VistaEvent.h>
-#include <VistaKernel/EventManager/VistaSystemEvent.h>
+#include <VistaKernel/EventManager/VistaEventObserver.h>
 
-#include "DrawMutexHandler.hpp"
-
-/*============================================================================*/
-/* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
-/*============================================================================*/
-
-/*============================================================================*/
-/* LOCAL VARS AND FUNCS                                                       */
-/*============================================================================*/
+class VistaThreadEvent;
+class V2dDiagramDefault;
 
 namespace rhapsodies {
-/*============================================================================*/
-/* CONSTRUCTORS / DESTRUCTOR                                                  */
-/*============================================================================*/
-	DrawMutexHandler::DrawMutexHandler(VistaMutex *pMutex) :
-		m_pMutex(pMutex) {
-	}
-	
-/*============================================================================*/
-/* IMPLEMENTATION                                                             */
-/*============================================================================*/
-	void DrawMutexHandler::Notify(const VistaEvent *pEvent) {
-		// we handle only system events
-		if(pEvent->GetType() == VistaSystemEvent::GetTypeId()) {
-			if(pEvent->GetId() == VistaSystemEvent::VSE_PREGRAPHICS) {
-				m_pMutex->Lock();
-			}
-			else if(pEvent->GetId() == VistaSystemEvent::VSE_POSTGRAPHICS) {
-				m_pMutex->Unlock();
-			}				
-		}
-	}
+	class HistogramUpdater : public VistaEventObserver {
+		V2dDiagramDefault *m_pDiag;
+		VistaThreadEvent *m_pThreadEvent;
+
+	public:
+		HistogramUpdater(V2dDiagramDefault *pDiag);
+		~HistogramUpdater();
+
+		virtual void Notify(const VistaEvent *pEvent);
+
+		VistaThreadEvent *GetThreadEvent();
+	};
 }
+
+#endif // _RHAPSODIES_DRAWMUTEXUPDATER

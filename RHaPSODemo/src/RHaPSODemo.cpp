@@ -53,7 +53,7 @@
 #include <CameraFrameDepthHandler.hpp>
 #include <ShaderRegistry.hpp>
 #include <HandTracker.hpp>
-#include <DrawMutexHandler.hpp>
+#include <HistogramUpdater.hpp>
 
 #include "RHaPSODemo.hpp"
 
@@ -81,8 +81,13 @@ namespace rhapsodies {
 	}
 
 	RHaPSODemo::~RHaPSODemo() {
+		delete m_pColorFrameHandler;
+		delete m_pDepthFrameHandler;
+
 		delete m_pColorDraw;
 		delete m_pDepthDraw;
+		delete m_pDiagramDraw;
+
 		delete m_pTracker;
 		delete m_pShaderReg;
 		delete m_pSystem;
@@ -162,11 +167,6 @@ namespace rhapsodies {
 	bool RHaPSODemo::CreateScene() {
 		VistaSceneGraph *pSG = m_pSystem->GetGraphicsManager()->GetSceneGraph();
 
-		// pre/post draw event observer for draw lock mutex
-		m_pMutexHandler = new DrawMutexHandler(m_pDrawMutex);
-		m_pSystem->GetEventManager()->RegisterObserver(
-			m_pMutexHandler, VistaSystemEvent::GetTypeId());
-
 		// create global scene transform
 		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
 		m_pSceneTransform->Translate(0, 0, -2.2);
@@ -193,6 +193,11 @@ namespace rhapsodies {
 									   m_pDepthFrameHandler->GetDiagramTexture(),
 									   pSG);
 		m_pDiagramDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,0,0));
+
+
+		m_pSystem->GetEventManager()->RegisterObserver(
+		  	m_pDepthFrameHandler->GetHistogramUpdater(),
+		 	VistaSystemEvent::GetTypeId());
 
 		m_pColorFrameHandler->Enable(true);
 		m_pDepthFrameHandler->Enable(true);

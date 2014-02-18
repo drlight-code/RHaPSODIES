@@ -34,6 +34,7 @@ class V2dDiagramTextureVista;
 
 namespace rhapsodies {
 	class ImagePBOOpenGLDraw;
+	class HistogramUpdater;
 
 	class CameraFrameDepthHandler :
 		public CameraFrameHandler {
@@ -41,8 +42,13 @@ namespace rhapsodies {
 
 		V2dDiagramDefault *m_pDiagram;
 		V2dDiagramTextureVista *m_pDiagramTexture;
-		V2dDataSeriesFloatOverString *m_pDataSeries;
+		V2dDataSeriesIntContinuousOverString *m_pDataSeries;
 
+		int m_iHistDrawCounter;
+		int m_iHistDrawInterval;
+		int m_iHistNumBins;
+		HistogramUpdater *m_pHistUpdater;
+		
 	public:
 		CameraFrameDepthHandler(openni::VideoStream *pStream,
 								ImagePBOOpenGLDraw *pDraw);
@@ -51,6 +57,7 @@ namespace rhapsodies {
 		virtual void onNewFrame(openni::VideoStream &);
 
 		V2dDiagramTextureVista *GetDiagramTexture();
+		HistogramUpdater *GetHistogramUpdater();
 	};
 }
 

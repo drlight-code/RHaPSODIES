@@ -12,7 +12,7 @@ set( DirFiles
 	CameraFrameHandler.cpp
 	CameraFrameDepthHandler.cpp
 	CameraFrameColorHandler.cpp
-	DrawMutexHandler.cpp
+	HistogramUpdater.cpp
   	ShaderRegistry.cpp
   	HandTracker.cpp
 	_SourceFiles.cmake

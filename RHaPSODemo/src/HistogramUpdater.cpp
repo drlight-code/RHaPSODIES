@@ -21,7 +21,16 @@
 /*============================================================================*/
 // $Id: $
 
-#include <CameraFrameHandler.hpp>
+#include <iostream>
+
+#include <VistaInterProcComm/Concurrency/VistaThreadEvent.h>
+
+#include <VistaKernel/EventManager/VistaEvent.h>
+#include <VistaKernel/EventManager/VistaSystemEvent.h>
+
+#include <Vfl2DDiagrams/Diagrams/V2dDiagramDefault.h>
+
+#include "HistogramUpdater.hpp"
 
 /*============================================================================*/
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
@@ -35,35 +44,31 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	CameraFrameHandler::CameraFrameHandler(openni::VideoStream *pStream,
-										   ImagePBOOpenGLDraw *pDraw) :
-		m_pStream(pStream),
-		m_pDraw(pDraw),
-		m_bEnabled(false) {
+	HistogramUpdater::HistogramUpdater(V2dDiagramDefault *pDiag) :
+		m_pThreadEvent(new VistaThreadEvent(false)),
+		m_pDiag(pDiag) {
 	}
-
-	CameraFrameHandler::~CameraFrameHandler() {
-		Enable(false);
+	
+	HistogramUpdater::~HistogramUpdater() {
+		delete m_pThreadEvent;
 	}
-
+	
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	bool CameraFrameHandler::Enable(bool bEnable) {
-		if(bEnable)
-			m_pStream->addNewFrameListener(this);
-		else
-			m_pStream->removeNewFrameListener(this);
-		m_bEnabled = bEnable;
-
-		return true;
+	void HistogramUpdater::Notify(const VistaEvent *pEvent) {
+		if(pEvent->GetType() == VistaSystemEvent::GetTypeId()) {
+			if(pEvent->GetId() == VistaSystemEvent::VSE_PREGRAPHICS) {
+				// check if depth handler thread signaled us
+				if(m_pThreadEvent->WaitForEvent(0)) {
+					// update diagram texture
+					m_pDiag->DataUpdated();
+				}
+			}
+		}
 	}
 
-	bool CameraFrameHandler::isEnabled() {
-		return m_bEnabled;
-	}
-	
-	ImagePBOOpenGLDraw *CameraFrameHandler::GetPBODraw() {
-		return m_pDraw;
+	VistaThreadEvent *HistogramUpdater::GetThreadEvent() {
+		return m_pThreadEvent;
 	}
 }

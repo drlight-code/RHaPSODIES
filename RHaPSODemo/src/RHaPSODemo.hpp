@@ -36,7 +36,7 @@ namespace rhapsodies {
 	class ImageDraw;
 	class ShaderRegistry;
 	class HandTracker;
-	class DrawMutexHandler;
+	class HistogramUpdater;
 
 	class RHaPSODemo {
 		int m_camWidth, m_camHeight;
@@ -55,8 +55,7 @@ namespace rhapsodies {
 		CameraFrameDepthHandler *m_pDepthFrameHandler;
 
 		VistaMutex *m_pDrawMutex;
-		DrawMutexHandler *m_pMutexHandler;
-		
+
 		bool InitTracker();
 		bool RegisterShaders();
 		bool CreateScene();

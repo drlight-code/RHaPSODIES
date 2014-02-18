@@ -54,6 +54,8 @@ namespace rhapsodies {
 
 		bool FillPBOFromBuffer(const void*,
 							   int width, int height);
+
+		VistaMutex *GetDrawMutex();
 	};
 }
 

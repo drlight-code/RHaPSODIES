@@ -138,4 +138,8 @@ namespace rhapsodies {
 
 		m_pDrawMutex->Unlock();
 	}
+
+	VistaMutex *ImagePBOOpenGLDraw::GetDrawMutex() {
+		return m_pDrawMutex;
+	}
 }
