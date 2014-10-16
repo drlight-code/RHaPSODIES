@@ -152,9 +152,9 @@ namespace rhapsodies {
 
 	bool RHaPSODemo::RegisterShaders() {
 		m_pShaderReg->RegisterShader("vert_textured", GL_VERTEX_SHADER,   
-									 "shaders/textured.vs");
+									 "resources/shaders/textured.vs");
 		m_pShaderReg->RegisterShader("frag_textured", GL_FRAGMENT_SHADER,
-									 "shaders/textured.fs");
+									 "resources/shaders/textured.fs");
 
 		std::vector<std::string> vec_shaders;
 		vec_shaders.push_back("vert_textured");		
