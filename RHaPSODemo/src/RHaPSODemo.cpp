@@ -146,8 +146,7 @@ namespace rhapsodies {
 	}
 
 	bool RHaPSODemo::InitTracker() {
-		return m_pTracker->Initialize(m_camWidth,
-									  m_camHeight);
+		return m_pTracker->Initialize();
 	}
 
 	bool RHaPSODemo::RegisterShaders() {
@@ -176,16 +175,15 @@ namespace rhapsodies {
 			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 								   m_pShaderReg, m_pDrawMutex);
 		m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pColorFrameHandler = new CameraFrameColorHandler(
-			&m_pTracker->GetColorStream(), pPBODraw);
+		m_pColorFrameHandler = new 
+CameraFrameColorHandler(pPBODraw);
 		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,0,0));
 
 		// ImageDraw for depth image
 		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 										  m_pShaderReg, m_pDrawMutex);
 		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pDepthFrameHandler = new CameraFrameDepthHandler(
-			&m_pTracker->GetDepthStream(), pPBODraw);
+		m_pDepthFrameHandler = new CameraFrameDepthHandler(pPBODraw);
 		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,0,0));
 
 		// ImageDraw for histogram

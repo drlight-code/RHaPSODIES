@@ -50,14 +50,14 @@ namespace rhapsodies {
 		HistogramUpdater *m_pHistUpdater;
 		
 	public:
-		CameraFrameDepthHandler(openni::VideoStream *pStream,
-								ImagePBOOpenGLDraw *pDraw);
+		CameraFrameDepthHandler(ImagePBOOpenGLDraw *pDraw);
 		virtual ~CameraFrameDepthHandler();
-
-		virtual void onNewFrame(openni::VideoStream &);
 
 		V2dDiagramTextureVista *GetDiagramTexture();
 		HistogramUpdater *GetHistogramUpdater();
+
+		// CameraFrameHandler methods
+		void onNewFrame();
 	};
 }
 

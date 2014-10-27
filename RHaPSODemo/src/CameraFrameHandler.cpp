@@ -35,9 +35,8 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	CameraFrameHandler::CameraFrameHandler(openni::VideoStream *pStream,
-										   ImagePBOOpenGLDraw *pDraw) :
-		m_pStream(pStream),
+	CameraFrameHandler::CameraFrameHandler(
+		ImagePBOOpenGLDraw *pDraw) :
 		m_pDraw(pDraw),
 		m_bEnabled(false) {
 	}
@@ -50,11 +49,6 @@ namespace rhapsodies {
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
 	bool CameraFrameHandler::Enable(bool bEnable) {
-		if(bEnable)
-			m_pStream->addNewFrameListener(this);
-		else
-			m_pStream->removeNewFrameListener(this);
-		m_bEnabled = bEnable;
 
 		return true;
 	}
@@ -62,7 +56,7 @@ namespace rhapsodies {
 	bool CameraFrameHandler::isEnabled() {
 		return m_bEnabled;
 	}
-	
+
 	ImagePBOOpenGLDraw *CameraFrameHandler::GetPBODraw() {
 		return m_pDraw;
 	}

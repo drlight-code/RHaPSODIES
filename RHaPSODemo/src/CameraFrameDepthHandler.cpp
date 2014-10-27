@@ -49,12 +49,11 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	CameraFrameDepthHandler::CameraFrameDepthHandler(openni::VideoStream *pStream,
-													 ImagePBOOpenGLDraw *pDraw) :
+	CameraFrameDepthHandler::CameraFrameDepthHandler(ImagePBOOpenGLDraw *pDraw) :
 		m_iHistNumBins(64),
 		m_iHistDrawCounter(0),
 		m_iHistDrawInterval(15), // update histogram every half second at 30fps
-		CameraFrameHandler(pStream, pDraw) {
+		CameraFrameHandler(pDraw) {
 		m_pDiagram = new V2dDiagramDefault(
 			V2dDiagramDefault::AT_NOMINAL,
 			V2dDiagramDefault::AT_CONTINUOUS_INT,
@@ -86,9 +85,9 @@ namespace rhapsodies {
 
 		m_pHistUpdater = new HistogramUpdater(m_pDiagram);
 
-		openni::VideoMode vm = pStream->getVideoMode();
-		m_pBuffer =	new unsigned char[vm.getResolutionX()*
-									  vm.getResolutionY()*3];
+		// openni::VideoMode vm = pStream->getVideoMode();
+		// m_pBuffer =	new unsigned char[vm.getResolutionX()*
+		// 							  vm.getResolutionY()*3];
 	}
 
 	CameraFrameDepthHandler::~CameraFrameDepthHandler() {
@@ -103,56 +102,56 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	void CameraFrameDepthHandler::onNewFrame(openni::VideoStream &stream) {
-		openni::VideoFrameRef frame;
-		stream.readFrame(&frame);
+	void CameraFrameDepthHandler::onNewFrame() {
+		// openni::VideoFrameRef frame;
+		// stream.readFrame(&frame);
 
-		int iWidth  = frame.getWidth();
-		int iHeight = frame.getHeight();
+		// int iWidth  = frame.getWidth();
+		// int iHeight = frame.getHeight();
 
-		std::vector<int> vecBins(m_iHistNumBins);
-		int minVal = stream.getMinPixelValue()+1; // exclude 0
-		int maxVal = stream.getMaxPixelValue();
-		int binWidth = (maxVal - minVal) / (m_iHistNumBins-1);
+		// std::vector<int> vecBins(m_iHistNumBins);
+		// int minVal = stream.getMinPixelValue()+1; // exclude 0
+		// int maxVal = stream.getMaxPixelValue();
+		// int binWidth = (maxVal - minVal) / (m_iHistNumBins-1);
 
-		bool bUpdateHistogram = false;
-		if(++m_iHistDrawCounter % m_iHistDrawInterval == 0) {
-			bUpdateHistogram = true;
-			m_iHistDrawCounter = 0;
-		}
+		// bool bUpdateHistogram = false;
+		// if(++m_iHistDrawCounter % m_iHistDrawInterval == 0) {
+		// 	bUpdateHistogram = true;
+		// 	m_iHistDrawCounter = 0;
+		// }
 
-		unsigned short* pData = (unsigned short*)frame.getData();
-		for(int i = 0; i < iWidth*iHeight; i++) {
-			unsigned short val = pData[i];
+		// unsigned short* pData = (unsigned short*)frame.getData();
+		// for(int i = 0; i < iWidth*iHeight; i++) {
+		// 	unsigned short val = pData[i];
 
-			// convert to RGB888 buffer
-			if(val > 0) {
-				m_pBuffer[3*i] = m_pBuffer[3*i+1] = 
-					255 - val / 40;
-			}
-			else {
-				m_pBuffer[3*i] = 200;
-				m_pBuffer[3*i+1] = m_pBuffer[3*i+2] = 0;
-			}
+		// 	// convert to RGB888 buffer
+		// 	if(val > 0) {
+		// 		m_pBuffer[3*i] = m_pBuffer[3*i+1] = 
+		// 			255 - val / 40;
+		// 	}
+		// 	else {
+		// 		m_pBuffer[3*i] = 200;
+		// 		m_pBuffer[3*i+1] = m_pBuffer[3*i+2] = 0;
+		// 	}
 
-			if(bUpdateHistogram) {
-				// calculate histogram
-				if(val == 0)
-					vecBins[0]++;
-				else {
-					vecBins[(val-1)/binWidth+1]++;
-				}
-			}
-		}
+		// 	if(bUpdateHistogram) {
+		// 		// calculate histogram
+		// 		if(val == 0)
+		// 			vecBins[0]++;
+		// 		else {
+		// 			vecBins[(val-1)/binWidth+1]++;
+		// 		}
+		// 	}
+		// }
 
-		if(bUpdateHistogram) {
-			m_pDataSeries->ReplaceDataPointsY(0, 0, m_iHistNumBins, vecBins);
-			m_pHistUpdater->GetThreadEvent()->SignalEvent();
-		}
+		// if(bUpdateHistogram) {
+		// 	m_pDataSeries->ReplaceDataPointsY(0, 0, m_iHistNumBins, vecBins);
+		// 	m_pHistUpdater->GetThreadEvent()->SignalEvent();
+		// }
 		
-		GetPBODraw()->FillPBOFromBuffer(m_pBuffer,
-										frame.getWidth(),
-										frame.getHeight());
+		// GetPBODraw()->FillPBOFromBuffer(m_pBuffer,
+		// 								frame.getWidth(),
+		// 								frame.getHeight());
 	}
 
 	V2dDiagramTextureVista *CameraFrameDepthHandler::GetDiagramTexture() {

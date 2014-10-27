@@ -24,21 +24,18 @@
 #ifndef _RHAPSODIES_CAMERAFRAMEHANDLER
 #define _RHAPSODIES_CAMERAFRAMEHANDLER
 
-#include <OpenNI.h>
-
 namespace rhapsodies {
 	class ImagePBOOpenGLDraw;
 
-	class CameraFrameHandler :
-		public openni::VideoStream::NewFrameListener {
+	class CameraFrameHandler {
 		ImagePBOOpenGLDraw *m_pDraw;
-		openni::VideoStream *m_pStream;
 		bool m_bEnabled;
 
 	public:
-		CameraFrameHandler(openni::VideoStream *pStream,
-						   ImagePBOOpenGLDraw *pDraw);
+		CameraFrameHandler(ImagePBOOpenGLDraw *pDraw);
 		virtual ~CameraFrameHandler();
+
+		virtual void onNewFrame()=0;
 
 		bool Enable(bool bEnable);
 		bool isEnabled();

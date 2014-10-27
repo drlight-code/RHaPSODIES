@@ -29,10 +29,11 @@
 namespace rhapsodies {
 	class CameraFrameColorHandler : public CameraFrameHandler {
 	public:
-		CameraFrameColorHandler(openni::VideoStream *pStream,
-								ImagePBOOpenGLDraw *pDraw);
+		CameraFrameColorHandler(ImagePBOOpenGLDraw *pDraw);
 		virtual ~CameraFrameColorHandler();
-		virtual void onNewFrame(openni::VideoStream &);
+
+		// CameraFrameHandler methods
+		void onNewFrame();
 	};
 }
 

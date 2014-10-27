@@ -39,9 +39,9 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	CameraFrameColorHandler::CameraFrameColorHandler(openni::VideoStream *pStream,
-													 ImagePBOOpenGLDraw *pDraw) :
-		CameraFrameHandler(pStream, pDraw) {
+	CameraFrameColorHandler::
+	CameraFrameColorHandler(ImagePBOOpenGLDraw *pDraw) :
+		CameraFrameHandler(pDraw) {
 	}
 
 	CameraFrameColorHandler::~CameraFrameColorHandler() {
@@ -50,12 +50,12 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	void CameraFrameColorHandler::onNewFrame(openni::VideoStream &stream) {
-		openni::VideoFrameRef frame;
-		stream.readFrame(&frame);
+	void CameraFrameColorHandler::onNewFrame() {
+		// openni::VideoFrameRef frame;
+		// stream.readFrame(&frame);
 
-		GetPBODraw()->FillPBOFromBuffer(frame.getData(),
-										frame.getWidth(),
-										frame.getHeight());
+		// GetPBODraw()->FillPBOFromBuffer(frame.getData(),
+		// 								frame.getWidth(),
+		// 								frame.getHeight());
 	}
 }
