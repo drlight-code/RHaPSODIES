@@ -230,10 +230,10 @@ namespace rhapsodies {
 		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,0,0));
 
 		// ImageDraw for histogram
-		// m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
-		// 							   m_pDepthFrameHandler->GetDiagramTexture(),
-		// 							   pSG);
-		// m_pDiagramDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,0,0));
+		m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
+									   m_pDepthFrameHandler->GetDiagramTexture(),
+									   pSG);
+		m_pDiagramDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,0,0));
 
 
 		m_pSystem->GetEventManager()->RegisterObserver(

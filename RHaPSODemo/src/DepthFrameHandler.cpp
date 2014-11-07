@@ -21,6 +21,7 @@
 /*============================================================================*/
 // $Id: $
 
+#include <limits>
 #include <iostream>
 #include <sstream>
 
@@ -44,13 +45,25 @@
 /*============================================================================*/
 /* LOCAL VARS AND FUNCS                                                       */
 /*============================================================================*/
+namespace {
+	float MapRangeExp(float value) {
+		// map range 0-1 exponentially
+		float base = 0.01;
+		float ret = (1 - pow(base, value))/(1-base);
+		
+		// clamp
+		ret = ret < 0.0 ? 0.0 : ret;
+		ret = ret > 1.0 ? 1.0 : ret;
+	}
+}
+
 
 namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
 	DepthFrameHandler::DepthFrameHandler(ImagePBOOpenGLDraw *pDraw) :
-		m_iHistNumBins(64),
+		m_iHistNumBins(20),
 		m_iHistDrawCounter(0),
 		m_iHistDrawInterval(15), // update histogram every half second at 30fps
 		CameraFrameHandler(pDraw) {
@@ -122,12 +135,14 @@ namespace rhapsodies {
 
 			// convert to RGB888 buffer
 			if(val > 0) {
-				m_pBuffer[3*i] = m_pBuffer[3*i+1] = 
-					255 - val / 40;
+				float linearvalue = val/4000.0;
+				float mappedvalue = MapRangeExp(linearvalue);
+
+				m_pBuffer[3*i] = m_pBuffer[3*i+1] = 255*(1-mappedvalue);
 			}
 			else {
-				m_pBuffer[3*i] = 200;
-				m_pBuffer[3*i+1] = m_pBuffer[3*i+2] = 0;
+				m_pBuffer[3*i+1] = 200;
+				m_pBuffer[3*i+0] = m_pBuffer[3*i+2] = 0;
 			}
 
 			if(bUpdateHistogram) {
@@ -144,7 +159,7 @@ namespace rhapsodies {
 			m_pDataSeries->ReplaceDataPointsY(0, 0, m_iHistNumBins, vecBins);
 			m_pHistUpdater->GetThreadEvent()->SignalEvent();
 		}
-		
+
 		GetPBODraw()->FillPBOFromBuffer(m_pBuffer, 320, 240);
 	}
 
