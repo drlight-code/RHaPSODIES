@@ -35,7 +35,7 @@ namespace rhapsodies {
 		CameraFrameHandler(ImagePBOOpenGLDraw *pDraw);
 		virtual ~CameraFrameHandler();
 
-		virtual void onNewFrame()=0;
+		virtual void ProcessFrame(const void *pFrame)=0;
 
 		bool Enable(bool bEnable);
 		bool isEnabled();

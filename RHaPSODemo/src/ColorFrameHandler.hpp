@@ -33,7 +33,7 @@ namespace rhapsodies {
 		virtual ~ColorFrameHandler();
 
 		// ColorFrameHandler methods
-		void onNewFrame();
+		void ProcessFrame(const void *pFrame);
 	};
 }
 

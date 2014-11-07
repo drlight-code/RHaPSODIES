@@ -49,7 +49,7 @@ namespace rhapsodies {
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
 	bool CameraFrameHandler::Enable(bool bEnable) {
-
+		m_bEnabled = bEnable;
 		return true;
 	}
 

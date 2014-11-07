@@ -57,7 +57,7 @@ namespace rhapsodies {
 		HistogramUpdater *GetHistogramUpdater();
 
 		// CameraFrameHandler methods
-		void onNewFrame();
+		void ProcessFrame(const void *pFrame);
 	};
 }
 

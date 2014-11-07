@@ -255,16 +255,28 @@ namespace rhapsodies {
 		if(iNewCount > m_iDepthMeasures) {
 			m_iDepthMeasures = iNewCount;
 			// new depth data
-			vstr::debug() << "new depth data" << std::endl;
+			const VistaMeasureHistory &oHistory =
+				m_pDepthSensor->GetMeasures();
+			const VistaSensorMeasure *pM = 
+				oHistory.GetCurrentRead();
+				
+			const VistaDepthSenseDriver::DepthMeasure *pMeasure =
+				pM->getRead<VistaDepthSenseDriver::DepthMeasure>();
+			m_pDepthFrameHandler->ProcessFrame(pMeasure->frame);
 		}
 		iNewCount = m_pColorSensor->GetDataCount();
 		if(iNewCount > m_iColorMeasures) {
 			m_iColorMeasures = iNewCount;
 			// new color data
-			vstr::debug() << "new color data" << std::endl;
+			const VistaMeasureHistory &oHistory =
+				m_pColorSensor->GetMeasures();
+			const VistaSensorMeasure *pM = 
+				oHistory.GetCurrentRead();
+				
+			const VistaDepthSenseDriver::ColorMeasure *pMeasure =
+				pM->getRead<VistaDepthSenseDriver::ColorMeasure>();
+			m_pColorFrameHandler->ProcessFrame(pMeasure->frame);
 		}
-
-		// update diagram and textures
 	}
 
 	void RHaPSODemo::HandleEvent(VistaEvent *pEvent) {

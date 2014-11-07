@@ -50,12 +50,7 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	void ColorFrameHandler::onNewFrame() {
-		// openni::VideoFrameRef frame;
-		// stream.readFrame(&frame);
-
-		// GetPBODraw()->FillPBOFromBuffer(frame.getData(),
-		// 								frame.getWidth(),
-		// 								frame.getHeight());
+	void ColorFrameHandler::ProcessFrame(const void *pFrame) {
+		GetPBODraw()->FillPBOFromBuffer(pFrame, 320, 240);
 	}
 }
