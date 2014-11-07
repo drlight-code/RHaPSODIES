@@ -21,41 +21,44 @@
 /*============================================================================*/
 // $Id: $
 
-#include <iostream>
+#ifndef _RHAPSODIES_DEPTHFRAMEHANDLER
+#define _RHAPSODIES_DEPTHFRAMEHANDLER
 
-#include <ImagePBOOpenGLDraw.hpp>
+#include <CameraFrameHandler.hpp>
 
-#include "CameraFrameColorHandler.hpp"
+// @todo forward declare the data series, mon!
+#include <Vfl2DDiagrams/Data/V2dDataSeriesTypes.h>
 
-/*============================================================================*/
-/* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
-/*============================================================================*/
-
-/*============================================================================*/
-/* LOCAL VARS AND FUNCS                                                       */
-/*============================================================================*/
+class V2dDiagramDefault;
+class V2dDiagramTextureVista;
 
 namespace rhapsodies {
-/*============================================================================*/
-/* CONSTRUCTORS / DESTRUCTOR                                                  */
-/*============================================================================*/
-	CameraFrameColorHandler::
-	CameraFrameColorHandler(ImagePBOOpenGLDraw *pDraw) :
-		CameraFrameHandler(pDraw) {
-	}
+	class ImagePBOOpenGLDraw;
+	class HistogramUpdater;
 
-	CameraFrameColorHandler::~CameraFrameColorHandler() {
-	}
+	class DepthFrameHandler :
+		public CameraFrameHandler {
+		unsigned char *m_pBuffer;
 
-/*============================================================================*/
-/* IMPLEMENTATION                                                             */
-/*============================================================================*/
-	void CameraFrameColorHandler::onNewFrame() {
-		// openni::VideoFrameRef frame;
-		// stream.readFrame(&frame);
+		V2dDiagramDefault *m_pDiagram;
+		V2dDiagramTextureVista *m_pDiagramTexture;
+		V2dDataSeriesIntContinuousOverString *m_pDataSeries;
 
-		// GetPBODraw()->FillPBOFromBuffer(frame.getData(),
-		// 								frame.getWidth(),
-		// 								frame.getHeight());
-	}
+		int m_iHistDrawCounter;
+		int m_iHistDrawInterval;
+		int m_iHistNumBins;
+		HistogramUpdater *m_pHistUpdater;
+		
+	public:
+		DepthFrameHandler(ImagePBOOpenGLDraw *pDraw);
+		virtual ~DepthFrameHandler();
+
+		V2dDiagramTextureVista *GetDiagramTexture();
+		HistogramUpdater *GetHistogramUpdater();
+
+		// CameraFrameHandler methods
+		void onNewFrame();
+	};
 }
+
+#endif // _RHAPSODIES_DEPTHFRAMEHANDLER

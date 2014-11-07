@@ -49,8 +49,19 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	bool HandTracker::Initialize() {
+	void HandTracker::SetDriver(VistaDepthSenseDriver *pDriver) {
+		m_pDriver = pDriver;
+	}
 
+	bool HandTracker::Initialize() {
+		// get sensors from driver
+		
+		
+		
 		return true;
+	}
+
+	bool HandTracker::FrameUpdate() {
+
 	}
 }

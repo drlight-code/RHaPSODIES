@@ -35,7 +35,7 @@
 #include <ImagePBOOpenGLDraw.hpp>
 #include <HistogramUpdater.hpp>
 
-#include "CameraFrameDepthHandler.hpp"
+#include "DepthFrameHandler.hpp"
 
 /*============================================================================*/
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
@@ -49,7 +49,7 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	CameraFrameDepthHandler::CameraFrameDepthHandler(ImagePBOOpenGLDraw *pDraw) :
+	DepthFrameHandler::DepthFrameHandler(ImagePBOOpenGLDraw *pDraw) :
 		m_iHistNumBins(64),
 		m_iHistDrawCounter(0),
 		m_iHistDrawInterval(15), // update histogram every half second at 30fps
@@ -90,10 +90,10 @@ namespace rhapsodies {
 		// 							  vm.getResolutionY()*3];
 	}
 
-	CameraFrameDepthHandler::~CameraFrameDepthHandler() {
+	DepthFrameHandler::~DepthFrameHandler() {
 		Enable(false);
 
-		delete [] m_pBuffer;
+//		delete [] m_pBuffer;
 		delete m_pHistUpdater;
 		delete m_pDataSeries;
 		delete m_pDiagram;
@@ -102,7 +102,7 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	void CameraFrameDepthHandler::onNewFrame() {
+	void DepthFrameHandler::onNewFrame() {
 		// openni::VideoFrameRef frame;
 		// stream.readFrame(&frame);
 
@@ -154,11 +154,11 @@ namespace rhapsodies {
 		// 								frame.getHeight());
 	}
 
-	V2dDiagramTextureVista *CameraFrameDepthHandler::GetDiagramTexture() {
+	V2dDiagramTextureVista *DepthFrameHandler::GetDiagramTexture() {
 		return m_pDiagramTexture;
 	}
 
-	HistogramUpdater *CameraFrameDepthHandler::GetHistogramUpdater() {
+	HistogramUpdater *DepthFrameHandler::GetHistogramUpdater() {
 		return m_pHistUpdater;
 	}
 }

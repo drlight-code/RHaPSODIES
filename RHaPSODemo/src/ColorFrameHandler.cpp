@@ -21,20 +21,41 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_CAMERAFRAMECOLORHANDLER
-#define _RHAPSODIES_CAMERAFRAMECOLORHANDLER
+#include <iostream>
 
-#include <CameraFrameHandler.hpp>
+#include <ImagePBOOpenGLDraw.hpp>
+
+#include "ColorFrameHandler.hpp"
+
+/*============================================================================*/
+/* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
+/*============================================================================*/
+
+/*============================================================================*/
+/* LOCAL VARS AND FUNCS                                                       */
+/*============================================================================*/
 
 namespace rhapsodies {
-	class CameraFrameColorHandler : public CameraFrameHandler {
-	public:
-		CameraFrameColorHandler(ImagePBOOpenGLDraw *pDraw);
-		virtual ~CameraFrameColorHandler();
+/*============================================================================*/
+/* CONSTRUCTORS / DESTRUCTOR                                                  */
+/*============================================================================*/
+	ColorFrameHandler::
+	ColorFrameHandler(ImagePBOOpenGLDraw *pDraw) :
+		CameraFrameHandler(pDraw) {
+	}
 
-		// CameraFrameHandler methods
-		void onNewFrame();
-	};
+	ColorFrameHandler::~ColorFrameHandler() {
+	}
+
+/*============================================================================*/
+/* IMPLEMENTATION                                                             */
+/*============================================================================*/
+	void ColorFrameHandler::onNewFrame() {
+		// openni::VideoFrameRef frame;
+		// stream.readFrame(&frame);
+
+		// GetPBODraw()->FillPBOFromBuffer(frame.getData(),
+		// 								frame.getWidth(),
+		// 								frame.getHeight());
+	}
 }
-
-#endif // _RHAPSODIES_CAMERAFRAMECOLORHANDLER

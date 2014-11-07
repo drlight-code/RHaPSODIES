@@ -27,16 +27,19 @@
 
 #include <VistaTools/VistaProfiler.h>
 
-#include <VistaKernel/VistaSystem.h>
+#include <VistaDeviceDriversBase/VistaDriverMap.h>
+#include <VistaDeviceDriversBase/VistaDeviceSensor.h>
 
+#include <VistaDeviceDrivers/VistaDepthSenseDriver/VistaDepthSenseDriver.h>
+
+#include <VistaKernel/VistaSystem.h>
 #include <VistaKernel/DisplayManager/VistaDisplayManager.h>
 #include <VistaKernel/DisplayManager/VistaDisplaySystem.h>
 #include <VistaKernel/DisplayManager/VistaVirtualPlatform.h>
-
+#include <VistaKernel/InteractionManager/VistaInteractionManager.h>
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
-
 #include <VistaKernel/EventManager/VistaEventManager.h>
 #include <VistaKernel/EventManager/VistaSystemEvent.h>
 
@@ -49,8 +52,8 @@
 
 #include <ImageDraw.hpp>
 #include <ImagePBOOpenGLDraw.hpp>
-#include <CameraFrameColorHandler.hpp>
-#include <CameraFrameDepthHandler.hpp>
+#include <ColorFrameHandler.hpp>
+#include <DepthFrameHandler.hpp>
 #include <ShaderRegistry.hpp>
 #include <HandTracker.hpp>
 #include <HistogramUpdater.hpp>
@@ -77,7 +80,9 @@ namespace rhapsodies {
 		m_pShaderReg(new ShaderRegistry),
 		m_pTracker(new HandTracker),
 		m_pDrawMutex(new VistaMutex),
-		m_camWidth(640), m_camHeight(480) {
+		m_camWidth(320), m_camHeight(240),
+		m_iDepthMeasures(0), m_iColorMeasures(0)
+	{
 	}
 
 	RHaPSODemo::~RHaPSODemo() {
@@ -104,12 +109,37 @@ namespace rhapsodies {
 		success &= m_pSystem->Init(argc, argv);
 		glewInit();
 
-		VtrFontManager::GetInstance()->SetFontDirectory("resources/fonts/");
-		VistaShaderRegistry::GetInstance().AddSearchDirectory("resources/shaders/");
-		V2dGlobalConfig::GetInstance()->SetDefaultFont("FreeSans.ttf");
+		// static_cast for now. for dynamic_cast we need to link
+		// against the VistaDepthSenseDriver for the vtable (and thus
+		// typeinfo struct) to be available at link time.
+		m_pDriver = static_cast<VistaDepthSenseDriver*>(
+			m_pSystem->GetDriverMap()->GetDeviceDriver("DEPTHSENSE"));
 
-		success &= InitTracker();
+		if(m_pDriver) {
+			std::cout << "DEPTHSENSE driver found" << std::endl;
+			std::cout << "Sensors: " << std::endl;
+			for(int i = 0 ; i < m_pDriver->GetNumberOfSensors() ; i++) {
+				std::cout << m_pDriver->GetSensorByIndex(i)
+					->GetSensorName() << std::endl;
+			}
+			std::cout << std::endl;
+		}
+		else {
+			std::cerr << "DEPTHSENSE driver NOT found!" << std::endl;
+		}
+
+		m_pDepthSensor = m_pDriver->GetSensorByName("DEPTH");
+		m_pColorSensor = m_pDriver->GetSensorByName("RGB");
+
+		VtrFontManager::GetInstance()
+			->SetFontDirectory("resources/fonts/");
+		VistaShaderRegistry::GetInstance()
+			.AddSearchDirectory("resources/shaders/");
+		V2dGlobalConfig::GetInstance()
+			->SetDefaultFont("FreeSans.ttf");
+
    		success &= RegisterShaders();
+		success &= InitTracker();
 		success &= CreateScene();
 
 		return success;
@@ -138,15 +168,27 @@ namespace rhapsodies {
 
 		// read camera parameters
 		m_camWidth  = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_X",
-											 640, RHaPSODemo::sRDIniFile);
+											 320, RHaPSODemo::sRDIniFile);
 		m_camHeight = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_Y",
-											 480, RHaPSODemo::sRDIniFile);
+											 240, RHaPSODemo::sRDIniFile);
 
 		return true;
 	}
 
 	bool RHaPSODemo::InitTracker() {
-		return m_pTracker->Initialize();
+		bool success = true;
+		
+		VistaDepthSenseDriver* pDriver = static_cast<VistaDepthSenseDriver*>(
+			m_pSystem->GetInteractionManager()->GetDeviceDriver("DEPTHSENSE"));
+		m_pTracker->SetDriver(pDriver);
+		success &= m_pTracker->Initialize();
+
+		// register frame update handler
+		m_pSystem->GetEventManager()->AddEventHandler(
+			this, VistaSystemEvent::GetTypeId(), 
+			VistaSystemEvent::VSE_POSTAPPLICATIONLOOP);
+
+		return success;
 	}
 
 	bool RHaPSODemo::RegisterShaders() {
@@ -176,14 +218,14 @@ namespace rhapsodies {
 								   m_pShaderReg, m_pDrawMutex);
 		m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pColorFrameHandler = new 
-CameraFrameColorHandler(pPBODraw);
+			ColorFrameHandler(pPBODraw);
 		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,0,0));
 
 		// ImageDraw for depth image
 		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 										  m_pShaderReg, m_pDrawMutex);
 		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pDepthFrameHandler = new CameraFrameDepthHandler(pPBODraw);
+		m_pDepthFrameHandler = new DepthFrameHandler(pPBODraw);
 		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,0,0));
 
 		// ImageDraw for histogram
@@ -205,5 +247,31 @@ CameraFrameColorHandler(pPBODraw);
 
 	bool RHaPSODemo::Run() {
 		return m_pSystem->Run();
+	}
+
+	void RHaPSODemo::FrameLoop() {
+		// poll sensors for new data
+		int iNewCount = m_pDepthSensor->GetDataCount();
+		if(iNewCount > m_iDepthMeasures) {
+			m_iDepthMeasures = iNewCount;
+			// new depth data
+			vstr::debug() << "new depth data" << std::endl;
+		}
+		iNewCount = m_pColorSensor->GetDataCount();
+		if(iNewCount > m_iColorMeasures) {
+			m_iColorMeasures = iNewCount;
+			// new color data
+			vstr::debug() << "new color data" << std::endl;
+		}
+
+		// update diagram and textures
+	}
+
+	void RHaPSODemo::HandleEvent(VistaEvent *pEvent) {
+		if(pEvent->GetType() == VistaSystemEvent::GetTypeId()) {
+			if(pEvent->GetId() == VistaSystemEvent::VSE_POSTAPPLICATIONLOOP) {
+				FrameLoop();
+			}
+		}
 	}
 }

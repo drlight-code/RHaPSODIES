@@ -26,9 +26,13 @@
 
 namespace rhapsodies {
 	class HandTracker {
+		VistaDepthSenseDriver *m_pDriver;
 
 	public:
+		void SetDriver(VistaDepthSenseDriver *pDriver);
+
 		bool Initialize();
+		bool FrameUpdate();
 	};
 }
 

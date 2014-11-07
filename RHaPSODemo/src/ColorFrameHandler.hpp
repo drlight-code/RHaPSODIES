@@ -21,44 +21,20 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_CAMERAFRAMEDEPTHHANDLER
-#define _RHAPSODIES_CAMERAFRAMEDEPTHHANDLER
+#ifndef _RHAPSODIES_COLORFRAMEHANDLER
+#define _RHAPSODIES_COLORFRAMEHANDLER
 
 #include <CameraFrameHandler.hpp>
 
-// @todo forward declare the data series, mon!
-#include <Vfl2DDiagrams/Data/V2dDataSeriesTypes.h>
-
-class V2dDiagramDefault;
-class V2dDiagramTextureVista;
-
 namespace rhapsodies {
-	class ImagePBOOpenGLDraw;
-	class HistogramUpdater;
-
-	class CameraFrameDepthHandler :
-		public CameraFrameHandler {
-		unsigned char *m_pBuffer;
-
-		V2dDiagramDefault *m_pDiagram;
-		V2dDiagramTextureVista *m_pDiagramTexture;
-		V2dDataSeriesIntContinuousOverString *m_pDataSeries;
-
-		int m_iHistDrawCounter;
-		int m_iHistDrawInterval;
-		int m_iHistNumBins;
-		HistogramUpdater *m_pHistUpdater;
-		
+	class ColorFrameHandler : public CameraFrameHandler {
 	public:
-		CameraFrameDepthHandler(ImagePBOOpenGLDraw *pDraw);
-		virtual ~CameraFrameDepthHandler();
+		ColorFrameHandler(ImagePBOOpenGLDraw *pDraw);
+		virtual ~ColorFrameHandler();
 
-		V2dDiagramTextureVista *GetDiagramTexture();
-		HistogramUpdater *GetHistogramUpdater();
-
-		// CameraFrameHandler methods
+		// ColorFrameHandler methods
 		void onNewFrame();
 	};
 }
 
-#endif // _RHAPSODIES_CAMERAFRAMEDEPTHHANDLER
+#endif // _RHAPSODIES_COLORFRAMEHANDLER

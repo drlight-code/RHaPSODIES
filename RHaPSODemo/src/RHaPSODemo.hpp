@@ -25,12 +25,17 @@
 #ifndef _RHAPSODIES_RHAPSODEMO
 #define _RHAPSODIES_RHAPSODEMO
 
+#include <VistaKernel/EventManager/VistaEventHandler.h>
+
 class VistaMutex;
 class VistaSystem;
 class VistaTransformNode;
 class VistaOpenGLNode;
-class CameraFrameColorHandler;
-class CameraFrameDepthHandler;
+class VistaDepthSenseDriver;
+class VistaDeviceSensor;
+
+class ColorFrameHandler;
+class DepthFrameHandler;
 
 namespace rhapsodies {
 	class ImageDraw;
@@ -38,11 +43,16 @@ namespace rhapsodies {
 	class HandTracker;
 	class HistogramUpdater;
 
-	class RHaPSODemo {
+	class RHaPSODemo : public VistaEventHandler {
 		int m_camWidth, m_camHeight;
 
 		VistaSystem *m_pSystem;
 		ShaderRegistry *m_pShaderReg;
+		VistaDepthSenseDriver *m_pDriver;
+		VistaDeviceSensor *m_pDepthSensor;
+		VistaDeviceSensor *m_pColorSensor;
+		int m_iDepthMeasures, m_iColorMeasures;
+
 		HandTracker *m_pTracker;
 
 		VistaTransformNode *m_pSceneTransform;
@@ -51,8 +61,8 @@ namespace rhapsodies {
 		ImageDraw *m_pDiagramDraw;
 		ImageDraw *m_pColorDraw;
 		ImageDraw *m_pDepthDraw;
-		CameraFrameColorHandler *m_pColorFrameHandler;
-		CameraFrameDepthHandler *m_pDepthFrameHandler;
+		ColorFrameHandler *m_pColorFrameHandler;
+		DepthFrameHandler *m_pDepthFrameHandler;
 
 		VistaMutex *m_pDrawMutex;
 
@@ -68,6 +78,11 @@ namespace rhapsodies {
 
 		bool Initialize(int argc, char** argv);
 		bool Run();
+
+		void FrameLoop();
+
+		// VistaEventHandler interface
+		virtual void HandleEvent(VistaEvent *pEvent);
 
 		static const std::string sRDIniFile;
 	};
