@@ -102,6 +102,8 @@ namespace rhapsodies {
 
 		glUseProgram(0);
 		glBindTexture(GL_TEXTURE_2D, 0);
+
+		return true;
 	}
 
 	bool TexturedQuadGLDraw::GetBoundingBox(VistaBoundingBox &bb) {
