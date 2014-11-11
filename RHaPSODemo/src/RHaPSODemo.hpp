@@ -49,8 +49,8 @@ namespace rhapsodies {
 		VistaSystem *m_pSystem;
 		ShaderRegistry *m_pShaderReg;
 		VistaDepthSenseDriver *m_pDriver;
-		VistaDeviceSensor *m_pDepthSensor;
 		VistaDeviceSensor *m_pColorSensor;
+		VistaDeviceSensor *m_pDepthSensor;
 		int m_iDepthMeasures, m_iColorMeasures;
 
 		HandTracker *m_pTracker;

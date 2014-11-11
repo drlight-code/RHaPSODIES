@@ -45,8 +45,8 @@ namespace rhapsodies {
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
 	HistogramUpdater::HistogramUpdater(V2dDiagramDefault *pDiag) :
-		m_pThreadEvent(new VistaThreadEvent(false)),
-		m_pDiag(pDiag) {
+		m_pDiag(pDiag),
+		m_pThreadEvent(new VistaThreadEvent(false)) {
 	}
 	
 	HistogramUpdater::~HistogramUpdater() {

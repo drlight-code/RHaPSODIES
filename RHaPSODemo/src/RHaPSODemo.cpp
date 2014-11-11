@@ -76,12 +76,16 @@ namespace rhapsodies {
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
 	RHaPSODemo::RHaPSODemo() :
+		m_camWidth(320), m_camHeight(240),
 		m_pSystem(new VistaSystem),
 		m_pShaderReg(new ShaderRegistry),
+		m_pDriver(NULL), m_pColorSensor(NULL), m_pDepthSensor(NULL),
+		m_iDepthMeasures(0), m_iColorMeasures(0),
 		m_pTracker(new HandTracker),
-		m_pDrawMutex(new VistaMutex),
-		m_camWidth(320), m_camHeight(240),
-		m_iDepthMeasures(0), m_iColorMeasures(0)
+		m_pSceneTransform(NULL), m_pDiagramTransform(NULL),
+		m_pDiagramDraw(NULL), m_pColorDraw(NULL), m_pDepthDraw(NULL),
+		m_pColorFrameHandler(NULL), m_pDepthFrameHandler(NULL),
+		m_pDrawMutex(new VistaMutex)
 	{
 	}
 
@@ -119,7 +123,8 @@ namespace rhapsodies {
 		if(m_pDriver) {
 			std::cout << "DEPTHSENSE driver found" << std::endl;
 			std::cout << "Sensors: " << std::endl;
-			for(int i = 0 ; i < m_pDriver->GetNumberOfSensors() ; i++) {
+			for(unsigned int i = 0 ; 
+				i < m_pDriver->GetNumberOfSensors() ; i++) {
 				std::cout << m_pDriver->GetSensorByIndex(i)
 					->GetSensorName() << std::endl;
 			}
