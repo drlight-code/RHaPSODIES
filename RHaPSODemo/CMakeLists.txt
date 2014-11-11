@@ -12,6 +12,17 @@ vista_set_version( RHaPSODemo HEAD HEAD 0 1 0 svn_rev )
 vista_use_package( VistaCoreLibs "HEAD" REQUIRED FIND_DEPENDENCIES )
 vista_use_package( Vfl2DDiagrams REQUIRED FIND_DEPENDENCIES )
 
+set(CMAKE_CXX_FLAGS "-Wall -std=c++0x")
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+    execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+    if (NOT (GCC_VERSION VERSION_GREATER 4.3 OR GCC_VERSION VERSION_EQUAL 4.3))
+        message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.3 or greater.")
+    endif ()
+else ()
+    message(FATAL_ERROR "Your C++ compiler does not support C++11.")
+endif ()
 
 # Including the source files of all source subfolders recursively
 include( "src/_SourceFiles.cmake" )
