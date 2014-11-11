@@ -65,10 +65,10 @@ namespace rhapsodies {
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
 	DepthFrameHandler::DepthFrameHandler(ImagePBOOpenGLDraw *pDraw) :
+		CameraFrameHandler(pDraw),
 		m_iHistNumBins(10),
 		m_iHistDrawCounter(0),
-		m_iHistDrawInterval(15), // update histogram every half second at 30fps
-		CameraFrameHandler(pDraw) {
+		m_iHistDrawInterval(15) {
 		m_pDiagram = new V2dDiagramDefault(
 			V2dDiagramDefault::AT_NOMINAL,
 			V2dDiagramDefault::AT_CONTINUOUS_INT,
@@ -91,9 +91,8 @@ namespace rhapsodies {
 		V2dIntAxisContinuous *pAxisY =
 			dynamic_cast<V2dIntAxisContinuous*>(m_pDiagram->GetAxisY());
 		pAxisY->SetAutoScaleMode(V2dIntAxisContinuous::ASM_MANUAL_EXACT);
-		pAxisY->SetMin(0);
-		pAxisY->SetMax(40000);
-
+		pAxisY->SetRange(0, 40000);
+		
 		V2dStringAxis *pAxisX =
 			dynamic_cast<V2dStringAxis*>(m_pDiagram->GetAxisX());
 		pAxisX->SetLabelOrientation(V2dStringAxis::LO_VERTICAL);

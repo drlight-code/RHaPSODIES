@@ -44,9 +44,9 @@ namespace rhapsodies {
 		V2dDiagramTextureVista *m_pDiagramTexture;
 		V2dDataSeriesIntContinuousOverString *m_pDataSeries;
 
+		int m_iHistNumBins;
 		int m_iHistDrawCounter;
 		int m_iHistDrawInterval;
-		int m_iHistNumBins;
 		HistogramUpdater *m_pHistUpdater;
 		
 	public:
