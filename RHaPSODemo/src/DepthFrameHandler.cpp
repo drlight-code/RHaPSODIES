@@ -54,6 +54,8 @@ namespace {
 		// clamp
 		ret = ret < 0.0 ? 0.0 : ret;
 		ret = ret > 1.0 ? 1.0 : ret;
+
+		return ret;
 	}
 }
 
@@ -63,7 +65,7 @@ namespace rhapsodies {
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
 	DepthFrameHandler::DepthFrameHandler(ImagePBOOpenGLDraw *pDraw) :
-		m_iHistNumBins(20),
+		m_iHistNumBins(10),
 		m_iHistDrawCounter(0),
 		m_iHistDrawInterval(15), // update histogram every half second at 30fps
 		CameraFrameHandler(pDraw) {
