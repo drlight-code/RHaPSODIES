@@ -4,6 +4,6 @@ for dir in ../VistaCoreLibs ../VistaFlowLib ../VflModules/VflTextRendering ../Vf
 	DIR=$(pwd)
 
 	cd $dir/build-debug
-	make || exit
+	make $* || exit
 	cd $DIR
 done
