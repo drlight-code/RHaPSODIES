@@ -62,6 +62,7 @@ namespace rhapsodies {
 	}
 
 	bool HandTracker::FrameUpdate() {
-
+		
+		return true;
 	}
 }

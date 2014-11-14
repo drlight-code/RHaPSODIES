@@ -38,8 +38,8 @@ namespace rhapsodies {
 		unsigned char m_pboIndex;
 		void *m_pPBO;
 
-		unsigned int m_texWidth;
-		unsigned int m_texHeight;
+		int m_texWidth;
+		int m_texHeight;
 		bool m_texUpdate;
 
 		VistaMutex *m_pDrawMutex;

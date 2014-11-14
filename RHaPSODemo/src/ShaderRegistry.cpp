@@ -65,7 +65,7 @@ namespace rhapsodies {
 			delete[] strInfoLog;
 		}
 
-		_mapShader[name] = shader;
+		m_mapShader[name] = shader;
 		return shader;
 	}
 
@@ -74,7 +74,7 @@ namespace rhapsodies {
 		GLuint program = glCreateProgram();
 
 		for(size_t iLoop = 0; iLoop < shader_names.size(); iLoop++)
-			glAttachShader(program, _mapShader[shader_names[iLoop]]);
+			glAttachShader(program, m_mapShader[shader_names[iLoop]]);
 
 		glLinkProgram(program);
 
@@ -92,24 +92,26 @@ namespace rhapsodies {
 		}
 
 		for(size_t iLoop = 0; iLoop < shader_names.size(); iLoop++)
-			glDetachShader(program, _mapShader[shader_names[iLoop]]);
+			glDetachShader(program, m_mapShader[shader_names[iLoop]]);
 
-		_mapProgram[name] = program;
+		m_mapProgram[name] = program;
 		return program;
 	}
 
 	GLuint ShaderRegistry::RegisterUniform(std::string program_name,
 										   std::string uniform_name) {
-		_mapUniform[program_name][uniform_name] =
-			glGetUniformLocation(GetProgram(program_name), uniform_name.c_str());
+		GLuint location = glGetUniformLocation(GetProgram(program_name),
+											   uniform_name.c_str());
+		m_mapUniform[program_name][uniform_name] = location;
+		return location;		
 	}
 
 	GLuint ShaderRegistry::GetProgram(std::string name) {
-		return _mapProgram[name];
+		return m_mapProgram[name];
 	}
 
 	GLuint ShaderRegistry::GetUniform(std::string program_name,
 									  std::string uniform_name) {
-		return _mapUniform[program_name][uniform_name];
+		return m_mapUniform[program_name][uniform_name];
 	}
 }

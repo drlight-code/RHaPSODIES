@@ -66,7 +66,7 @@ namespace rhapsodies {
 /*============================================================================*/
 	DepthFrameHandler::DepthFrameHandler(ImagePBOOpenGLDraw *pDraw) :
 		CameraFrameHandler(pDraw),
-		m_iHistNumBins(10),
+		m_iHistNumBins(30),
 		m_iHistDrawCounter(0),
 		m_iHistDrawInterval(15) {
 		m_pDiagram = new V2dDiagramDefault(
@@ -105,7 +105,7 @@ namespace rhapsodies {
 	DepthFrameHandler::~DepthFrameHandler() {
 		Enable(false);
 
-//		delete [] m_pBuffer;
+		delete [] m_pBuffer;
 		delete m_pHistUpdater;
 		delete m_pDataSeries;
 		delete m_pDiagram;

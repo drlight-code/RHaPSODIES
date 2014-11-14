@@ -9,9 +9,9 @@
 
 namespace rhapsodies {
 	class ShaderRegistry {
-		std::map<std::string, GLuint> _mapShader;
-		std::map<std::string, GLuint> _mapProgram;
-		std::map<std::string, std::map<std::string, GLuint> > _mapUniform;
+		std::map<std::string, GLuint> m_mapShader;
+		std::map<std::string, GLuint> m_mapProgram;
+		std::map<std::string, std::map<std::string, GLuint> > m_mapUniform;
 
 	public:
 		GLuint RegisterShader(std::string name,

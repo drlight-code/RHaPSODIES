@@ -46,11 +46,11 @@ namespace rhapsodies {
 										   ShaderRegistry *pShaderReg,
 										   VistaMutex *pDrawMutex) :
 		TexturedQuadGLDraw(pShaderReg),
-		m_pDrawMutex(pDrawMutex),
 		m_pboIndex(0),
-		m_texUpdate(false),
 		m_texWidth(width),
-		m_texHeight(height)
+		m_texHeight(height),
+		m_texUpdate(false),
+		m_pDrawMutex(pDrawMutex)
 	{
 		unsigned char *texData =
 			new unsigned char[m_texWidth*m_texHeight*3];
@@ -137,6 +137,8 @@ namespace rhapsodies {
 		m_texUpdate = true;
 
 		m_pDrawMutex->Unlock();
+
+		return true;
 	}
 
 	VistaMutex *ImagePBOOpenGLDraw::GetDrawMutex() {

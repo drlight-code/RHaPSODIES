@@ -132,6 +132,7 @@ namespace rhapsodies {
 		}
 		else {
 			std::cerr << "DEPTHSENSE driver NOT found!" << std::endl;
+			return false;
 		}
 
 		m_pDepthSensor = m_pDriver->GetSensorByName("DEPTH");
