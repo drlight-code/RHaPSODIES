@@ -122,7 +122,9 @@ namespace rhapsodies {
 		std::vector<int> vecBins(m_iHistNumBins);
 		int minVal = 1;
 		int maxVal = 10000;
-		int binWidth = (maxVal - minVal) / (m_iHistNumBins-1);
+
+		// add 1 for "rounding up" so we stay within index range
+		int binWidth = (maxVal - minVal) / (m_iHistNumBins-1) + 1;
 
 		bool bUpdateHistogram = false;
 		if(++m_iHistDrawCounter % m_iHistDrawInterval == 0) {
@@ -151,7 +153,11 @@ namespace rhapsodies {
 				if(val == 0)
 					vecBins[0]++;
 				else {
-					vecBins[(val-1)/binWidth+1]++;
+					val = val > maxVal ? maxVal : val;
+					val = val < minVal ? minVal : val;
+					
+					size_t iBin = (val-minVal)/binWidth+1;
+					vecBins[iBin]++;
 				}
 			}
 		}
