@@ -21,11 +21,13 @@
 /*============================================================================*/
 // $Id: $
 
+#include <cmath>
 #include <iostream>
 
-#include <VistaTools/VistaProfiler.h>
+#include <VistaBase/VistaStreamUtils.h>
 
 #include <RHaPSODemo.hpp>
+#include <ImagePBOOpenGLDraw.hpp>
 
 #include "HandTracker.hpp"
 
@@ -37,9 +39,18 @@
 /* LOCAL VARS AND FUNCS                                                       */
 /*============================================================================*/
 namespace {
+	float MapRangeExp(float value) {
+		// map range 0-1 exponentially
+		float base = 0.01;
+		float ret = (1 - pow(base, value))/(1-base);
+		
+		// clamp
+		ret = ret < 0.0 ? 0.0 : ret;
+		ret = ret > 1.0 ? 1.0 : ret;
 
+		return ret;
+	}
 }
-
 
 namespace rhapsodies {
 /*============================================================================*/
@@ -49,20 +60,52 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	void HandTracker::SetDriver(VistaDepthSenseDriver *pDriver) {
-		m_pDriver = pDriver;
-	}
-
 	bool HandTracker::Initialize() {
-		// get sensors from driver
+		vstr::out() << "Initializing RHaPSODIES HandTracker" << std::endl;
+
+		return true;
+	}
+	
+	void HandTracker::SetViewPBODraw(ViewType type,
+									 ImagePBOOpenGLDraw *pPBODraw) {
+		m_mapPBO[type] = pPBODraw;
+	}
+
+	bool HandTracker::FrameUpdate(const unsigned short *depthFrame,
+								  const unsigned char  *colorFrame) {
+		int iWidth  = 320;
+		int iHeight = 240;
 		
-		
-		
+		ImagePBOOpenGLDraw *pPBODraw = m_mapPBO[DEPTH];
+		if(pPBODraw) {
+			unsigned char pBuffer[iWidth*iHeight*3];
+			DepthToRGB(depthFrame, pBuffer);
+			pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
+		}
+
+		pPBODraw = m_mapPBO[COLOR];
+		if(pPBODraw) {
+			pPBODraw->FillPBOFromBuffer(colorFrame,	320, 240);
+		}
+
 		return true;
 	}
 
-	bool HandTracker::FrameUpdate() {
-		
-		return true;
+	void HandTracker::DepthToRGB(const unsigned short *depth,
+					unsigned char *rgb) {
+		for(int i = 0 ; i < 76800 ; i++) {
+			unsigned short val = depth[i];
+
+			if(val > 0) {
+				float linearvalue = val/4000.0;
+				float mappedvalue = MapRangeExp(linearvalue);
+
+				rgb[3*i] = rgb[3*i+1] = 255*(1-mappedvalue);
+			}
+			else {
+				rgb[3*i+1] = 200;
+				rgb[3*i+0] = rgb[3*i+2] = 0;
+			}
+		}
 	}
 }

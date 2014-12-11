@@ -52,8 +52,9 @@
 
 #include <ImageDraw.hpp>
 #include <ImagePBOOpenGLDraw.hpp>
-#include <ColorFrameHandler.hpp>
-#include <DepthFrameHandler.hpp>
+
+#include <DepthHistogramHandler.hpp>
+
 #include <ShaderRegistry.hpp>
 #include <HandTracker.hpp>
 #include <HistogramUpdater.hpp>
@@ -84,14 +85,13 @@ namespace rhapsodies {
 		m_pTracker(new HandTracker),
 		m_pSceneTransform(NULL), m_pDiagramTransform(NULL),
 		m_pDiagramDraw(NULL), m_pColorDraw(NULL), m_pDepthDraw(NULL),
-		m_pColorFrameHandler(NULL), m_pDepthFrameHandler(NULL),
+		m_pDepthHistogramHandler(NULL),
 		m_pDrawMutex(new VistaMutex)
 	{
 	}
 
 	RHaPSODemo::~RHaPSODemo() {
-		delete m_pColorFrameHandler;
-		delete m_pDepthFrameHandler;
+		delete m_pDepthHistogramHandler;
 
 		delete m_pColorDraw;
 		delete m_pDepthDraw;
@@ -185,9 +185,9 @@ namespace rhapsodies {
 	bool RHaPSODemo::InitTracker() {
 		bool success = true;
 		
-		VistaDepthSenseDriver* pDriver = static_cast<VistaDepthSenseDriver*>(
-			m_pSystem->GetInteractionManager()->GetDeviceDriver("DEPTHSENSE"));
-		m_pTracker->SetDriver(pDriver);
+		// VistaDepthSenseDriver* pDriver = static_cast<VistaDepthSenseDriver*>(
+		// 	m_pSystem->GetInteractionManager()->GetDeviceDriver("DEPTHSENSE"));
+
 		success &= m_pTracker->Initialize();
 
 		// register frame update handler
@@ -224,30 +224,29 @@ namespace rhapsodies {
 			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 								   m_pShaderReg, m_pDrawMutex);
 		m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pColorFrameHandler = new 
-			ColorFrameHandler(pPBODraw);
 		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,0,0));
+		m_pTracker->SetViewPBODraw(HandTracker::COLOR, pPBODraw); 
 
 		// ImageDraw for depth image
 		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 										  m_pShaderReg, m_pDrawMutex);
 		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pDepthFrameHandler = new DepthFrameHandler(pPBODraw);
+		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
 		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,0,0));
+		m_pTracker->SetViewPBODraw(HandTracker::DEPTH, pPBODraw); 
 
+		
 		// ImageDraw for histogram
 		m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
-									   m_pDepthFrameHandler->GetDiagramTexture(),
+									   m_pDepthHistogramHandler->GetDiagramTexture(),
 									   pSG);
 		m_pDiagramDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,0,0));
 
-
 		m_pSystem->GetEventManager()->RegisterObserver(
-		  	m_pDepthFrameHandler->GetHistogramUpdater(),
+		  	m_pDepthHistogramHandler->GetHistogramUpdater(),
 		 	VistaSystemEvent::GetTypeId());
 
-		m_pColorFrameHandler->Enable(true);
-		m_pDepthFrameHandler->Enable(true);
+		m_pDepthHistogramHandler->Enable(true);
 
 		return true;
 	}
@@ -262,27 +261,26 @@ namespace rhapsodies {
 		if(iNewCount > m_iDepthMeasures) {
 			m_iDepthMeasures = iNewCount;
 			// new depth data
-			const VistaMeasureHistory &oHistory =
+			const VistaMeasureHistory &oDHistory =
 				m_pDepthSensor->GetMeasures();
 			const VistaSensorMeasure *pM = 
-				oHistory.GetCurrentRead();
+				oDHistory.GetCurrentRead();
 				
-			const VistaDepthSenseDriver::DepthMeasure *pMeasure =
+			const VistaDepthSenseDriver::DepthMeasure *pDepthMeasure =
 				pM->getRead<VistaDepthSenseDriver::DepthMeasure>();
-			m_pDepthFrameHandler->ProcessFrame(pMeasure->frame);
-		}
-		iNewCount = m_pColorSensor->GetDataCount();
-		if(iNewCount > m_iColorMeasures) {
-			m_iColorMeasures = iNewCount;
-			// new color data
-			const VistaMeasureHistory &oHistory =
+			m_pDepthHistogramHandler->ProcessFrame(pDepthMeasure->frame);
+
+			const VistaMeasureHistory &oCHistory =
 				m_pColorSensor->GetMeasures();
-			const VistaSensorMeasure *pM = 
-				oHistory.GetCurrentRead();
-				
-			const VistaDepthSenseDriver::ColorMeasure *pMeasure =
+			pM = oCHistory.GetCurrentRead();
+			
+			const VistaDepthSenseDriver::ColorMeasure *pColorMeasure =
 				pM->getRead<VistaDepthSenseDriver::ColorMeasure>();
-			m_pColorFrameHandler->ProcessFrame(pMeasure->frame);
+
+			
+			m_pTracker->FrameUpdate(pDepthMeasure->frame,
+									pColorMeasure->frame);
+		
 		}
 	}
 

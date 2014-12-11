@@ -36,7 +36,7 @@
 #include <ImagePBOOpenGLDraw.hpp>
 #include <HistogramUpdater.hpp>
 
-#include "DepthFrameHandler.hpp"
+#include "DepthHistogramHandler.hpp"
 
 /*============================================================================*/
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
@@ -46,17 +46,6 @@
 /* LOCAL VARS AND FUNCS                                                       */
 /*============================================================================*/
 namespace {
-	float MapRangeExp(float value) {
-		// map range 0-1 exponentially
-		float base = 0.01;
-		float ret = (1 - pow(base, value))/(1-base);
-		
-		// clamp
-		ret = ret < 0.0 ? 0.0 : ret;
-		ret = ret > 1.0 ? 1.0 : ret;
-
-		return ret;
-	}
 }
 
 
@@ -64,11 +53,12 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	DepthFrameHandler::DepthFrameHandler(ImagePBOOpenGLDraw *pDraw) :
-		CameraFrameHandler(pDraw),
-		m_iHistNumBins(30),
+	DepthHistogramHandler::DepthHistogramHandler(ImagePBOOpenGLDraw *pDraw) :
+		m_pDraw(pDraw),
+		m_iHistNumBins(20),
 		m_iHistDrawCounter(0),
-		m_iHistDrawInterval(15) {
+		m_iHistDrawInterval(15)
+	{
 		m_pDiagram = new V2dDiagramDefault(
 			V2dDiagramDefault::AT_NOMINAL,
 			V2dDiagramDefault::AT_CONTINUOUS_INT,
@@ -91,21 +81,18 @@ namespace rhapsodies {
 		V2dIntAxisContinuous *pAxisY =
 			dynamic_cast<V2dIntAxisContinuous*>(m_pDiagram->GetAxisY());
 		pAxisY->SetAutoScaleMode(V2dIntAxisContinuous::ASM_MANUAL_EXACT);
-		pAxisY->SetRange(0, 40000);
+		pAxisY->SetRange(0, 10000);
 		
 		V2dStringAxis *pAxisX =
 			dynamic_cast<V2dStringAxis*>(m_pDiagram->GetAxisX());
 		pAxisX->SetLabelOrientation(V2dStringAxis::LO_VERTICAL);
 
 		m_pHistUpdater = new HistogramUpdater(m_pDiagram);
-
-		m_pBuffer =	new unsigned char[320*240*3];
 	}
 
-	DepthFrameHandler::~DepthFrameHandler() {
+	DepthHistogramHandler::~DepthHistogramHandler() {
 		Enable(false);
 
-		delete [] m_pBuffer;
 		delete m_pHistUpdater;
 		delete m_pDataSeries;
 		delete m_pDiagram;
@@ -114,14 +101,36 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	void DepthFrameHandler::ProcessFrame(const void* pFrame) {
+	V2dDiagramTextureVista *DepthHistogramHandler::GetDiagramTexture() {
+		return m_pDiagramTexture;
+	}
+
+	HistogramUpdater *DepthHistogramHandler::GetHistogramUpdater() {
+		return m_pHistUpdater;
+	}
+
+	ImagePBOOpenGLDraw *DepthHistogramHandler::GetPBODraw() {
+		return m_pDraw;
+	}
+
+	bool DepthHistogramHandler::Enable(bool bEnable) {
+		m_bEnabled = bEnable;
+		return true;
+	}
+
+	bool DepthHistogramHandler::isEnabled() {
+		return m_bEnabled;
+	}
+
+	void DepthHistogramHandler::ProcessFrame(const unsigned short* pFrame) {
 		int iWidth  = 320;
 		int iHeight = 240;
 
 		// calculate depth histogram
 		std::vector<int> vecBins(m_iHistNumBins);
 		int minVal = 1;
-		int maxVal = 10000;
+//		int maxVal = 2000;
+		int maxVal = 65536;
 
 		// add 1 for "rounding up" so we stay within index range
 		int binWidth = (maxVal - minVal) / (m_iHistNumBins-1) + 1;
@@ -132,24 +141,10 @@ namespace rhapsodies {
 			m_iHistDrawCounter = 0;
 		}
 
-		unsigned short* pData = (unsigned short*)pFrame;
-		for(int i = 0; i < iWidth*iHeight; i++) {
-			unsigned short val = pData[i];
-
-			// convert to RGB888 buffer
-			if(val > 0) {
-				float linearvalue = val/4000.0;
-				float mappedvalue = MapRangeExp(linearvalue);
-
-				m_pBuffer[3*i] = m_pBuffer[3*i+1] = 255*(1-mappedvalue);
-			}
-			else {
-				m_pBuffer[3*i+1] = 200;
-				m_pBuffer[3*i+0] = m_pBuffer[3*i+2] = 0;
-			}
-
-			if(bUpdateHistogram) {
-				// calculate histogram
+		if(bUpdateHistogram) {
+			int iters = iWidth*iHeight;
+			for(int i = 0; i < iters; i++) {
+				unsigned short val = pFrame[i];
 				if(val == 0)
 					vecBins[0]++;
 				else {
@@ -159,22 +154,10 @@ namespace rhapsodies {
 					size_t iBin = (val-minVal)/binWidth+1;
 					vecBins[iBin]++;
 				}
+
+				m_pDataSeries->ReplaceDataPointsY(0, 0, m_iHistNumBins, vecBins);
+				m_pHistUpdater->GetThreadEvent()->SignalEvent();
 			}
 		}
-
-		if(bUpdateHistogram) {
-			m_pDataSeries->ReplaceDataPointsY(0, 0, m_iHistNumBins, vecBins);
-			m_pHistUpdater->GetThreadEvent()->SignalEvent();
-		}
-
-		GetPBODraw()->FillPBOFromBuffer(m_pBuffer, 320, 240);
-	}
-
-	V2dDiagramTextureVista *DepthFrameHandler::GetDiagramTexture() {
-		return m_pDiagramTexture;
-	}
-
-	HistogramUpdater *DepthFrameHandler::GetHistogramUpdater() {
-		return m_pHistUpdater;
 	}
 }

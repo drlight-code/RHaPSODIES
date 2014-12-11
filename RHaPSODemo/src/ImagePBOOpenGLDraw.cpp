@@ -128,7 +128,7 @@ namespace rhapsodies {
 		m_pDrawMutex->Unlock();
 	}
 
-	bool ImagePBOOpenGLDraw::FillPBOFromBuffer(const void* pData,
+	bool ImagePBOOpenGLDraw::FillPBOFromBuffer(const unsigned char* pData,
 											   int width, int height) {
 		m_pDrawMutex->Lock();
 

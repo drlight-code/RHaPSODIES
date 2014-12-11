@@ -24,15 +24,32 @@
 #ifndef _RHAPSODIES_HANDTRACKER
 #define _RHAPSODIES_HANDTRACKER
 
-namespace rhapsodies {
-	class HandTracker {
-		VistaDepthSenseDriver *m_pDriver;
+#include <map>
 
+namespace rhapsodies {
+	class ImagePBOOpenGLDraw;
+	
+	class HandTracker {
 	public:
-		void SetDriver(VistaDepthSenseDriver *pDriver);
+		enum ViewType {
+			COLOR,
+			DEPTH			
+		};
 
 		bool Initialize();
-		bool FrameUpdate();
+
+		void SetViewPBODraw(ViewType type,
+							ImagePBOOpenGLDraw *pPBODraw);
+		
+		bool FrameUpdate(const unsigned short *depthFrame,
+						 const unsigned char  *colorFrame);
+
+	private:
+		void DepthToRGB(const unsigned short *depth,
+						unsigned char *rgb);
+		
+		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
+		MapPBO m_mapPBO;
 	};
 }
 

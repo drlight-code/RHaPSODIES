@@ -34,8 +34,7 @@ class VistaOpenGLNode;
 class VistaDepthSenseDriver;
 class VistaDeviceSensor;
 
-class ColorFrameHandler;
-class DepthFrameHandler;
+class DepthHistogramHandler;
 
 namespace rhapsodies {
 	class ImageDraw;
@@ -61,8 +60,8 @@ namespace rhapsodies {
 		ImageDraw *m_pDiagramDraw;
 		ImageDraw *m_pColorDraw;
 		ImageDraw *m_pDepthDraw;
-		ColorFrameHandler *m_pColorFrameHandler;
-		DepthFrameHandler *m_pDepthFrameHandler;
+
+		DepthHistogramHandler *m_pDepthHistogramHandler;
 
 		VistaMutex *m_pDrawMutex;
 

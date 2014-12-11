@@ -9,9 +9,7 @@ set( DirFiles
   	ImageDraw.cpp
 	TexturedQuadGLDraw.cpp
 	ImagePBOOpenGLDraw.cpp
-	CameraFrameHandler.cpp
-	DepthFrameHandler.cpp
-	ColorFrameHandler.cpp
+	DepthHistogramHandler.cpp
 	HistogramUpdater.cpp
   	ShaderRegistry.cpp
   	HandTracker.cpp

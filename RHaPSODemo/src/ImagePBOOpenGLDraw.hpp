@@ -52,7 +52,7 @@ namespace rhapsodies {
 
 		virtual void UpdateTexture();
 
-		bool FillPBOFromBuffer(const void*,
+		bool FillPBOFromBuffer(const unsigned char*,
 							   int width, int height);
 
 		VistaMutex *GetDrawMutex();

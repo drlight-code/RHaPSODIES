@@ -21,20 +21,48 @@
 /*============================================================================*/
 // $Id: $
 
-#ifndef _RHAPSODIES_COLORFRAMEHANDLER
-#define _RHAPSODIES_COLORFRAMEHANDLER
+#ifndef _RHAPSODIES_DEPTHFRAMEHANDLER
+#define _RHAPSODIES_DEPTHFRAMEHANDLER
 
 #include <CameraFrameHandler.hpp>
 
-namespace rhapsodies {
-	class ColorFrameHandler : public CameraFrameHandler {
-	public:
-		ColorFrameHandler(ImagePBOOpenGLDraw *pDraw);
-		virtual ~ColorFrameHandler();
+// @todo forward declare the data series, mon!
+#include <Vfl2DDiagrams/Data/V2dDataSeriesTypes.h>
 
-		// ColorFrameHandler methods
-		void ProcessFrame(const void *pFrame);
+class V2dDiagramDefault;
+class V2dDiagramTextureVista;
+
+namespace rhapsodies {
+	class ImagePBOOpenGLDraw;
+	class HistogramUpdater;
+
+	class DepthHistogramHandler {
+		bool m_bEnabled;
+
+		ImagePBOOpenGLDraw *m_pDraw;
+
+		V2dDiagramDefault *m_pDiagram;
+		V2dDiagramTextureVista *m_pDiagramTexture;
+		V2dDataSeriesIntContinuousOverString *m_pDataSeries;
+
+		int m_iHistNumBins;
+		int m_iHistDrawCounter;
+		int m_iHistDrawInterval;
+		HistogramUpdater *m_pHistUpdater;
+		
+	public:
+		DepthHistogramHandler(ImagePBOOpenGLDraw *pDraw);
+		virtual ~DepthHistogramHandler();
+
+		V2dDiagramTextureVista *GetDiagramTexture();
+		HistogramUpdater       *GetHistogramUpdater();
+		ImagePBOOpenGLDraw     *GetPBODraw();
+
+		bool Enable(bool bEnable);
+		bool isEnabled();
+
+		void ProcessFrame(const unsigned short *pFrame);
 	};
 }
 
-#endif // _RHAPSODIES_COLORFRAMEHANDLER
+#endif // _RHAPSODIES_DEPTHFRAMEHANDLER
