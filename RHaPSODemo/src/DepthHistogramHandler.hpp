@@ -24,8 +24,6 @@
 #ifndef _RHAPSODIES_DEPTHFRAMEHANDLER
 #define _RHAPSODIES_DEPTHFRAMEHANDLER
 
-#include <CameraFrameHandler.hpp>
-
 // @todo forward declare the data series, mon!
 #include <Vfl2DDiagrams/Data/V2dDataSeriesTypes.h>
 

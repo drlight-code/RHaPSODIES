@@ -129,8 +129,7 @@ namespace rhapsodies {
 		// calculate depth histogram
 		std::vector<int> vecBins(m_iHistNumBins);
 		int minVal = 1;
-//		int maxVal = 2000;
-		int maxVal = 65536;
+		int maxVal = 2000;
 
 		// add 1 for "rounding up" so we stay within index range
 		int binWidth = (maxVal - minVal) / (m_iHistNumBins-1) + 1;

@@ -41,10 +41,13 @@ namespace rhapsodies {
 		void SetViewPBODraw(ViewType type,
 							ImagePBOOpenGLDraw *pPBODraw);
 		
-		bool FrameUpdate(const unsigned short *depthFrame,
-						 const unsigned char  *colorFrame);
+		bool FrameUpdate(const unsigned char  *colorFrame,
+						 const unsigned short *depthFrame);
 
 	private:
+		void FilterSkinAreas(unsigned char  *colorFrame,
+							 unsigned short *depthFrame);
+
 		void DepthToRGB(const unsigned short *depth,
 						unsigned char *rgb);
 		

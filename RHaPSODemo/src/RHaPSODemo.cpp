@@ -278,8 +278,8 @@ namespace rhapsodies {
 				pM->getRead<VistaDepthSenseDriver::ColorMeasure>();
 
 			
-			m_pTracker->FrameUpdate(pDepthMeasure->frame,
-									pColorMeasure->frame);
+			m_pTracker->FrameUpdate(pColorMeasure->frame,
+									pDepthMeasure->frame);
 		
 		}
 	}

@@ -22,6 +22,7 @@
 // $Id: $
 
 #include <cmath>
+#include <cstring>
 #include <iostream>
 
 #include <VistaBase/VistaStreamUtils.h>
@@ -71,24 +72,72 @@ namespace rhapsodies {
 		m_mapPBO[type] = pPBODraw;
 	}
 
-	bool HandTracker::FrameUpdate(const unsigned short *depthFrame,
-								  const unsigned char  *colorFrame) {
+	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
+								  const unsigned short *depthFrame) {
 		int iWidth  = 320;
 		int iHeight = 240;
+
+		// create writable copy of sensor measurement buffers
+		unsigned char  colorBuffer[320*240*3];
+		unsigned short depthBuffer[320*240];
+
+		memcpy(colorBuffer, colorFrame, 320*240*3);
+		memcpy(depthBuffer, depthFrame, 320*240*2);
+
+		FilterSkinAreas(colorBuffer, depthBuffer);
 		
 		ImagePBOOpenGLDraw *pPBODraw = m_mapPBO[DEPTH];
 		if(pPBODraw) {
 			unsigned char pBuffer[iWidth*iHeight*3];
-			DepthToRGB(depthFrame, pBuffer);
+			DepthToRGB(depthBuffer, pBuffer);
 			pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
 		}
 
 		pPBODraw = m_mapPBO[COLOR];
 		if(pPBODraw) {
-			pPBODraw->FillPBOFromBuffer(colorFrame,	320, 240);
+			pPBODraw->FillPBOFromBuffer(colorBuffer, 320, 240);
 		}
 
 		return true;
+	}
+
+	void HandTracker::FilterSkinAreas(unsigned char  *colorFrame,
+									  unsigned short *depthFrame) {
+
+		// detects skin. loops through the pixels in the image, if the
+		// pixel is skin then it leaves that pixel unchanged, or else it will    
+		// color that pixel black. (Modified LOG). First, convert RGB
+		// color space to IRgBy color space using this formula:
+
+ 		int R, G, B;
+		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
+			R = colorFrame[3*pixel];
+			G = colorFrame[3*pixel+1];
+			B = colorFrame[3*pixel+2];
+
+            // I= L(G);
+			double Rg = log(R) - log(G);
+			double By = log(B) - (log(G) +log(R)) / 2.0 ;
+
+            // 20 <= I <= 90 from YIQ Color Space
+			int I = int(0.5957*R - 0.2745*G - 0.3213*B);
+
+			// ?
+			int H = atan2(Rg,By) * (180.0 / 3.141592654);
+
+			if (I >= 20 && I <= 90 && (H >= 100 && H <= 150) ) 
+			{ 
+				//skin; 
+			} 
+			else 
+			{ 
+				//non skin
+				colorFrame[3*pixel] =
+					colorFrame[3*pixel+1] =
+					colorFrame[3*pixel+2] = 0;
+				depthFrame[pixel] = 0;												 
+			} 
+		} 		
 	}
 
 	void HandTracker::DepthToRGB(const unsigned short *depth,
@@ -97,13 +146,13 @@ namespace rhapsodies {
 			unsigned short val = depth[i];
 
 			if(val > 0) {
-				float linearvalue = val/4000.0;
+				float linearvalue = val/2000.0;
 				float mappedvalue = MapRangeExp(linearvalue);
 
 				rgb[3*i] = rgb[3*i+1] = 255*(1-mappedvalue);
 			}
 			else {
-				rgb[3*i+1] = 200;
+				rgb[3*i+1] = 0;
 				rgb[3*i+0] = rgb[3*i+2] = 0;
 			}
 		}
