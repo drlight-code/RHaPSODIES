@@ -2,6 +2,7 @@
 
 set( RelativeDir "src" )
 set( RelativeSourceGroup "source" )
+set( SubDirs SkinClassifiers )
 
 set( DirFiles
 	main.cpp
@@ -24,3 +25,11 @@ foreach( File ${DirFiles} )
 endforeach()
 source_group( ${DirFiles_SourceGroup} FILES ${LocalSourceGroupFiles} )
 
+set( SubDirFiles "" )
+foreach( Dir ${SubDirs} )
+	list( APPEND SubDirFiles "${RelativeDir}/${Dir}/_SourceFiles.cmake" )
+endforeach()
+
+foreach( SubDirFile ${SubDirFiles} )
+	include( ${SubDirFile} )
+endforeach()

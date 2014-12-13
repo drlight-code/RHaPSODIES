@@ -30,6 +30,15 @@
 #include <RHaPSODemo.hpp>
 #include <ImagePBOOpenGLDraw.hpp>
 
+#include <SkinClassifiers/SkinClassifierLogOpponentYIQ.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter0.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter1.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter2.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter3.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter4.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter5.hpp>
+
+
 #include "HandTracker.hpp"
 
 /*============================================================================*/
@@ -64,6 +73,31 @@ namespace rhapsodies {
 	bool HandTracker::Initialize() {
 		vstr::out() << "Initializing RHaPSODIES HandTracker" << std::endl;
 
+		// Initialize the different skin classifiers
+		SkinClassifierLogOpponentYIQ *pSkinLOYIQ =
+			new SkinClassifierLogOpponentYIQ;
+		m_lClassifiers.push_back(pSkinLOYIQ);
+
+		SkinClassifier *pSkinCl = new SkinClassifierRedMatter0;
+		m_lClassifiers.push_back(pSkinCl);
+
+		pSkinCl = new SkinClassifierRedMatter1;
+		m_lClassifiers.push_back(pSkinCl);
+
+		pSkinCl = new SkinClassifierRedMatter2;
+		m_lClassifiers.push_back(pSkinCl);
+
+		pSkinCl = new SkinClassifierRedMatter3;
+		m_lClassifiers.push_back(pSkinCl);
+
+		pSkinCl = new SkinClassifierRedMatter4;
+		m_lClassifiers.push_back(pSkinCl);
+
+		pSkinCl = new SkinClassifierRedMatter5;
+		m_lClassifiers.push_back(pSkinCl);
+
+		m_itCurrentClassifier = m_lClassifiers.begin();
+		
 		return true;
 	}
 	
@@ -84,18 +118,30 @@ namespace rhapsodies {
 		memcpy(colorBuffer, colorFrame, 320*240*3);
 		memcpy(depthBuffer, depthFrame, 320*240*2);
 
-		FilterSkinAreas(colorBuffer, depthBuffer);
-		
-		ImagePBOOpenGLDraw *pPBODraw = m_mapPBO[DEPTH];
+		ImagePBOOpenGLDraw *pPBODraw = m_mapPBO[COLOR];
+		if(pPBODraw) {
+			pPBODraw->FillPBOFromBuffer(colorBuffer, 320, 240);
+		}
+
+		pPBODraw = m_mapPBO[DEPTH];
 		if(pPBODraw) {
 			unsigned char pBuffer[iWidth*iHeight*3];
 			DepthToRGB(depthBuffer, pBuffer);
 			pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
 		}
 
-		pPBODraw = m_mapPBO[COLOR];
+		FilterSkinAreas(colorBuffer, depthBuffer);
+		
+		pPBODraw = m_mapPBO[COLOR_SEGMENTED];
 		if(pPBODraw) {
 			pPBODraw->FillPBOFromBuffer(colorBuffer, 320, 240);
+		}
+
+		pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
+		if(pPBODraw) {
+			unsigned char pBuffer[iWidth*iHeight*3];
+			DepthToRGB(depthBuffer, pBuffer);
+			pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
 		}
 
 		return true;
@@ -104,40 +150,28 @@ namespace rhapsodies {
 	void HandTracker::FilterSkinAreas(unsigned char  *colorFrame,
 									  unsigned short *depthFrame) {
 
-		// detects skin. loops through the pixels in the image, if the
-		// pixel is skin then it leaves that pixel unchanged, or else it will    
-		// color that pixel black. (Modified LOG). First, convert RGB
-		// color space to IRgBy color space using this formula:
-
- 		int R, G, B;
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
-			R = colorFrame[3*pixel];
-			G = colorFrame[3*pixel+1];
-			B = colorFrame[3*pixel+2];
+			if( (*m_itCurrentClassifier)->IsSkinPixel(colorFrame+3*pixel) ) {
+				// yay! skin!
+			}
+			else {
+				colorFrame[3*pixel+0] = 0;
+				colorFrame[3*pixel+1] = 0;
+				colorFrame[3*pixel+2] = 0;
 
-            // I= L(G);
-			double Rg = log(R) - log(G);
-			double By = log(B) - (log(G) +log(R)) / 2.0 ;
-
-            // 20 <= I <= 90 from YIQ Color Space
-			int I = int(0.5957*R - 0.2745*G - 0.3213*B);
-
-			// ?
-			int H = atan2(Rg,By) * (180.0 / 3.141592654);
-
-			if (I >= 20 && I <= 90 && (H >= 100 && H <= 150) ) 
-			{ 
-				//skin; 
-			} 
-			else 
-			{ 
-				//non skin
-				colorFrame[3*pixel] =
-					colorFrame[3*pixel+1] =
-					colorFrame[3*pixel+2] = 0;
-				depthFrame[pixel] = 0;												 
-			} 
+				depthFrame[pixel] = 0;
+			}				
 		} 		
+	}
+
+	SkinClassifier *HandTracker::GetSkinClassifier() {
+		return *m_itCurrentClassifier;
+	}
+	
+	void HandTracker::NextSkinClassifier() {
+		m_itCurrentClassifier++;
+		if(m_itCurrentClassifier == m_lClassifiers.end())
+			m_itCurrentClassifier = m_lClassifiers.begin();
 	}
 
 	void HandTracker::DepthToRGB(const unsigned short *depth,

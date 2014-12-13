@@ -224,16 +224,31 @@ namespace rhapsodies {
 			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 								   m_pShaderReg, m_pDrawMutex);
 		m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,0,0));
+		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,1,0));
 		m_pTracker->SetViewPBODraw(HandTracker::COLOR, pPBODraw); 
+
+		// ImageDraw for segmented color image
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
+										  m_pShaderReg, m_pDrawMutex);
+		m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,-1,0));
+		m_pTracker->SetViewPBODraw(HandTracker::COLOR_SEGMENTED, pPBODraw); 
 
 		// ImageDraw for depth image
 		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 										  m_pShaderReg, m_pDrawMutex);
 		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
-		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,0,0));
+		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,1,0));
 		m_pTracker->SetViewPBODraw(HandTracker::DEPTH, pPBODraw); 
+
+		// ImageDraw for segmented depth image
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
+										  m_pShaderReg, m_pDrawMutex);
+		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
+		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,-1,0));
+		m_pTracker->SetViewPBODraw(HandTracker::DEPTH_SEGMENTED, pPBODraw); 
 
 		
 		// ImageDraw for histogram

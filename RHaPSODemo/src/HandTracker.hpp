@@ -24,16 +24,20 @@
 #ifndef _RHAPSODIES_HANDTRACKER
 #define _RHAPSODIES_HANDTRACKER
 
+#include <list>
 #include <map>
 
 namespace rhapsodies {
 	class ImagePBOOpenGLDraw;
+	class SkinClassifier;
 	
 	class HandTracker {
 	public:
 		enum ViewType {
 			COLOR,
-			DEPTH			
+			COLOR_SEGMENTED,
+			DEPTH,
+			DEPTH_SEGMENTED
 		};
 
 		bool Initialize();
@@ -44,6 +48,9 @@ namespace rhapsodies {
 		bool FrameUpdate(const unsigned char  *colorFrame,
 						 const unsigned short *depthFrame);
 
+		SkinClassifier *GetSkinClassifier();
+		void NextSkinClassifier();
+
 	private:
 		void FilterSkinAreas(unsigned char  *colorFrame,
 							 unsigned short *depthFrame);
@@ -53,6 +60,10 @@ namespace rhapsodies {
 		
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
 		MapPBO m_mapPBO;
+
+		typedef std::list<SkinClassifier*> ListSkinCl;
+		ListSkinCl m_lClassifiers;
+		ListSkinCl::iterator m_itCurrentClassifier;
 	};
 }
 
