@@ -81,7 +81,7 @@ namespace rhapsodies {
 		V2dIntAxisContinuous *pAxisY =
 			dynamic_cast<V2dIntAxisContinuous*>(m_pDiagram->GetAxisY());
 		pAxisY->SetAutoScaleMode(V2dIntAxisContinuous::ASM_MANUAL_EXACT);
-		pAxisY->SetRange(0, 10000);
+		pAxisY->SetRange(0, 20000);
 		
 		V2dStringAxis *pAxisX =
 			dynamic_cast<V2dStringAxis*>(m_pDiagram->GetAxisX());
