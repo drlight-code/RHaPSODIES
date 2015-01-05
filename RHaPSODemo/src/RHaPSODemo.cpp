@@ -189,7 +189,11 @@ namespace rhapsodies {
 		delete m_pDepthHistogramHandler;
 
 		delete m_pColorDraw;
+		delete m_pColorSegDraw;
 		delete m_pDepthDraw;
+		delete m_pDepthSegDraw;
+		delete m_pUVMapDraw;
+		delete m_pUVMapSegDraw;
 		if(m_pDiagramDraw)
 			delete m_pDiagramDraw;
 
@@ -208,30 +212,6 @@ namespace rhapsodies {
 
 		success &= m_pSystem->Init(argc, argv);
 		glewInit();
-
-		// static_cast for now. for dynamic_cast we need to link
-		// against the VistaDepthSenseDriver for the vtable (and thus
-		// typeinfo struct) to be available at link time.
-		// m_pDriver = static_cast<VistaDepthSenseDriver*>(
-		// 	m_pSystem->GetDriverMap()->GetDeviceDriver("DEPTHSENSE"));
-
-		// if(m_pDriver) {
-		// 	std::cout << "DEPTHSENSE driver found" << std::endl;
-		// 	std::cout << "Sensors: " << std::endl;
-		// 	for(unsigned int i = 0 ; 
-		// 		i < m_pDriver->GetNumberOfSensors() ; i++) {
-		// 		std::cout << m_pDriver->GetSensorByIndex(i)
-		// 			->GetSensorName() << std::endl;
-		// 	}
-		// 	std::cout << std::endl;
-		// }
-		// else {
-		// 	std::cerr << "DEPTHSENSE driver NOT found!" << std::endl;
-		// 	return false;
-		// }
-
-		// m_pDepthSensor = m_pDriver->GetSensorByName("DEPTH");
-		// m_pColorSensor = m_pDriver->GetSensorByName("RGB");
 
 		VtrFontManager::GetInstance()
 			->SetFontDirectory("resources/fonts/");
@@ -294,9 +274,6 @@ namespace rhapsodies {
 	bool RHaPSODemo::InitTracker() {
 		bool success = true;
 		
-		// VistaDepthSenseDriver* pDriver = static_cast<VistaDepthSenseDriver*>(
-		// 	m_pSystem->GetInteractionManager()->GetDeviceDriver("DEPTHSENSE"));
-
 		success &= m_pTracker->Initialize();
 
 		// register frame update handler
