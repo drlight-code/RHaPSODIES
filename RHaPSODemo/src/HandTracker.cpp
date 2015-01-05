@@ -38,7 +38,6 @@
 #include <SkinClassifiers/SkinClassifierRedMatter4.hpp>
 #include <SkinClassifiers/SkinClassifierRedMatter5.hpp>
 
-
 #include "HandTracker.hpp"
 
 /*============================================================================*/
@@ -172,6 +171,12 @@ namespace rhapsodies {
 		m_itCurrentClassifier++;
 		if(m_itCurrentClassifier == m_lClassifiers.end())
 			m_itCurrentClassifier = m_lClassifiers.begin();
+	}
+
+	void HandTracker::PrevSkinClassifier() {
+		m_itCurrentClassifier--;
+		if(m_itCurrentClassifier == m_lClassifiers.begin())
+			m_itCurrentClassifier = m_lClassifiers.end()--;
 	}
 
 	void HandTracker::DepthToRGB(const unsigned short *depth,

@@ -1,0 +1,31 @@
+<module>
+<nodespace>
+</nodespace>
+<graph>
+	<node name="depthsense_color" type="DriverSensor">
+		<param name="sensor_index" value="0"/>
+		<param name="driver" value="DEPTHSENSE"/>
+	</node>
+
+	<node name="depthsense_depth" type="DriverSensor">
+		<param name="sensor_index" value="1"/>
+		<param name="driver" value="DEPTHSENSE"/>
+	</node>
+
+	<node name="project_color" type="HistoryProject">
+		<param name="project">COLOR_FRAME</param>
+	</node>
+	<node name="project_depth" type="HistoryProject">
+		<param name="project">DEPTH_FRAME</param>
+	</node>
+	
+	<node name="handtracker" type="HandTracker"/>
+</graph>
+<edges>
+	<edge fromnode="depthsense_color" tonode="project_color" fromport="history" toport="history"/>
+	<edge fromnode="depthsense_depth" tonode="project_depth" fromport="history" toport="history"/>
+	
+	<edge fromnode="project_color" tonode="handtracker" fromport="COLOR_FRAME"   toport="color_frame"/>
+	<edge fromnode="project_depth" tonode="handtracker" fromport="DEPTH_FRAME"   toport="depth_frame"/>
+</edges>
+</module>

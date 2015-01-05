@@ -37,7 +37,8 @@ namespace rhapsodies {
 			COLOR,
 			COLOR_SEGMENTED,
 			DEPTH,
-			DEPTH_SEGMENTED
+			DEPTH_SEGMENTED,
+			UV_MAP
 		};
 
 		bool Initialize();
@@ -50,6 +51,7 @@ namespace rhapsodies {
 
 		SkinClassifier *GetSkinClassifier();
 		void NextSkinClassifier();
+		void PrevSkinClassifier();
 
 	private:
 		void FilterSkinAreas(unsigned char  *colorFrame,

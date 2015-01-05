@@ -14,6 +14,7 @@ set( DirFiles
 	HistogramUpdater.cpp
   	ShaderRegistry.cpp
   	HandTracker.cpp
+  	HandTrackingNode.cpp
 	_SourceFiles.cmake
 )
 set( DirFiles_SourceGroup "${RelativeSourceGroup}" )

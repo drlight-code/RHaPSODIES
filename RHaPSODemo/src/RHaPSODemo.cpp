@@ -56,8 +56,10 @@
 #include <DepthHistogramHandler.hpp>
 
 #include <ShaderRegistry.hpp>
-#include <HandTracker.hpp>
 #include <HistogramUpdater.hpp>
+
+#include <HandTracker.hpp>
+#include <HandTrackingNode.hpp>
 
 #include "RHaPSODemo.hpp"
 
@@ -84,7 +86,8 @@ namespace rhapsodies {
 		m_iDepthMeasures(0), m_iColorMeasures(0),
 		m_pTracker(new HandTracker),
 		m_pSceneTransform(NULL), m_pDiagramTransform(NULL),
-		m_pDiagramDraw(NULL), m_pColorDraw(NULL), m_pDepthDraw(NULL),
+		m_pDiagramDraw(NULL), m_pColorDraw(NULL),
+		m_pDepthDraw(NULL), m_pUVMapDraw(NULL),
 		m_pDepthHistogramHandler(NULL),
 		m_pDrawMutex(new VistaMutex)
 	{
@@ -117,26 +120,26 @@ namespace rhapsodies {
 		// static_cast for now. for dynamic_cast we need to link
 		// against the VistaDepthSenseDriver for the vtable (and thus
 		// typeinfo struct) to be available at link time.
-		m_pDriver = static_cast<VistaDepthSenseDriver*>(
-			m_pSystem->GetDriverMap()->GetDeviceDriver("DEPTHSENSE"));
+		// m_pDriver = static_cast<VistaDepthSenseDriver*>(
+		// 	m_pSystem->GetDriverMap()->GetDeviceDriver("DEPTHSENSE"));
 
-		if(m_pDriver) {
-			std::cout << "DEPTHSENSE driver found" << std::endl;
-			std::cout << "Sensors: " << std::endl;
-			for(unsigned int i = 0 ; 
-				i < m_pDriver->GetNumberOfSensors() ; i++) {
-				std::cout << m_pDriver->GetSensorByIndex(i)
-					->GetSensorName() << std::endl;
-			}
-			std::cout << std::endl;
-		}
-		else {
-			std::cerr << "DEPTHSENSE driver NOT found!" << std::endl;
-			return false;
-		}
+		// if(m_pDriver) {
+		// 	std::cout << "DEPTHSENSE driver found" << std::endl;
+		// 	std::cout << "Sensors: " << std::endl;
+		// 	for(unsigned int i = 0 ; 
+		// 		i < m_pDriver->GetNumberOfSensors() ; i++) {
+		// 		std::cout << m_pDriver->GetSensorByIndex(i)
+		// 			->GetSensorName() << std::endl;
+		// 	}
+		// 	std::cout << std::endl;
+		// }
+		// else {
+		// 	std::cerr << "DEPTHSENSE driver NOT found!" << std::endl;
+		// 	return false;
+		// }
 
-		m_pDepthSensor = m_pDriver->GetSensorByName("DEPTH");
-		m_pColorSensor = m_pDriver->GetSensorByName("RGB");
+		// m_pDepthSensor = m_pDriver->GetSensorByName("DEPTH");
+		// m_pColorSensor = m_pDriver->GetSensorByName("RGB");
 
 		VtrFontManager::GetInstance()
 			->SetFontDirectory("resources/fonts/");
@@ -149,6 +152,11 @@ namespace rhapsodies {
 		success &= InitTracker();
 		success &= CreateScene();
 
+		// register tracking node with DFN
+		VdfnNodeFactory *pFac = VdfnNodeFactory::GetSingleton();
+		pFac->SetNodeCreator( "HandTracker",
+							  new HandTrackingNodeCreate(m_pTracker) );
+		
 		return success;
 	}
 
@@ -250,12 +258,19 @@ namespace rhapsodies {
 		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,-1,0));
 		m_pTracker->SetViewPBODraw(HandTracker::DEPTH_SEGMENTED, pPBODraw); 
 
-		
+		// ImageDraw for UV map
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
+										  m_pShaderReg, m_pDrawMutex);
+		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
+		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,1,0));
+		m_pTracker->SetViewPBODraw(HandTracker::UV_MAP, pPBODraw); 
+
 		// ImageDraw for histogram
 		m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
 									   m_pDepthHistogramHandler->GetDiagramTexture(),
 									   pSG);
-		m_pDiagramDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,0,0));
+		m_pDiagramDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,-1,0));
 
 		m_pSystem->GetEventManager()->RegisterObserver(
 		  	m_pDepthHistogramHandler->GetHistogramUpdater(),
@@ -271,32 +286,7 @@ namespace rhapsodies {
 	}
 
 	void RHaPSODemo::FrameLoop() {
-		// poll sensors for new data
-		int iNewCount = m_pDepthSensor->GetDataCount();
-		if(iNewCount > m_iDepthMeasures) {
-			m_iDepthMeasures = iNewCount;
-			// new depth data
-			const VistaMeasureHistory &oDHistory =
-				m_pDepthSensor->GetMeasures();
-			const VistaSensorMeasure *pM = 
-				oDHistory.GetCurrentRead();
-				
-			const VistaDepthSenseDriver::DepthMeasure *pDepthMeasure =
-				pM->getRead<VistaDepthSenseDriver::DepthMeasure>();
-			m_pDepthHistogramHandler->ProcessFrame(pDepthMeasure->frame);
 
-			const VistaMeasureHistory &oCHistory =
-				m_pColorSensor->GetMeasures();
-			pM = oCHistory.GetCurrentRead();
-			
-			const VistaDepthSenseDriver::ColorMeasure *pColorMeasure =
-				pM->getRead<VistaDepthSenseDriver::ColorMeasure>();
-
-			
-			m_pTracker->FrameUpdate(pColorMeasure->frame,
-									pDepthMeasure->frame);
-		
-		}
 	}
 
 	void RHaPSODemo::HandleEvent(VistaEvent *pEvent) {
@@ -306,4 +296,5 @@ namespace rhapsodies {
 			}
 		}
 	}
+
 }
