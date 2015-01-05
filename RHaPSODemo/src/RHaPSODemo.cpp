@@ -82,12 +82,15 @@ namespace rhapsodies {
 		m_camWidth(320), m_camHeight(240),
 		m_pSystem(new VistaSystem),
 		m_pShaderReg(new ShaderRegistry),
-		m_pDriver(NULL), m_pColorSensor(NULL), m_pDepthSensor(NULL),
-		m_iDepthMeasures(0), m_iColorMeasures(0),
 		m_pTracker(new HandTracker),
 		m_pSceneTransform(NULL), m_pDiagramTransform(NULL),
-		m_pDiagramDraw(NULL), m_pColorDraw(NULL),
-		m_pDepthDraw(NULL), m_pUVMapDraw(NULL),
+		m_pDiagramDraw(NULL), 
+		m_pColorDraw(NULL),
+		m_pColorSegDraw(NULL),
+		m_pDepthDraw(NULL), 
+		m_pDepthSegDraw(NULL), 
+		m_pUVMapDraw(NULL),
+		m_pUVMapSegDraw(NULL),
 		m_pDepthHistogramHandler(NULL),
 		m_pDrawMutex(new VistaMutex)
 	{
@@ -225,52 +228,63 @@ namespace rhapsodies {
 
 		// create global scene transform
 		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
-		m_pSceneTransform->Translate(0, 0, -2.2);
+		m_pSceneTransform->Translate(-1, 0, -3.0);
 
 		// ImageDraw for color image
 		ImagePBOOpenGLDraw *pPBODraw = 
 			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 								   m_pShaderReg, m_pDrawMutex);
+		m_pTracker->SetViewPBODraw(HandTracker::COLOR, pPBODraw); 
+
 		m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,1,0));
-		m_pTracker->SetViewPBODraw(HandTracker::COLOR, pPBODraw); 
 
 		// ImageDraw for segmented color image
 		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 										  m_pShaderReg, m_pDrawMutex);
-		m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,-1,0));
 		m_pTracker->SetViewPBODraw(HandTracker::COLOR_SEGMENTED, pPBODraw); 
+
+		m_pColorSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pColorSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,-1,0));
 
 		// ImageDraw for depth image
 		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 										  m_pShaderReg, m_pDrawMutex);
-		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
-		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,1,0));
 		m_pTracker->SetViewPBODraw(HandTracker::DEPTH, pPBODraw); 
+
+		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,1,0));
+		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
 
 		// ImageDraw for segmented depth image
 		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 										  m_pShaderReg, m_pDrawMutex);
-		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
-		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,-1,0));
 		m_pTracker->SetViewPBODraw(HandTracker::DEPTH_SEGMENTED, pPBODraw); 
+
+		m_pDepthSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pDepthSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,-1,0));
 
 		// ImageDraw for UV map
 		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
 										  m_pShaderReg, m_pDrawMutex);
-		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
-		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,1,0));
 		m_pTracker->SetViewPBODraw(HandTracker::UV_MAP, pPBODraw); 
 
+		m_pUVMapDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pUVMapDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,1,0));
+
+		// ImageDraw for segmented UV map
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
+										  m_pShaderReg, m_pDrawMutex);
+		m_pTracker->SetViewPBODraw(HandTracker::UV_MAP_SEGMENTED, pPBODraw); 
+
+		m_pUVMapSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pUVMapSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,-1,0));
+		
 		// ImageDraw for histogram
 		m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
 									   m_pDepthHistogramHandler->GetDiagramTexture(),
 									   pSG);
-		m_pDiagramDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,-1,0));
+		m_pDiagramDraw->GetTransformNode()->SetTranslation(VistaVector3D(4,1,0));
 
 		m_pSystem->GetEventManager()->RegisterObserver(
 		  	m_pDepthHistogramHandler->GetHistogramUpdater(),

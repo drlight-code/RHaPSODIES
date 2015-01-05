@@ -38,7 +38,8 @@ namespace rhapsodies {
 			COLOR_SEGMENTED,
 			DEPTH,
 			DEPTH_SEGMENTED,
-			UV_MAP
+			UV_MAP,
+			UV_MAP_SEGMENTED
 		};
 
 		bool Initialize();
