@@ -1,0 +1,4 @@
+*.dot
+build-debug/
+RHaPSODemo[D]
+set_path_for_RHaPSODemo.sh
