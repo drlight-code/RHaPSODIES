@@ -36,6 +36,11 @@ class VistaDeviceSensor;
 
 class DepthHistogramHandler;
 
+// @todo: remove this hack! properly integrate into baselibs!
+class IVistaDeSerializer;
+IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned char* val );
+IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned short* val );
+
 namespace rhapsodies {
 	class ImageDraw;
 	class ShaderRegistry;

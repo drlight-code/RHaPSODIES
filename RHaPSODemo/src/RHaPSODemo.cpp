@@ -27,6 +27,10 @@
 
 #include <VistaTools/VistaProfiler.h>
 
+#include <VistaDataFlowNet/VdfnPortFactory.h>
+#include <VistaDataFlowNet/VdfnHistoryPort.h>
+#include <VistaDataFlowNet/VdfnActionObject.h>
+
 #include <VistaDeviceDriversBase/VistaDriverMap.h>
 #include <VistaDeviceDriversBase/VistaDeviceSensor.h>
 
@@ -73,6 +77,91 @@ namespace rhapsodies {
 /*============================================================================*/
 /* LOCAL VARS AND FUNCS                                                       */
 /*============================================================================*/
+namespace {
+	template<class T>
+	class PropertyGetAsString : public VdfnPortFactory::StringGet
+	{
+	public:
+		typedef std::string (*Convert)( const T& );
+		PropertyGetAsString( Convert pFConvert = NULL )
+		: m_pFC( pFConvert )
+		{
+			if( m_pFC == NULL )
+				m_pFC = &VistaConversion::ToString<T>;
+		}
+
+		virtual bool GetStringValue(IVistaPropertyGetFunctor *pF,
+										const VistaSensorMeasure *pMeasure,
+										std::string &strOut)
+		{
+			IVistaMeasureTranscode::TTranscodeValueGet<T> *pGet
+				= dynamic_cast<IVistaMeasureTranscode::TTranscodeValueGet<T>*>(pF);
+			if(pGet != NULL)
+			{
+				T value;
+				if(pGet->GetValue(pMeasure, value))
+				{
+					strOut = m_pFC(value);
+					return true;
+				}
+				return false;
+			}
+
+			IVistaMeasureTranscode::TTranscodeIndexedGet<T> *pGetIdx
+				= dynamic_cast<IVistaMeasureTranscode::TTranscodeIndexedGet<T>*>(pF);
+			if(pGetIdx == NULL)
+				return false;
+
+			unsigned int n=0;
+			while(n<256)
+			{
+				T value;
+				if( pGetIdx->GetValueIndexed(pMeasure, value, n) == true )
+				{
+					strOut += std::string(" ") + m_pFC(value);
+				}
+				else
+					return true;
+				++n;
+			}
+
+			return false;
+		}
+
+	private:
+		Convert m_pFC;
+	};
+	
+	template<typename T>
+	void RegisterDefaultPortAndFunctorAccess( VdfnPortFactory* pFac )
+	{
+		pFac->AddPortAccess( typeid(T).name(),
+					new VdfnPortFactory::CPortAccess(
+							new VdfnTypedPortCreate<T>,
+							new TVdfnTranscodePortSet<T>,
+							new VdfnTypedPortStringGet<T> ) );
+
+		pFac->AddFunctorAccess( typeid(T).name(),
+					new VdfnPortFactory::CFunctorAccess(
+							new VdfnTypedPortTypeCompareCreate<T>,
+							new TActionSet<T>,
+							new VdfnTypedPortCreate<T>,
+							new PropertyGetAsString<T> ) );
+	}
+}
+
+IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned char* val )
+{
+	ser.ReadUInt64(reinterpret_cast<VistaType::uint64&>(val));
+	return ser;
+}
+
+IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned short* val )
+{
+	ser.ReadUInt64(reinterpret_cast<VistaType::uint64&>(val));
+	return ser;
+}
+
 
 namespace rhapsodies {
 /*============================================================================*/
@@ -155,10 +244,19 @@ namespace rhapsodies {
 		success &= InitTracker();
 		success &= CreateScene();
 
+		// register port and functor access for pointer types. this
+		// needs to be cleanly integrated into the baselibs, with a
+		// TVdfnPortSerializerAdapter specialization for pointer types
+		// which inhibits serialization of pointers (e.g. by throwing
+		// an exception).
+		VdfnPortFactory *pPortFac = VdfnPortFactory::GetSingleton();
+		RegisterDefaultPortAndFunctorAccess<const unsigned char*>( pPortFac );
+		RegisterDefaultPortAndFunctorAccess<const unsigned short*>( pPortFac );
+		
 		// register tracking node with DFN
-		VdfnNodeFactory *pFac = VdfnNodeFactory::GetSingleton();
-		pFac->SetNodeCreator( "HandTracker",
-							  new HandTrackingNodeCreate(m_pTracker) );
+		VdfnNodeFactory *pNodeFac = VdfnNodeFactory::GetSingleton();
+		pNodeFac->SetNodeCreator( "HandTracker",
+								  new HandTrackingNodeCreate(m_pTracker) );
 		
 		return success;
 	}

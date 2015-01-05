@@ -1,3 +1,4 @@
+#include "RHaPSODemo.hpp"
 #include <VistaDataFlowNet/VdfnUtil.h>
 
 #include <HandTracker.hpp>
