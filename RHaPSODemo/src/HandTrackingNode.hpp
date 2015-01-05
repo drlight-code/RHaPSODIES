@@ -45,6 +45,7 @@ namespace rhapsodies {
 
 		sPortHlp<const unsigned char*>  m_sPortColorFrame;
 		sPortHlp<const unsigned short*> m_sPortDepthFrame;
+		sPortHlp<const float*> m_sPortUVMapFrame;
 
 		HandTracker *m_pTracker;
 	};

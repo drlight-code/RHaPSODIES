@@ -11,6 +11,7 @@ namespace {
 
 	const std::string g_sPortColorFrameName = "color_frame";
 	const std::string g_sPortDepthFrameName = "depth_frame";
+	const std::string g_sPortUVMapFrameName = "uvmap_frame";
 }
 
 namespace rhapsodies {
@@ -28,12 +29,16 @@ namespace rhapsodies {
 		RegisterInPortPrototype(
 			g_sPortDepthFrameName,
 			new TVdfnPortTypeCompare<TVdfnPort<const unsigned short*> > );
-	}
+
+		RegisterInPortPrototype(
+			g_sPortUVMapFrameName,
+			new TVdfnPortTypeCompare<TVdfnPort<const float*> > );
+}
 
 	bool HandTrackingNode::GetIsValid() const {
 		return (m_sPortColorFrame.m_pPort &&
-				m_sPortDepthFrame.m_pPort);
-//		return IVdfnNode::GetIsValid();
+				m_sPortDepthFrame.m_pPort &&
+				m_sPortUVMapFrame.m_pPort);
 	}
 	
 	bool HandTrackingNode::PrepareEvaluationRun() {
@@ -53,10 +58,17 @@ namespace rhapsodies {
 			VdfnUtil::GetInPortTyped<TVdfnPort<const unsigned short*>*>(
 				g_sPortDepthFrameName, this );
 
+		m_sPortUVMapFrame.m_pPort =
+			VdfnUtil::GetInPortTyped<TVdfnPort<const float*>*>(
+				g_sPortUVMapFrameName, this );
+
 		return true;
 	}
 
 	bool HandTrackingNode::DoEvalNode() {
+		if(!GetIsValid())
+			return false;
+
 		if(m_sPortNextClassifier.HasNewData()) {
 			m_pTracker->NextSkinClassifier();				
 		}
@@ -68,7 +80,8 @@ namespace rhapsodies {
 		if(m_sPortDepthFrame.HasNewData()) {
 			m_pTracker->FrameUpdate(
 				m_sPortColorFrame.m_pPort->GetValue(),
-				m_sPortDepthFrame.m_pPort->GetValue());
+				m_sPortDepthFrame.m_pPort->GetValue(),
+				m_sPortUVMapFrame.m_pPort->GetValue());
 		}
 
 		return true;

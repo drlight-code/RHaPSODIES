@@ -40,6 +40,7 @@ class DepthHistogramHandler;
 class IVistaDeSerializer;
 IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned char* val );
 IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned short* val );
+IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const float* val );
 
 namespace rhapsodies {
 	class ImageDraw;

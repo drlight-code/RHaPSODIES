@@ -48,7 +48,8 @@ namespace rhapsodies {
 							ImagePBOOpenGLDraw *pPBODraw);
 		
 		bool FrameUpdate(const unsigned char  *colorFrame,
-						 const unsigned short *depthFrame);
+						 const unsigned short *depthFrame,
+						 const float          *uvMapFrame);
 
 		SkinClassifier *GetSkinClassifier();
 		void NextSkinClassifier();

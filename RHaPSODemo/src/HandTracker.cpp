@@ -106,7 +106,8 @@ namespace rhapsodies {
 	}
 
 	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
-								  const unsigned short *depthFrame) {
+								  const unsigned short *depthFrame,
+								  const float          *uvMapFrame) {
 		int iWidth  = 320;
 		int iHeight = 240;
 

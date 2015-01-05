@@ -12,11 +12,19 @@
 		<param name="driver" value="DEPTHSENSE"/>
 	</node>
 
+	<node name="depthsense_uvmap" type="DriverSensor">
+		<param name="sensor_index" value="2"/>
+		<param name="driver" value="DEPTHSENSE"/>
+	</node>
+
 	<node name="project_color" type="HistoryProject">
 		<param name="project">COLOR_FRAME</param>
 	</node>
 	<node name="project_depth" type="HistoryProject">
 		<param name="project">DEPTH_FRAME</param>
+	</node>
+	<node name="project_uvmap" type="HistoryProject">
+		<param name="project">UVMAP_FRAME</param>
 	</node>
 	
 	<node name="handtracker" type="HandTracker"/>
@@ -24,8 +32,10 @@
 <edges>
 	<edge fromnode="depthsense_color" tonode="project_color" fromport="history" toport="history"/>
 	<edge fromnode="depthsense_depth" tonode="project_depth" fromport="history" toport="history"/>
+	<edge fromnode="depthsense_uvmap" tonode="project_uvmap" fromport="history" toport="history"/>
 	
 	<edge fromnode="project_color" tonode="handtracker" fromport="COLOR_FRAME"   toport="color_frame"/>
 	<edge fromnode="project_depth" tonode="handtracker" fromport="DEPTH_FRAME"   toport="depth_frame"/>
+	<edge fromnode="project_uvmap" tonode="handtracker" fromport="UVMAP_FRAME"   toport="uvmap_frame"/>
 </edges>
 </module>
