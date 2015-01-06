@@ -26,6 +26,15 @@
 	<node name="project_uvmap" type="HistoryProject">
 		<param name="project">UVMAP_FRAME</param>
 	</node>
+
+	<node name="key_callback_next" type="KeyCallback">
+		<param name="key">n</param>
+	</node>
+	<node name="key_callback_prev" type="KeyCallback">
+		<param name="key">p</param>
+	</node>
+	<node name="typeconvert_next" type="TypeConvert[int,bool]"/>
+	<node name="typeconvert_prev" type="TypeConvert[int,bool]"/>
 	
 	<node name="handtracker" type="HandTracker"/>
 </graph>
@@ -37,5 +46,12 @@
 	<edge fromnode="project_color" tonode="handtracker" fromport="COLOR_FRAME"   toport="color_frame"/>
 	<edge fromnode="project_depth" tonode="handtracker" fromport="DEPTH_FRAME"   toport="depth_frame"/>
 	<edge fromnode="project_uvmap" tonode="handtracker" fromport="UVMAP_FRAME"   toport="uvmap_frame"/>
+
+	<edge fromnode="key_callback_next" tonode="typeconvert_next" fromport="value" toport="in"/>
+	<edge fromnode="typeconvert_next"  tonode="handtracker"      fromport="out"   toport="next_classifier"/>
+
+	<edge fromnode="key_callback_prev" tonode="typeconvert_prev" fromport="value" toport="in"/>
+	<edge fromnode="typeconvert_prev"  tonode="handtracker"      fromport="out"   toport="prev_classifier"/>
+
 </edges>
 </module>

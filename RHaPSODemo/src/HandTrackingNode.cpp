@@ -33,7 +33,7 @@ namespace rhapsodies {
 		RegisterInPortPrototype(
 			g_sPortUVMapFrameName,
 			new TVdfnPortTypeCompare<TVdfnPort<const float*> > );
-}
+	}
 
 	bool HandTrackingNode::GetIsValid() const {
 		return (m_sPortColorFrame.m_pPort &&

@@ -169,15 +169,16 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::NextSkinClassifier() {
+		vstr::debug() << "next skin classifier..." << std::endl;
 		m_itCurrentClassifier++;
 		if(m_itCurrentClassifier == m_lClassifiers.end())
 			m_itCurrentClassifier = m_lClassifiers.begin();
 	}
 
 	void HandTracker::PrevSkinClassifier() {
-		m_itCurrentClassifier--;
 		if(m_itCurrentClassifier == m_lClassifiers.begin())
-			m_itCurrentClassifier = m_lClassifiers.end()--;
+			m_itCurrentClassifier = m_lClassifiers.end();
+		m_itCurrentClassifier--;
 	}
 
 	void HandTracker::DepthToRGB(const unsigned short *depth,
