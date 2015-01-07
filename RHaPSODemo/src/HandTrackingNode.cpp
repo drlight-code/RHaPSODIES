@@ -6,12 +6,13 @@
 #include "HandTrackingNode.hpp"
 
 namespace {
-	const std::string g_sPortNextClassifierName = "next_classifier";
-	const std::string g_sPortPrevClassifierName = "prev_classifier";
-
 	const std::string g_sPortColorFrameName = "color_frame";
 	const std::string g_sPortDepthFrameName = "depth_frame";
 	const std::string g_sPortUVMapFrameName = "uvmap_frame";
+
+	const std::string g_sPortNextClassifierName = "next_classifier";
+	const std::string g_sPortPrevClassifierName = "prev_classifier";
+	const std::string g_sPortFrameUpdateName    = "set_frame_update";
 }
 
 namespace rhapsodies {
@@ -20,6 +21,8 @@ namespace rhapsodies {
 		RegisterInPortPrototype( g_sPortNextClassifierName,
 								 new TVdfnPortTypeCompare<TVdfnPort<bool> > );
 		RegisterInPortPrototype( g_sPortPrevClassifierName,
+								 new TVdfnPortTypeCompare<TVdfnPort<bool> > );
+		RegisterInPortPrototype( g_sPortFrameUpdateName,
 								 new TVdfnPortTypeCompare<TVdfnPort<bool> > );
 
 		RegisterInPortPrototype(
@@ -42,14 +45,6 @@ namespace rhapsodies {
 	}
 	
 	bool HandTrackingNode::PrepareEvaluationRun() {
-		m_sPortNextClassifier.m_pPort =
-			VdfnUtil::GetInPortTyped<TVdfnPort<bool>*>(
-				g_sPortNextClassifierName, this );
-		
-		m_sPortPrevClassifier.m_pPort =
-			VdfnUtil::GetInPortTyped<TVdfnPort<bool>*>(
-				g_sPortPrevClassifierName, this );
-
 		m_sPortColorFrame.m_pPort =
 			VdfnUtil::GetInPortTyped<TVdfnPort<const unsigned char*>*>(
 				g_sPortColorFrameName, this );
@@ -62,6 +57,18 @@ namespace rhapsodies {
 			VdfnUtil::GetInPortTyped<TVdfnPort<const float*>*>(
 				g_sPortUVMapFrameName, this );
 
+		m_sPortNextClassifier.m_pPort =
+			VdfnUtil::GetInPortTyped<TVdfnPort<bool>*>(
+				g_sPortNextClassifierName, this );
+		
+		m_sPortPrevClassifier.m_pPort =
+			VdfnUtil::GetInPortTyped<TVdfnPort<bool>*>(
+				g_sPortPrevClassifierName, this );
+
+		m_sPortFrameUpdate.m_pPort =
+			VdfnUtil::GetInPortTyped<TVdfnPort<bool>*>(
+				g_sPortFrameUpdateName, this );
+
 		return true;
 	}
 
@@ -69,19 +76,20 @@ namespace rhapsodies {
 		if(!GetIsValid())
 			return false;
 
-		if(m_sPortNextClassifier.HasNewData()) {
-			m_pTracker->NextSkinClassifier();				
-		}
-
-		if(m_sPortPrevClassifier.HasNewData()) {
-			m_pTracker->PrevSkinClassifier();
-		}
-
-		if(m_sPortDepthFrame.HasNewData()) {
+		if(m_sPortDepthFrame.HasNewData() &&
+			m_sPortFrameUpdate.m_pPort->GetValue() == true) {
 			m_pTracker->FrameUpdate(
 				m_sPortColorFrame.m_pPort->GetValue(),
 				m_sPortDepthFrame.m_pPort->GetValue(),
 				m_sPortUVMapFrame.m_pPort->GetValue());
+		}
+
+		if(m_sPortNextClassifier.HasNewData()) {
+			m_pTracker->NextSkinClassifier();
+		}
+
+		if(m_sPortPrevClassifier.HasNewData()) {
+			m_pTracker->PrevSkinClassifier();
 		}
 
 		return true;

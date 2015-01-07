@@ -42,6 +42,7 @@ namespace rhapsodies {
 			UVMAP_SEGMENTED
 		};
 
+		HandTracker();
 		virtual ~HandTracker();
 		
 		bool Initialize();
@@ -75,6 +76,8 @@ namespace rhapsodies {
 		typedef std::list<SkinClassifier*> ListSkinCl;
 		ListSkinCl m_lClassifiers;
 		ListSkinCl::iterator m_itCurrentClassifier;
+
+		bool m_bCameraUpdate;
 	};
 }
 

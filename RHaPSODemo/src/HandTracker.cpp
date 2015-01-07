@@ -70,6 +70,11 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
+	HandTracker::HandTracker() :
+		m_bCameraUpdate(true) {
+
+	}
+
 	HandTracker::~HandTracker() {
 		for(ListSkinCl::iterator it = m_lClassifiers.begin() ;
 			it != m_lClassifiers.end() ; ++it) {
@@ -191,7 +196,7 @@ namespace rhapsodies {
 				uvmapImage[3*pixel+2] = 0;
 			}
 			
-		} 		
+		}
 	}
 
 	SkinClassifier *HandTracker::GetSkinClassifier() {
