@@ -28,8 +28,6 @@
 
 #include <TexturedQuadGLDraw.hpp>
 
-class VistaMutex;
-
 namespace rhapsodies {
 	class ShaderRegistry;
 
@@ -42,20 +40,15 @@ namespace rhapsodies {
 		int m_texHeight;
 		bool m_texUpdate;
 
-		VistaMutex *m_pDrawMutex;
-
 	public:
 		ImagePBOOpenGLDraw(int width, int height,
-						   ShaderRegistry *pShaderReg,
-						   VistaMutex *pDrawMutex);
+						   ShaderRegistry *pShaderReg);
 		virtual ~ImagePBOOpenGLDraw();
 
 		virtual void UpdateTexture();
 
 		bool FillPBOFromBuffer(const unsigned char*,
 							   int width, int height);
-
-		VistaMutex *GetDrawMutex();
 	};
 }
 

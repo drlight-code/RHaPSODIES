@@ -38,8 +38,8 @@ namespace rhapsodies {
 			COLOR_SEGMENTED,
 			DEPTH,
 			DEPTH_SEGMENTED,
-			UV_MAP,
-			UV_MAP_SEGMENTED
+			UVMAP,
+			UVMAP_SEGMENTED
 		};
 
 		bool Initialize();
@@ -60,6 +60,10 @@ namespace rhapsodies {
 							 unsigned short *depthFrame);
 
 		void DepthToRGB(const unsigned short *depth,
+						unsigned char *rgb);
+
+		void UVMapToRGB(const float *uvmap,
+						const unsigned char *color,
 						unsigned char *rgb);
 		
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;

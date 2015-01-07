@@ -27,7 +27,6 @@
 
 #include <VistaKernel/EventManager/VistaEventHandler.h>
 
-class VistaMutex;
 class VistaSystem;
 class VistaTransformNode;
 class VistaOpenGLNode;
@@ -65,8 +64,6 @@ namespace rhapsodies {
 		ImageDraw *m_pUVMapDraw, *m_pUVMapSegDraw;
 
 		DepthHistogramHandler *m_pDepthHistogramHandler;
-
-		VistaMutex *m_pDrawMutex;
 
 		bool InitTracker();
 		bool RegisterShaders();

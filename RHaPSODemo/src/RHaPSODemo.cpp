@@ -23,8 +23,6 @@
 
 #include <GL/glew.h>
 
-#include <VistaInterProcComm/Concurrency/VistaMutex.h>
-
 #include <VistaTools/VistaProfiler.h>
 
 #include <VistaDataFlowNet/VdfnPortFactory.h>
@@ -125,8 +123,7 @@ namespace rhapsodies {
 		m_pDepthSegDraw(NULL), 
 		m_pUVMapDraw(NULL),
 		m_pUVMapSegDraw(NULL),
-		m_pDepthHistogramHandler(NULL),
-		m_pDrawMutex(new VistaMutex)
+		m_pDepthHistogramHandler(NULL)
 	{
 	}
 
@@ -251,56 +248,53 @@ namespace rhapsodies {
 		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
 		m_pSceneTransform->Translate(-1, 0, -3.0);
 
+
 		// ImageDraw for color image
 		ImagePBOOpenGLDraw *pPBODraw = 
-			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
-								   m_pShaderReg, m_pDrawMutex);
+			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
 		m_pTracker->SetViewPBODraw(HandTracker::COLOR, pPBODraw); 
 
 		m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,1,0));
 
-		// ImageDraw for segmented color image
-		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
-										  m_pShaderReg, m_pDrawMutex);
-		m_pTracker->SetViewPBODraw(HandTracker::COLOR_SEGMENTED, pPBODraw); 
-
-		m_pColorSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pColorSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,-1,0));
-
 		// ImageDraw for depth image
-		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
-										  m_pShaderReg, m_pDrawMutex);
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
 		m_pTracker->SetViewPBODraw(HandTracker::DEPTH, pPBODraw); 
 
 		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,1,0));
 		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
 
+		// ImageDraw for UV map
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		m_pTracker->SetViewPBODraw(HandTracker::UVMAP, pPBODraw); 
+
+		m_pUVMapDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pUVMapDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,1,0));
+		
+
+		// ImageDraw for segmented color image
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		m_pTracker->SetViewPBODraw(HandTracker::COLOR_SEGMENTED, pPBODraw); 
+
+		m_pColorSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pColorSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,-1,0));
+
 		// ImageDraw for segmented depth image
-		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
-										  m_pShaderReg, m_pDrawMutex);
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
 		m_pTracker->SetViewPBODraw(HandTracker::DEPTH_SEGMENTED, pPBODraw); 
 
 		m_pDepthSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pDepthSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,-1,0));
 
-		// ImageDraw for UV map
-		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
-										  m_pShaderReg, m_pDrawMutex);
-		m_pTracker->SetViewPBODraw(HandTracker::UV_MAP, pPBODraw); 
-
-		m_pUVMapDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pUVMapDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,1,0));
-
 		// ImageDraw for segmented UV map
-		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight,
-										  m_pShaderReg, m_pDrawMutex);
-		m_pTracker->SetViewPBODraw(HandTracker::UV_MAP_SEGMENTED, pPBODraw); 
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		m_pTracker->SetViewPBODraw(HandTracker::UVMAP_SEGMENTED, pPBODraw); 
 
 		m_pUVMapSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pUVMapSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,-1,0));
 		
+
 		// ImageDraw for histogram
 		m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
 									   m_pDepthHistogramHandler->GetDiagramTexture(),

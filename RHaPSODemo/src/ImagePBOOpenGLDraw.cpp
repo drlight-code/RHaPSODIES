@@ -26,8 +26,6 @@
 
 #include <GL/glew.h>
 
-#include <VistaInterProcComm/Concurrency/VistaMutex.h>
-
 #include "ImagePBOOpenGLDraw.hpp"
 
 /*============================================================================*/
@@ -43,15 +41,12 @@ namespace rhapsodies {
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
 	ImagePBOOpenGLDraw::ImagePBOOpenGLDraw(int width, int height,
-										   ShaderRegistry *pShaderReg,
-										   VistaMutex *pDrawMutex) :
+										   ShaderRegistry *pShaderReg) :
 		TexturedQuadGLDraw(pShaderReg),
 		m_pboIndex(0),
 		m_texWidth(width),
 		m_texHeight(height),
-		m_texUpdate(false),
-		m_pDrawMutex(pDrawMutex)
-	{
+		m_texUpdate(false) {
 		unsigned char *texData =
 			new unsigned char[m_texWidth*m_texHeight*3];
 
@@ -65,8 +60,6 @@ namespace rhapsodies {
 				texData[i] = 255;
 		}
 
-
-		m_pDrawMutex->Lock();
 		glGenBuffers(2, m_pboIds);
 
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
@@ -96,7 +89,6 @@ namespace rhapsodies {
 
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
-		m_pDrawMutex->Unlock();
 	}
 
 	ImagePBOOpenGLDraw::~ImagePBOOpenGLDraw() {
@@ -106,7 +98,6 @@ namespace rhapsodies {
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
 	void ImagePBOOpenGLDraw::UpdateTexture() {
-		m_pDrawMutex->Lock();
 		if(m_texUpdate) {
 			m_texUpdate = false;
 
@@ -125,23 +116,14 @@ namespace rhapsodies {
 								 GL_WRITE_ONLY);
 			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 		}
-		m_pDrawMutex->Unlock();
 	}
 
 	bool ImagePBOOpenGLDraw::FillPBOFromBuffer(const unsigned char* pData,
 											   int width, int height) {
-		m_pDrawMutex->Lock();
-
 		// we assume RGB888 memory layout here!
 		memcpy(m_pPBO, pData, width*height*3);
 		m_texUpdate = true;
 
-		m_pDrawMutex->Unlock();
-
 		return true;
-	}
-
-	VistaMutex *ImagePBOOpenGLDraw::GetDrawMutex() {
-		return m_pDrawMutex;
 	}
 }

@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <limits>
 
 #include <VistaBase/VistaStreamUtils.h>
 
@@ -108,8 +109,6 @@ namespace rhapsodies {
 	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
 								  const unsigned short *depthFrame,
 								  const float          *uvMapFrame) {
-		int iWidth  = 320;
-		int iHeight = 240;
 
 		// create writable copy of sensor measurement buffers
 		unsigned char  colorBuffer[320*240*3];
@@ -118,31 +117,44 @@ namespace rhapsodies {
 		memcpy(colorBuffer, colorFrame, 320*240*3);
 		memcpy(depthBuffer, depthFrame, 320*240*2);
 
-		ImagePBOOpenGLDraw *pPBODraw = m_mapPBO[COLOR];
+		ImagePBOOpenGLDraw *pPBODraw;
+		unsigned char pBuffer[320*240*3];
+
+		pPBODraw = m_mapPBO[COLOR];
 		if(pPBODraw) {
 			pPBODraw->FillPBOFromBuffer(colorBuffer, 320, 240);
 		}
 
 		pPBODraw = m_mapPBO[DEPTH];
 		if(pPBODraw) {
-			unsigned char pBuffer[iWidth*iHeight*3];
 			DepthToRGB(depthBuffer, pBuffer);
 			pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
 		}
 
-		FilterSkinAreas(colorBuffer, depthBuffer);
+		// pPBODraw = m_mapPBO[UVMAP];
+		// if(pPBODraw) {
+		// 	UVMapToRGB(uvMapFrame, colorBuffer, pBuffer);
+		// 	pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
+		// }
 		
-		pPBODraw = m_mapPBO[COLOR_SEGMENTED];
-		if(pPBODraw) {
-			pPBODraw->FillPBOFromBuffer(colorBuffer, 320, 240);
-		}
+		// FilterSkinAreas(colorBuffer, depthBuffer, pBuffer);
+		
+		// pPBODraw = m_mapPBO[COLOR_SEGMENTED];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(colorBuffer, 320, 240);
+		// }
 
-		pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
-		if(pPBODraw) {
-			unsigned char pBuffer[iWidth*iHeight*3];
-			DepthToRGB(depthBuffer, pBuffer);
-			pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
-		}
+		// pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
+		// if(pPBODraw) {
+		// 	DepthToRGB(depthBuffer, pBuffer);
+		// 	pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
+		// }
+
+		// pPBODraw = m_mapPBO[UVMAP_SEGMENTED];
+		// if(pPBODraw) {
+		// 	DepthToRGB(depthBuffer, pBuffer);
+		// 	pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
+		// }
 
 		return true;
 	}
@@ -169,7 +181,6 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::NextSkinClassifier() {
-		vstr::debug() << "next skin classifier..." << std::endl;
 		m_itCurrentClassifier++;
 		if(m_itCurrentClassifier == m_lClassifiers.end())
 			m_itCurrentClassifier = m_lClassifiers.begin();
@@ -182,7 +193,7 @@ namespace rhapsodies {
 	}
 
 	void HandTracker::DepthToRGB(const unsigned short *depth,
-					unsigned char *rgb) {
+								 unsigned char *rgb) {
 		for(int i = 0 ; i < 76800 ; i++) {
 			unsigned short val = depth[i];
 
@@ -195,6 +206,31 @@ namespace rhapsodies {
 			else {
 				rgb[3*i+1] = 0;
 				rgb[3*i+0] = rgb[3*i+2] = 0;
+			}
+		}
+	}
+
+	void HandTracker::UVMapToRGB(const float *uvmap,
+								 const unsigned char *color,
+								 unsigned char *rgb) {
+		for(int i = 0 ; i < 76800 ; i++) {
+			int index_x, index_y, index;
+
+			float invalid = -std::numeric_limits<float>::max();
+			if(uvmap[2*i+0] != invalid &&
+			   uvmap[2*i+1] != invalid) {
+				index_x = 320*uvmap[2*i];
+				index_y = 240*uvmap[2*i+1];
+				index = 240*index_y + index_x;
+
+				// rgb[3*i+0] = color[3*index+0];
+				// rgb[3*i+1] = color[3*index+1];
+				// rgb[3*i+2] = color[3*index+2];
+			}
+			else {
+				// rgb[3*i+0] = 200;
+				// rgb[3*i+1] = 0;
+				// rgb[3*i+2] = 200;
 			}
 		}
 	}
