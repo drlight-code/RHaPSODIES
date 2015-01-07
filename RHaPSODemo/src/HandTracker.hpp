@@ -42,6 +42,8 @@ namespace rhapsodies {
 			UVMAP_SEGMENTED
 		};
 
+		virtual ~HandTracker();
+		
 		bool Initialize();
 
 		void SetViewPBODraw(ViewType type,
@@ -56,8 +58,9 @@ namespace rhapsodies {
 		void PrevSkinClassifier();
 
 	private:
-		void FilterSkinAreas(unsigned char  *colorFrame,
-							 unsigned short *depthFrame);
+		void FilterSkinAreas(unsigned char *colorImage,
+							 unsigned char *depthImage,
+							 unsigned char *uvmapImage);
 
 		void DepthToRGB(const unsigned short *depth,
 						unsigned char *rgb);

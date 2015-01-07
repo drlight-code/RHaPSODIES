@@ -295,17 +295,17 @@ namespace rhapsodies {
 		m_pUVMapSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,-1,0));
 		
 
-		// ImageDraw for histogram
-		m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
-									   m_pDepthHistogramHandler->GetDiagramTexture(),
-									   pSG);
-		m_pDiagramDraw->GetTransformNode()->SetTranslation(VistaVector3D(4,1,0));
+		// // ImageDraw for histogram
+		// m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
+		// 							   m_pDepthHistogramHandler->GetDiagramTexture(),
+		// 							   pSG);
+		// m_pDiagramDraw->GetTransformNode()->SetTranslation(VistaVector3D(4,1,0));
 
-		m_pSystem->GetEventManager()->RegisterObserver(
-		  	m_pDepthHistogramHandler->GetHistogramUpdater(),
-		 	VistaSystemEvent::GetTypeId());
+		// m_pSystem->GetEventManager()->RegisterObserver(
+		//   	m_pDepthHistogramHandler->GetHistogramUpdater(),
+		//  	VistaSystemEvent::GetTypeId());
 
-		m_pDepthHistogramHandler->Enable(true);
+		m_pDepthHistogramHandler->Enable(false);
 
 		return true;
 	}

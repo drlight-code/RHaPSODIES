@@ -70,6 +70,13 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
+	HandTracker::~HandTracker() {
+		for(ListSkinCl::iterator it = m_lClassifiers.begin() ;
+			it != m_lClassifiers.end() ; ++it) {
+			delete *it;
+		}
+	}
+	
 	bool HandTracker::Initialize() {
 		vstr::out() << "Initializing RHaPSODIES HandTracker" << std::endl;
 
@@ -118,7 +125,8 @@ namespace rhapsodies {
 		memcpy(depthBuffer, depthFrame, 320*240*2);
 
 		ImagePBOOpenGLDraw *pPBODraw;
-		unsigned char pBuffer[320*240*3];
+		unsigned char pDepthRGBBuffer[320*240*3];
+		unsigned char pUVMapRGBBuffer[320*240*3];
 
 		pPBODraw = m_mapPBO[COLOR];
 		if(pPBODraw) {
@@ -127,52 +135,62 @@ namespace rhapsodies {
 
 		pPBODraw = m_mapPBO[DEPTH];
 		if(pPBODraw) {
-			DepthToRGB(depthBuffer, pBuffer);
-			pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
+			DepthToRGB(depthBuffer, pDepthRGBBuffer);
+			pPBODraw->FillPBOFromBuffer(pDepthRGBBuffer, 320, 240);
 		}
 
-		// pPBODraw = m_mapPBO[UVMAP];
-		// if(pPBODraw) {
-		// 	UVMapToRGB(uvMapFrame, colorBuffer, pBuffer);
-		// 	pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
-		// }
+		pPBODraw = m_mapPBO[UVMAP];
+		if(pPBODraw) {
+			UVMapToRGB(uvMapFrame, colorBuffer, pUVMapRGBBuffer);
+			pPBODraw->FillPBOFromBuffer(pUVMapRGBBuffer, 320, 240);
+		}
 		
-		// FilterSkinAreas(colorBuffer, depthBuffer, pBuffer);
+		FilterSkinAreas(colorBuffer, pDepthRGBBuffer, pUVMapRGBBuffer);
 		
-		// pPBODraw = m_mapPBO[COLOR_SEGMENTED];
-		// if(pPBODraw) {
-		// 	pPBODraw->FillPBOFromBuffer(colorBuffer, 320, 240);
-		// }
+		pPBODraw = m_mapPBO[COLOR_SEGMENTED];
+		if(pPBODraw) {
+			pPBODraw->FillPBOFromBuffer(colorBuffer, 320, 240);
+		}
 
-		// pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
-		// if(pPBODraw) {
-		// 	DepthToRGB(depthBuffer, pBuffer);
-		// 	pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
-		// }
+		pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
+		if(pPBODraw) {
+			pPBODraw->FillPBOFromBuffer(pDepthRGBBuffer, 320, 240);
+		}
 
-		// pPBODraw = m_mapPBO[UVMAP_SEGMENTED];
-		// if(pPBODraw) {
-		// 	DepthToRGB(depthBuffer, pBuffer);
-		// 	pPBODraw->FillPBOFromBuffer(pBuffer, 320, 240);
-		// }
+		pPBODraw = m_mapPBO[UVMAP_SEGMENTED];
+		if(pPBODraw) {
+			pPBODraw->FillPBOFromBuffer(pUVMapRGBBuffer, 320, 240);
+		}
 
 		return true;
 	}
 
-	void HandTracker::FilterSkinAreas(unsigned char  *colorFrame,
-									  unsigned short *depthFrame) {
+	void HandTracker::FilterSkinAreas(unsigned char *colorImage,
+									  unsigned char *depthImage,
+									  unsigned char *uvmapImage) {
 
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
-			if( (*m_itCurrentClassifier)->IsSkinPixel(colorFrame+3*pixel) ) {
+			if( (*m_itCurrentClassifier)->IsSkinPixel(colorImage+3*pixel) ) {
 				// yay! skin!
 			}
 			else {
-				colorFrame[3*pixel+0] = 0;
-				colorFrame[3*pixel+1] = 0;
-				colorFrame[3*pixel+2] = 0;
+				colorImage[3*pixel+0] = 0;
+				colorImage[3*pixel+1] = 0;
+				colorImage[3*pixel+2] = 0;
+			}
+			if( (*m_itCurrentClassifier)->IsSkinPixel(uvmapImage+3*pixel) ) {
+				// yay! skin!
+			}
+			else {
+				depthImage[3*pixel+0] = 0;
+				depthImage[3*pixel+1] = 0;
+				depthImage[3*pixel+2] = 0;
 
-				depthFrame[pixel] = 0;
-			}				
+				uvmapImage[3*pixel+0] = 0;
+				uvmapImage[3*pixel+1] = 0;
+				uvmapImage[3*pixel+2] = 0;
+			}
+			
 		} 		
 	}
 
@@ -201,11 +219,14 @@ namespace rhapsodies {
 				float linearvalue = val/2000.0;
 				float mappedvalue = MapRangeExp(linearvalue);
 
-				rgb[3*i] = rgb[3*i+1] = 255*(1-mappedvalue);
+				rgb[3*i+0] = 255*(1-mappedvalue);
+				rgb[3*i+1] = 255*(1-mappedvalue);
+				rgb[3*i+2] = 0;
 			}
 			else {
+				rgb[3*i+0] = 0;
 				rgb[3*i+1] = 0;
-				rgb[3*i+0] = rgb[3*i+2] = 0;
+				rgb[3*i+2] = 0;
 			}
 		}
 	}
@@ -219,18 +240,18 @@ namespace rhapsodies {
 			float invalid = -std::numeric_limits<float>::max();
 			if(uvmap[2*i+0] != invalid &&
 			   uvmap[2*i+1] != invalid) {
-				index_x = 320*uvmap[2*i];
+				index_x = 320*uvmap[2*i+0];
 				index_y = 240*uvmap[2*i+1];
-				index = 240*index_y + index_x;
+				index = 320*index_y + index_x;
 
-				// rgb[3*i+0] = color[3*index+0];
-				// rgb[3*i+1] = color[3*index+1];
-				// rgb[3*i+2] = color[3*index+2];
+				rgb[3*i+0] = color[3*index+0];
+				rgb[3*i+1] = color[3*index+1];
+				rgb[3*i+2] = color[3*index+2];
 			}
 			else {
-				// rgb[3*i+0] = 200;
-				// rgb[3*i+1] = 0;
-				// rgb[3*i+2] = 200;
+				rgb[3*i+0] = 200;
+				rgb[3*i+1] = 0;
+				rgb[3*i+2] = 200;
 			}
 		}
 	}
