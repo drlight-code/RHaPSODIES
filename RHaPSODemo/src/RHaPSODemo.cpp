@@ -246,7 +246,7 @@ namespace rhapsodies {
 
 		// create global scene transform
 		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
-		m_pSceneTransform->Translate(-1, 0, -3.0);
+		m_pSceneTransform->Translate(0, 0, -2.0);
 
 
 		// ImageDraw for color image
