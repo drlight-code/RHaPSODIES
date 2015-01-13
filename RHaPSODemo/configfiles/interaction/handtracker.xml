@@ -2,6 +2,7 @@
 <nodespace>
 </nodespace>
 <graph>
+	<!-- video input -->
 	<node name="depthsense_color" type="DriverSensor">
 		<param name="sensor_index" value="0"/>
 		<param name="driver" value="DEPTHSENSE"/>
@@ -27,6 +28,7 @@
 		<param name="project">UVMAP_FRAME</param>
 	</node>
 
+	<!-- key callbacks -->
 	<node name="key_callback_next" type="KeyCallback">
 		<param name="key">n</param>
 	</node>
@@ -44,10 +46,18 @@
      	<param name="mode">on_any_update</param>
      	<param name="initial_state">true</param>
 	</node>
+
+	<!-- midi control -->
+	<node name="midi_sensor" type="DriverSensor">
+		<param name="sensor_index" value="0"/>
+		<param name="driver" value="MIDI"/>
+	</node>
+
 	
 	<node name="handtracker" type="HandTracker"/>
 </graph>
 <edges>
+	<!-- video input -->
 	<edge fromnode="depthsense_color" tonode="project_color" fromport="history" toport="history"/>
 	<edge fromnode="depthsense_depth" tonode="project_depth" fromport="history" toport="history"/>
 	<edge fromnode="depthsense_uvmap" tonode="project_uvmap" fromport="history" toport="history"/>
@@ -56,6 +66,7 @@
 	<edge fromnode="project_depth" tonode="handtracker" fromport="DEPTH_FRAME"   toport="depth_frame"/>
 	<edge fromnode="project_uvmap" tonode="handtracker" fromport="UVMAP_FRAME"   toport="uvmap_frame"/>
 
+	<!-- key callbacks -->
 	<edge fromnode="key_callback_next" tonode="typeconvert_next" fromport="value" toport="in"/>
 	<edge fromnode="typeconvert_next"  tonode="handtracker"      fromport="out"   toport="next_classifier"/>
 
@@ -65,5 +76,8 @@
 	<edge fromnode="key_callback_toggle_update" tonode="typeconvert_toggle_update" fromport="value" toport="in"/>
 	<edge fromnode="typeconvert_toggle_update" tonode="toggle_update" fromport="out"   toport="toggle"/>
 	<edge fromnode="toggle_update"     tonode="handtracker"   fromport="out"   toport="set_frame_update"/>
+
+	<!-- midi control -->
+	
 </edges>
 </module>
