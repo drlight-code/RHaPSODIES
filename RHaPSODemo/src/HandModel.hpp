@@ -1,6 +1,10 @@
 #ifndef _RHAPSODIES_HANDMODEL
 #define _RHAPSODIES_HANDMODEL
 
+#include <vector>
+
+#include <VistaBase/VistaTypes.h>
+
 namespace rhapsodies {
   class HandModel {
   private:
@@ -50,7 +54,9 @@ namespace rhapsodies {
 		  L_MCP_A,
 		  L_PIP,
 		  L_DIP
-	  }
+	  };
+	  
+	  float GetJointAngle(JointDOF dof);
   };
 }
 

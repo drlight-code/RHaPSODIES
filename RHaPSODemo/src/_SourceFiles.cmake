@@ -13,6 +13,7 @@ set( DirFiles
 	DepthHistogramHandler.cpp
 	HistogramUpdater.cpp
   	ShaderRegistry.cpp
+  	HandModel.cpp
   	HandTracker.cpp
   	HandTrackingNode.cpp
 	_SourceFiles.cmake
