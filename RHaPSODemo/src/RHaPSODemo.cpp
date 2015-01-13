@@ -153,7 +153,16 @@ namespace rhapsodies {
 		success &= ParseConfig();
 
 		success &= m_pSystem->Init(argc, argv);
-		glewInit();
+
+		GLenum err = glewInit();
+		if (err != GLEW_OK) {
+			vstr::err() << "glewInit error: " << glewGetErrorString(err)
+						<< std::endl;
+			vstr::err() << "GLEW initialization failed! Aborting."
+						<< std::endl;
+			
+			exit(1);
+		}
 
 		VtrFontManager::GetInstance()
 			->SetFontDirectory("resources/fonts/");
