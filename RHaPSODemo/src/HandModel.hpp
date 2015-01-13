@@ -3,7 +3,8 @@
 
 #include <vector>
 
-#include <VistaBase/VistaTypes.h>
+#include <VistaBase/VistaVector3D.h>
+#include <VistaBase/VistaQuaternion.h>
 
 namespace rhapsodies {
   class HandModel {
@@ -13,6 +14,8 @@ namespace rhapsodies {
 	  VistaQuaternion m_qOrientation;
 
   public:
+	  HandModel();
+
 	  /* JointDOF indices are named as: FINGER_JOINT[_DIRECTION]
 	   * 
 	   * FINGER is one of:

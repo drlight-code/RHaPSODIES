@@ -1,9 +1,12 @@
 #include "HandModel.hpp"
 
-HandModel::HandModel() {
-	m_vecJointAngles
-}
+namespace rhapsodies {
+	HandModel::HandModel() :
+		m_vecJointAngles(20) {
 
-HandModel::GetJointAngle(JointDOF dof) {
-	return m_vecJointAngles[dof];
+	}
+
+	float HandModel::GetJointAngle(JointDOF dof) {
+		return m_vecJointAngles[dof];
+	}
 }
