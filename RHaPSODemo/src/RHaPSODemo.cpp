@@ -272,7 +272,10 @@ namespace rhapsodies {
 	}
 
 	bool RHaPSODemo::CreateScene() {
-		VistaSceneGraph *pSG = m_pSystem->GetGraphicsManager()->GetSceneGraph();
+		VistaGraphicsManager *pGraphicsMgr = m_pSystem->GetGraphicsManager();
+		VistaSceneGraph *pSG = pGraphicsMgr->GetSceneGraph();
+
+		pGraphicsMgr->SetBackgroundColor(VistaColor(32, 32, 32));
 
 		// create global scene transform
 		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
