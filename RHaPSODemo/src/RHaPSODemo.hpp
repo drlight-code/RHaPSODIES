@@ -29,9 +29,8 @@
 
 class VistaSystem;
 class VistaTransformNode;
-class VistaOpenGLNode;
-class VistaDepthSenseDriver;
-class VistaDeviceSensor;
+
+class VistaPropertyList;
 
 class DepthHistogramHandler;
 
@@ -70,6 +69,8 @@ namespace rhapsodies {
 		bool CreateScene();
 
 		bool ParseConfig();
+		bool CheckForConfigSection(const VistaPropertyList &oPropList,
+								   const std::string &sSectionName);
 
 	public:
 		RHaPSODemo();
@@ -82,8 +83,6 @@ namespace rhapsodies {
 
 		// VistaEventHandler interface
 		virtual void HandleEvent(VistaEvent *pEvent);
-
-		static const std::string sRDIniFile;
 	};
 }
 

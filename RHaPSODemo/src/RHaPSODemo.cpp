@@ -23,7 +23,7 @@
 
 #include <GL/glew.h>
 
-#include <VistaTools/VistaProfiler.h>
+#include <VistaTools/VistaIniFileParser.h>
 
 #include <VistaDataFlowNet/VdfnPortFactory.h>
 #include <VistaDataFlowNet/VdfnHistoryPort.h>
@@ -69,7 +69,9 @@
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
 /*============================================================================*/
 namespace rhapsodies {
-	const std::string RHaPSODemo::sRDIniFile = "configfiles/rhapsodemo.ini";
+	const std::string sRDIniFile         = "configfiles/rhapsodemo.ini";
+	const std::string sAppSectionName    = "APPLICATION";
+	const std::string sCameraSectionName = "CAMERA";
 }
 
 /*============================================================================*/
@@ -193,32 +195,51 @@ namespace rhapsodies {
 		return success;
 	}
 
-	bool RHaPSODemo::ParseConfig() {
-		VistaProfiler oProf;
+	bool RHaPSODemo::CheckForConfigSection(
+		const VistaPropertyList &oPropList,
+		const std::string &sSectionName) {
 
-		// read the ini file names from dispatch ini
+		if( oPropList.HasProperty(sSectionName) )
+			return true;
+
+		vstr::errp() << "Error: config file does not contain ["
+					 << sSectionName << "] section! Aborting."
+					 << std::endl;
+		return false;
+	}
+	
+	bool RHaPSODemo::ParseConfig() {
+		VistaIniFileParser oIniParser(true);
+		oIniParser.ReadFile(sRDIniFile);
+
+		const VistaPropertyList &oConfig = oIniParser.GetPropertyList();
+
+		if(!CheckForConfigSection(oConfig, sAppSectionName) ||
+		   !CheckForConfigSection(oConfig, sCameraSectionName))
+			return false;
+
+		const VistaPropertyList &oApplicationSection =
+			oConfig.GetSubListConstRef( sAppSectionName );
+		const VistaPropertyList &oCameraSection =
+			oConfig.GetSubListConstRef( sAppSectionName );
+
+		// read the ini file names from rhapsodemo ini
 		m_pSystem->SetIniFile(
-			oProf.GetTheProfileString("APPLICATION", "MAININI",
-									  "vista.ini",
-									  sRDIniFile) );
+			oApplicationSection.GetValueOrDefault<std::string>("MAININI",
+															   "vista.ini"));
 		m_pSystem->SetDisplayIniFile(
-			oProf.GetTheProfileString("APPLICATION", "DISPLAYINI",
-									  "vista.ini",
-									  sRDIniFile) );
+			oApplicationSection.GetValueOrDefault<std::string>("DISPLAYINI",
+															   "vista.ini"));
 		m_pSystem->SetClusterIniFile(
-			oProf.GetTheProfileString("APPLICATION", "CLUSTERINI",
-									  "vista.ini",
-									  sRDIniFile) );
+			oApplicationSection.GetValueOrDefault<std::string>("CLUSTERINI",
+															   "vista.ini"));
 		m_pSystem->SetInteractionIniFile(
-			oProf.GetTheProfileString("APPLICATION", "INTERACTIONINI",
-									  "vista.ini",
-									  sRDIniFile) );
+			oApplicationSection.GetValueOrDefault<std::string>("INTERACTIONINI",
+															   "vista.ini"));
 
 		// read camera parameters
-		m_camWidth  = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_X",
-											 320, RHaPSODemo::sRDIniFile);
-		m_camHeight = oProf.GetTheProfileInt("CAMERAS", "RESOLUTION_Y",
-											 240, RHaPSODemo::sRDIniFile);
+		m_camWidth  = oCameraSection.GetValueOrDefault("RESOLUTION_X", 320);
+		m_camHeight = oCameraSection.GetValueOrDefault("RESOLUTION_Y", 240);
 
 		return true;
 	}
