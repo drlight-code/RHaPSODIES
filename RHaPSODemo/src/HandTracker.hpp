@@ -67,6 +67,7 @@ namespace rhapsodies {
 						unsigned char *rgb);
 
 		void UVMapToRGB(const float *uvmap,
+						const unsigned short *depth,
 						const unsigned char *color,
 						unsigned char *rgb);
 		
@@ -78,6 +79,7 @@ namespace rhapsodies {
 		ListSkinCl::iterator m_itCurrentClassifier;
 
 		bool m_bCameraUpdate;
+		int  m_iDepthLimit; // camera depth cutoff (mm)
 	};
 }
 

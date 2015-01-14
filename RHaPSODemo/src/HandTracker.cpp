@@ -71,7 +71,8 @@ namespace rhapsodies {
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
 	HandTracker::HandTracker() :
-		m_bCameraUpdate(true) {
+		m_bCameraUpdate(true),
+		m_iDepthLimit(600) {
 
 	}
 
@@ -146,7 +147,7 @@ namespace rhapsodies {
 
 		pPBODraw = m_mapPBO[UVMAP];
 		if(pPBODraw) {
-			UVMapToRGB(uvMapFrame, colorBuffer, pUVMapRGBBuffer);
+			UVMapToRGB(uvMapFrame, depthFrame, colorFrame, pUVMapRGBBuffer);
 			pPBODraw->FillPBOFromBuffer(pUVMapRGBBuffer, 320, 240);
 		}
 		
@@ -237,21 +238,25 @@ namespace rhapsodies {
 	}
 
 	void HandTracker::UVMapToRGB(const float *uvmap,
+								 const unsigned short *depth,
 								 const unsigned char *color,
 								 unsigned char *rgb) {
+
+		int color_index_x, color_index_y, color_index;
+		float invalid = -std::numeric_limits<float>::max();
+
 		for(int i = 0 ; i < 76800 ; i++) {
-			int index_x, index_y, index;
+			color_index_x = 320*uvmap[2*i+0];
+			color_index_y = 240*uvmap[2*i+1];
+			color_index = 320*color_index_y + color_index_x;
 
-			float invalid = -std::numeric_limits<float>::max();
 			if(uvmap[2*i+0] != invalid &&
-			   uvmap[2*i+1] != invalid) {
-				index_x = 320*uvmap[2*i+0];
-				index_y = 240*uvmap[2*i+1];
-				index = 320*index_y + index_x;
+			   uvmap[2*i+1] != invalid &&
+			   depth[i] < m_iDepthLimit) {
 
-				rgb[3*i+0] = color[3*index+0];
-				rgb[3*i+1] = color[3*index+1];
-				rgb[3*i+2] = color[3*index+2];
+				rgb[3*i+0] = color[3*color_index+0];
+				rgb[3*i+1] = color[3*color_index+1];
+				rgb[3*i+2] = color[3*color_index+2];
 			}
 			else {
 				rgb[3*i+0] = 200;
