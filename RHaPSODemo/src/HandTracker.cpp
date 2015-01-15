@@ -208,6 +208,10 @@ namespace rhapsodies {
 		m_itCurrentClassifier++;
 		if(m_itCurrentClassifier == m_lClassifiers.end())
 			m_itCurrentClassifier = m_lClassifiers.begin();
+
+		vstr::debug() << "Selected skin classifier: "
+					  << (*m_itCurrentClassifier)->GetName()
+					  << std::endl;
 	}
 
 	void HandTracker::PrevSkinClassifier() {
