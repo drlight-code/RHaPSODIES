@@ -60,6 +60,9 @@
 #include <ShaderRegistry.hpp>
 #include <HistogramUpdater.hpp>
 
+#include <HandModel.hpp>
+#include <HandModelView.hpp>
+
 #include <HandTracker.hpp>
 #include <HandTrackingNode.hpp>
 
@@ -116,6 +119,8 @@ namespace rhapsodies {
 		m_camWidth(320), m_camHeight(240),
 		m_pSystem(new VistaSystem),
 		m_pShaderReg(new ShaderRegistry),
+		m_pHandModel(new HandModel),
+		m_pHandModelView(new HandModelView(m_pHandModel)),
 		m_pTracker(new HandTracker),
 		m_pSceneTransform(NULL), m_pDiagramTransform(NULL),
 		m_pDiagramDraw(NULL), 

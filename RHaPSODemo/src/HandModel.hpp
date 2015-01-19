@@ -8,11 +8,6 @@
 
 namespace rhapsodies {
   class HandModel {
-  private:
-	  std::vector<float> m_vecJointAngles;
-	  VistaVector3D   m_vPosition;
-	  VistaQuaternion m_qOrientation;
-
   public:
 	  HandModel();
 
@@ -58,8 +53,21 @@ namespace rhapsodies {
 		  L_PIP,
 		  L_DIP
 	  };
+
+	  enum HandOrientation {
+		  LEFT_HAND,
+		  RIGHT_HAND
+	  };
 	  
 	  float GetJointAngle(JointDOF dof);
+	  void SetJointAngle(JointDOF dof, float angle);
+
+	  
+
+  private:
+	  std::vector<float> m_vecJointAngles;
+	  VistaVector3D   m_vPosition;
+	  VistaQuaternion m_qOrientation;
   };
 }
 

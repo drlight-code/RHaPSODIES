@@ -14,6 +14,7 @@ set( DirFiles
 	HistogramUpdater.cpp
   	ShaderRegistry.cpp
   	HandModel.cpp
+  	HandModelView.cpp
   	HandTracker.cpp
   	HandTrackingNode.cpp
 	_SourceFiles.cmake
