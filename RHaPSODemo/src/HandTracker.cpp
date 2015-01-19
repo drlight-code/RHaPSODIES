@@ -28,16 +28,20 @@
 
 #include <VistaBase/VistaStreamUtils.h>
 
-#include <RHaPSODemo.hpp>
-#include <ImagePBOOpenGLDraw.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
-#include <SkinClassifiers/SkinClassifierLogOpponentYIQ.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter0.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter1.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter2.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter3.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter4.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter5.hpp>
+#include "RHaPSODemo.hpp"
+#include "ImagePBOOpenGLDraw.hpp"
+
+#include "SkinClassifiers/SkinClassifierLogOpponentYIQ.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter0.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter1.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter2.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter3.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter4.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter5.hpp"
+
+#include "HandModel.hpp"
 
 #include "HandTracker.hpp"
 
@@ -72,8 +76,9 @@ namespace rhapsodies {
 /*============================================================================*/
 	HandTracker::HandTracker() :
 		m_bCameraUpdate(true),
-		m_iDepthLimit(600) {
-
+		m_iDepthLimit(500),
+		m_pHandModel(new HandModel) {
+				
 	}
 
 	HandTracker::~HandTracker() {
@@ -124,24 +129,18 @@ namespace rhapsodies {
 								  const float          *uvMapFrame) {
 
 		// create writable copy of sensor measurement buffers
-		unsigned char  colorBuffer[320*240*3];
-		unsigned short depthBuffer[320*240];
-
-		memcpy(colorBuffer, colorFrame, 320*240*3);
-		memcpy(depthBuffer, depthFrame, 320*240*2);
+		memcpy(m_pColorBuffer, colorFrame, 320*240*3);
+		memcpy(m_pDepthBuffer, depthFrame, 320*240*2);
 
 		ImagePBOOpenGLDraw *pPBODraw;
-		unsigned char pDepthRGBBuffer[320*240*3];
-		unsigned char pUVMapRGBBuffer[320*240*3];
-
 		pPBODraw = m_mapPBO[COLOR];
 		if(pPBODraw) {
-			pPBODraw->FillPBOFromBuffer(colorBuffer, 320, 240);
+			pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
 		}
 
 		pPBODraw = m_mapPBO[DEPTH];
 		if(pPBODraw) {
-			DepthToRGB(depthBuffer, pDepthRGBBuffer);
+			DepthToRGB(m_pDepthBuffer, pDepthRGBBuffer);
 			pPBODraw->FillPBOFromBuffer(pDepthRGBBuffer, 320, 240);
 		}
 
@@ -151,11 +150,11 @@ namespace rhapsodies {
 			pPBODraw->FillPBOFromBuffer(pUVMapRGBBuffer, 320, 240);
 		}
 		
-		FilterSkinAreas(colorBuffer, pDepthRGBBuffer, pUVMapRGBBuffer);
+		FilterSkinAreas(m_pColorBuffer, pDepthRGBBuffer, pUVMapRGBBuffer);
 		
 		pPBODraw = m_mapPBO[COLOR_SEGMENTED];
 		if(pPBODraw) {
-			pPBODraw->FillPBOFromBuffer(colorBuffer, 320, 240);
+			pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
 		}
 
 		pPBODraw = m_mapPBO[DEPTH_SEGMENTED];

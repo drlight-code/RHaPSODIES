@@ -30,6 +30,8 @@
 namespace rhapsodies {
 	class ImagePBOOpenGLDraw;
 	class SkinClassifier;
+	class HandModel;
+	class HandModelView;
 	
 	class HandTracker {
 	public:
@@ -80,6 +82,16 @@ namespace rhapsodies {
 
 		bool m_bCameraUpdate;
 		int  m_iDepthLimit; // camera depth cutoff (mm)
+
+		HandModel *m_pHandModel;
+		HandModelView *m_pHandModelView;
+
+		unsigned char  m_pColorBuffer[320*240*3];
+		unsigned short m_pDepthBuffer[320*240];
+
+		// depth frame and uv map RGB buffers
+		unsigned char pDepthRGBBuffer[320*240*3];
+		unsigned char pUVMapRGBBuffer[320*240*3];
 	};
 }
 
