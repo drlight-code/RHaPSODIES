@@ -264,7 +264,7 @@ namespace rhapsodies {
 
 		cv::imshow("Skin Map Dilated", image_processed);
 
-			//cv::waitKey(0);
+		cv::waitKey(1);
 
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
 			if( image_processed.data[pixel] == 0 ) {
