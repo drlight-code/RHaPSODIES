@@ -72,9 +72,10 @@
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
 /*============================================================================*/
 namespace rhapsodies {
-	const std::string sRDIniFile         = "configfiles/rhapsodemo.ini";
-	const std::string sAppSectionName    = "APPLICATION";
-	const std::string sCameraSectionName = "CAMERA";
+	const std::string RHaPSODemo::sRDIniFile          = "configfiles/rhapsodemo.ini";
+	const std::string RHaPSODemo::sAppSectionName     = "APPLICATION";
+	const std::string RHaPSODemo::sCameraSectionName  = "CAMERA";
+	const std::string RHaPSODemo::sTrackerSectionName = "HANDTRACKER";
 }
 
 /*============================================================================*/
@@ -161,7 +162,7 @@ namespace rhapsodies {
 	bool RHaPSODemo::Initialize(int argc, char** argv) {
 		bool success = true;
 
-		success &= ParseConfig();
+		ReadConfig();
 
 		success &= m_pSystem->Init(argc, argv);
 
@@ -203,30 +204,26 @@ namespace rhapsodies {
 		
 		return success;
 	}
-
-	bool RHaPSODemo::CheckForConfigSection(
-		const VistaPropertyList &oPropList,
-		const std::string &sSectionName) {
-
-		if( oPropList.HasProperty(sSectionName) )
-			return true;
-
-		vstr::errp() << "Error: config file does not contain ["
-					 << sSectionName << "] section! Aborting."
-					 << std::endl;
-		return false;
-	}
 	
-	bool RHaPSODemo::ParseConfig() {
+	void RHaPSODemo::ReadConfig() {
 		VistaIniFileParser oIniParser(true);
 		oIniParser.ReadFile(sRDIniFile);
 
 		const VistaPropertyList &oConfig = oIniParser.GetPropertyList();
 
-		if(!CheckForConfigSection(oConfig, sAppSectionName) ||
-		   !CheckForConfigSection(oConfig, sCameraSectionName))
-			return false;
-
+		if(!oConfig.HasProperty(sAppSectionName)) {
+			throw std::runtime_error(
+				std::string() + "Config section ["
+				+ RHaPSODemo::sAppSectionName
+				+ "] not found!");
+		}
+		if(!oConfig.HasProperty(sCameraSectionName)) {
+			throw std::runtime_error(
+				std::string() + "Config section ["
+				+ RHaPSODemo::sCameraSectionName
+				+ "] not found!");
+		}
+		
 		const VistaPropertyList &oApplicationSection =
 			oConfig.GetSubListConstRef( sAppSectionName );
 		const VistaPropertyList &oCameraSection =
@@ -249,8 +246,6 @@ namespace rhapsodies {
 		// read camera parameters
 		m_camWidth  = oCameraSection.GetValueOrDefault("RESOLUTION_X", 320);
 		m_camHeight = oCameraSection.GetValueOrDefault("RESOLUTION_Y", 240);
-
-		return true;
 	}
 
 	bool RHaPSODemo::InitTracker() {

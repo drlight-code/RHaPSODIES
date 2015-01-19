@@ -40,6 +40,8 @@ IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned char* 
 IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned short* val );
 IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const float* val );
 
+
+
 namespace rhapsodies {
 	class ImageDraw;
 	class ShaderRegistry;
@@ -72,7 +74,7 @@ namespace rhapsodies {
 		bool RegisterShaders();
 		bool CreateScene();
 
-		bool ParseConfig();
+		void ReadConfig();
 		bool CheckForConfigSection(const VistaPropertyList &oPropList,
 								   const std::string &sSectionName);
 
@@ -87,6 +89,11 @@ namespace rhapsodies {
 
 		// VistaEventHandler interface
 		virtual void HandleEvent(VistaEvent *pEvent);
+
+		static const std::string sRDIniFile;
+		static const std::string sAppSectionName;
+		static const std::string sCameraSectionName;
+		static const std::string sTrackerSectionName;
 	};
 }
 
