@@ -53,7 +53,18 @@
 		<param name="driver" value="MIDI"/>
 	</node>
 
-	
+	<node name="project_midi" type="HistoryProject">
+		<param name="project">CONTROLLER, VALUE</param>
+	</node>
+
+	<node name="typeconvert_midi_controller" type="TypeConvert[int,string]"/>
+	<node name="typeconvert_midi_value" type="TypeConvert[int,string]"/>
+		
+	<node name="log" type="Logger">
+		<param name="logtoconsole" value="true"/>
+		<param name="prefix"       value="midi"/>
+	</node>
+
 	<node name="handtracker" type="HandTracker"/>
 </graph>
 <edges>
@@ -78,6 +89,13 @@
 	<edge fromnode="toggle_update"     tonode="handtracker"   fromport="out"   toport="set_frame_update"/>
 
 	<!-- midi control -->
-	
+	<edge fromnode="midi_sensor"  tonode="project_midi" fromport="history" toport="history"/>
+
+	<edge fromnode="project_midi" tonode="typeconvert_midi_controller" fromport="CONTROLLER" toport="in"/>
+	<edge fromnode="project_midi" tonode="typeconvert_midi_value"      fromport="VALUE"      toport="in"/>
+
+	<edge fromnode="typeconvert_midi_controller" tonode="log" fromport="out" toport="controller"/>
+	<edge fromnode="typeconvert_midi_value"      tonode="log" fromport="out" toport="value"/>
+
 </edges>
 </module>
