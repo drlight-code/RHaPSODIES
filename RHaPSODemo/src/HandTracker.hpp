@@ -60,6 +60,8 @@ namespace rhapsodies {
 		void NextSkinClassifier();
 		void PrevSkinClassifier();
 
+		void ShowOpenCVImg();
+
 	private:
 		void FilterSkinAreas(unsigned char *colorImage,
 							 unsigned char *depthImage,
@@ -81,6 +83,8 @@ namespace rhapsodies {
 		ListSkinCl::iterator m_itCurrentClassifier;
 
 		bool m_bCameraUpdate;
+		bool m_bShowImage;
+
 		int  m_iDepthLimit; // camera depth cutoff (mm)
 
 		HandModel *m_pHandModel;
@@ -88,6 +92,8 @@ namespace rhapsodies {
 
 		unsigned char  m_pColorBuffer[320*240*3];
 		unsigned short m_pDepthBuffer[320*240];
+
+		unsigned char m_pSkinMap[320*240];
 
 		// depth frame and uv map RGB buffers
 		unsigned char pDepthRGBBuffer[320*240*3];

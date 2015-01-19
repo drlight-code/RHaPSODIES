@@ -117,12 +117,12 @@ namespace rhapsodies {
 /*============================================================================*/
 	RHaPSODemo::RHaPSODemo() :
 		m_camWidth(320), m_camHeight(240),
-		m_pSystem(new VistaSystem),
-		m_pShaderReg(new ShaderRegistry),
-		m_pHandModel(new HandModel),
-		m_pHandModelView(new HandModelView(m_pHandModel)),
-		m_pTracker(new HandTracker),
-		m_pSceneTransform(NULL), m_pDiagramTransform(NULL),
+		m_pSystem(NULL),
+		m_pShaderReg(NULL),
+		m_pHandModelView(NULL),
+		m_pTracker(NULL),
+		m_pSceneTransform(NULL),
+		m_pDiagramTransform(NULL),
 		m_pDiagramDraw(NULL), 
 		m_pColorDraw(NULL),
 		m_pColorSegDraw(NULL),
@@ -130,8 +130,12 @@ namespace rhapsodies {
 		m_pDepthSegDraw(NULL), 
 		m_pUVMapDraw(NULL),
 		m_pUVMapSegDraw(NULL),
-		m_pDepthHistogramHandler(NULL)
-	{
+		m_pDepthHistogramHandler(NULL) {
+
+		m_pSystem = new VistaSystem;
+		m_pShaderReg = new ShaderRegistry;
+
+		m_pTracker = new HandTracker;
 	}
 
 	RHaPSODemo::~RHaPSODemo() {
@@ -286,6 +290,10 @@ namespace rhapsodies {
 		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
 		m_pSceneTransform->Translate(0, 0, -2.0);
 
+		// hand model view
+		m_pHandModelView = new HandModelView(
+			m_pHandModel,
+			m_pSystem->GetGraphicsManager()->GetSceneGraph());
 
 		// ImageDraw for color image
 		ImagePBOOpenGLDraw *pPBODraw = 

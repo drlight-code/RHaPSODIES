@@ -28,6 +28,8 @@
 
 #include <VistaBase/VistaStreamUtils.h>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "RHaPSODemo.hpp"
@@ -76,9 +78,12 @@ namespace rhapsodies {
 /*============================================================================*/
 	HandTracker::HandTracker() :
 		m_bCameraUpdate(true),
+		m_bShowImage(false),
 		m_iDepthLimit(500),
 		m_pHandModel(new HandModel) {
-				
+
+		cv::namedWindow( "Skin Map", CV_WINDOW_AUTOSIZE );				
+		cv::namedWindow( "Skin Map Dilated", CV_WINDOW_AUTOSIZE );				
 	}
 
 	HandTracker::~HandTracker() {
@@ -149,6 +154,18 @@ namespace rhapsodies {
 			UVMapToRGB(uvMapFrame, depthFrame, colorFrame, pUVMapRGBBuffer);
 			pPBODraw->FillPBOFromBuffer(pUVMapRGBBuffer, 320, 240);
 		}
+
+		if(m_bShowImage) {
+			vstr::debug() << "showing opencv image" << std::endl;
+		
+			cv::Mat image = cv::Mat(240, 320, CV_8UC3, m_pColorBuffer);
+			cv::namedWindow( "window", CV_WINDOW_AUTOSIZE ); 
+			cv::imshow("window", image);
+
+			cv::waitKey(0);
+
+			m_bShowImage = false;
+		}
 		
 		FilterSkinAreas(m_pColorBuffer, pDepthRGBBuffer, pUVMapRGBBuffer);
 		
@@ -183,10 +200,33 @@ namespace rhapsodies {
 				colorImage[3*pixel+1] = 0;
 				colorImage[3*pixel+2] = 0;
 			}
+			
 			if( (*m_itCurrentClassifier)->IsSkinPixel(uvmapImage+3*pixel) ) {
 				// yay! skin!
+				m_pSkinMap[pixel] = 255;
 			}
 			else {
+				m_pSkinMap[pixel] = 0;
+			}
+		}
+
+		// dilate the skin map with opencv
+		cv::Mat image = cv::Mat(240, 320, CV_8UC1, m_pSkinMap);
+		cv::Mat image_processed;
+		cv::imshow("Skin Map", image);
+
+		cv::Mat element = getStructuringElement( cv::MORPH_ELLIPSE,
+												 cv::Size(5, 5),
+												 cv::Point(2) );
+
+		cv::dilate( image, image_processed, element );
+
+		cv::imshow("Skin Map Dilated", image_processed);
+
+			//cv::waitKey(0);
+
+		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
+			if( image_processed.data[pixel] == 0 ) {
 				depthImage[3*pixel+0] = 0;
 				depthImage[3*pixel+1] = 0;
 				depthImage[3*pixel+2] = 0;
@@ -195,7 +235,6 @@ namespace rhapsodies {
 				uvmapImage[3*pixel+1] = 0;
 				uvmapImage[3*pixel+2] = 0;
 			}
-			
 		}
 	}
 
@@ -219,6 +258,10 @@ namespace rhapsodies {
 		m_itCurrentClassifier--;
 	}
 
+	void HandTracker::ShowOpenCVImg() {
+		m_bShowImage = true;
+	}
+	
 	void HandTracker::DepthToRGB(const unsigned short *depth,
 								 unsigned char *rgb) {
 		for(int i = 0 ; i < 76800 ; i++) {
@@ -266,6 +309,6 @@ namespace rhapsodies {
 				rgb[3*i+1] = 0;
 				rgb[3*i+2] = 200;
 			}
-		}
+ 		}
 	}
 }

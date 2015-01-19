@@ -3,22 +3,28 @@
 
 #include <VistaMath/VistaBoundingBox.h>
 
+#include <VistaKernel/GraphicsManager/VistaGeometryFactory.h>
+
 #include "HandModelView.hpp"
 
 namespace rhapsodies {
-	HandModelView::HandModelView() :
-		m_pModel(NULL) {
+	HandModelView::HandModelView(HandModel *pModel,
+								 VistaSceneGraph *pSceneGraph) :
+		m_pModel(pModel),
+		m_pSceneGraph(pSceneGraph),
+		m_pGeom(NULL) {
 
-	}
-
-	HandModelView::HandModelView(HandModel *pModel) :
-		m_pModel(pModel) {
-
+		VistaGeometryFactory oGeomFac(pSceneGraph);
+		m_pGeom = oGeomFac.CreateSphere();
+		m_vecGeom.reserve(m_pGeom->GetNumberOfCoords());
+		m_pGeom->GetCoordinates(m_vecGeom);		
 	}
 	
 	bool HandModelView::Do() {
 		vstr::debug() << "rendering hand model" << std::endl;
 
+		
+		
 		return true;
 	}
 

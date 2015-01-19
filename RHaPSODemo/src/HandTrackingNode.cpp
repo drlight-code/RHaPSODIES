@@ -13,6 +13,7 @@ namespace {
 	const std::string g_sPortNextClassifierName = "next_classifier";
 	const std::string g_sPortPrevClassifierName = "prev_classifier";
 	const std::string g_sPortFrameUpdateName    = "set_frame_update";
+	const std::string g_sPortShowImageName      = "show_image";
 }
 
 namespace rhapsodies {
@@ -23,6 +24,8 @@ namespace rhapsodies {
 		RegisterInPortPrototype( g_sPortPrevClassifierName,
 								 new TVdfnPortTypeCompare<TVdfnPort<bool> > );
 		RegisterInPortPrototype( g_sPortFrameUpdateName,
+								 new TVdfnPortTypeCompare<TVdfnPort<bool> > );
+		RegisterInPortPrototype( g_sPortShowImageName,
 								 new TVdfnPortTypeCompare<TVdfnPort<bool> > );
 
 		RegisterInPortPrototype(
@@ -69,6 +72,10 @@ namespace rhapsodies {
 			VdfnUtil::GetInPortTyped<TVdfnPort<bool>*>(
 				g_sPortFrameUpdateName, this );
 
+		m_sPortShowImage.m_pPort =
+			VdfnUtil::GetInPortTyped<TVdfnPort<bool>*>(
+				g_sPortShowImageName, this );
+
 		return true;
 	}
 
@@ -90,6 +97,10 @@ namespace rhapsodies {
 
 		if(m_sPortPrevClassifier.HasNewData()) {
 			m_pTracker->PrevSkinClassifier();
+		}
+
+		if(m_sPortShowImage.HasNewData()) {
+			m_pTracker->ShowOpenCVImg();
 		}
 
 		return true;

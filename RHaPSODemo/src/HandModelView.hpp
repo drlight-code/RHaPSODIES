@@ -1,15 +1,19 @@
 #ifndef _RHAPSODIES_HANDMODELVIEW
 #define _RHAPSODIES_HANDMODELVIEW
 
+#include <vector>
+
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
+
+class VistaGeometry;
 
 namespace rhapsodies {
 	class HandModel;
 	
 	class HandModelView : public IVistaOpenGLDraw {
 	public:
-		HandModelView();
-		HandModelView(HandModel *pModel);
+		HandModelView(HandModel *pModel,
+					  VistaSceneGraph *pSceneGraph);
 		
 		virtual bool Do();
 		virtual bool GetBoundingBox(VistaBoundingBox &bb);
@@ -19,6 +23,11 @@ namespace rhapsodies {
 		
 	private:
 		HandModel *m_pModel;
+
+		VistaSceneGraph *m_pSceneGraph;
+		VistaGeometry *m_pGeom;
+		std::vector<float> m_vecGeom;
+
 	};
 }
 
