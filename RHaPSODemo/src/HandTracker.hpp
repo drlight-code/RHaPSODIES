@@ -27,6 +27,8 @@
 #include <list>
 #include <map>
 
+#include <VistaAspects/VistaPropertyList.h>
+
 namespace rhapsodies {
 	class ImagePBOOpenGLDraw;
 	class SkinClassifier;
@@ -48,6 +50,7 @@ namespace rhapsodies {
 		virtual ~HandTracker();
 		
 		bool Initialize();
+		void ReadConfig();
 
 		void SetViewPBODraw(ViewType type,
 							ImagePBOOpenGLDraw *pPBODraw);
@@ -63,6 +66,13 @@ namespace rhapsodies {
 		void ShowOpenCVImg();
 
 	private:
+		struct Config {
+		public:
+			int iDepthLimit;   // depth cutoff in millimeters
+			int iErosionSize;  // erosion blob size
+			int iDilationSize; // dilation blob size
+		};
+
 		void FilterSkinAreas(unsigned char *colorImage,
 							 unsigned char *depthImage,
 							 unsigned char *uvmapImage);
@@ -74,7 +84,7 @@ namespace rhapsodies {
 						const unsigned short *depth,
 						const unsigned char *color,
 						unsigned char *rgb);
-		
+
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
 		MapPBO m_mapPBO;
 
@@ -85,7 +95,7 @@ namespace rhapsodies {
 		bool m_bCameraUpdate;
 		bool m_bShowImage;
 
-		int  m_iDepthLimit; // camera depth cutoff (mm)
+		Config m_oConfig;
 
 		HandModel *m_pHandModel;
 		HandModelView *m_pHandModelView;

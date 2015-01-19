@@ -25,8 +25,11 @@
 #include <cstring>
 #include <iostream>
 #include <limits>
+#include <exception>
 
 #include <VistaBase/VistaStreamUtils.h>
+
+#include <VistaTools/VistaIniFileParser.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -69,6 +72,10 @@ namespace {
 }
 
 namespace rhapsodies {
+	const std::string sDepthLimitName   = "DEPTH_LIMIT";
+	const std::string sErosionSizeName  = "EROSION_SIZE";
+	const std::string sDilationSizeName = "DILATION_SIZE";
+	
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
@@ -79,9 +86,9 @@ namespace rhapsodies {
 	HandTracker::HandTracker() :
 		m_bCameraUpdate(true),
 		m_bShowImage(false),
-		m_iDepthLimit(500),
-		m_pHandModel(new HandModel) {
+		m_pHandModel(NULL) {
 
+		m_pHandModel = new HandModel;
 		cv::namedWindow( "Skin Map", CV_WINDOW_AUTOSIZE );				
 		cv::namedWindow( "Skin Map Dilated", CV_WINDOW_AUTOSIZE );				
 	}
@@ -96,6 +103,9 @@ namespace rhapsodies {
 	bool HandTracker::Initialize() {
 		vstr::out() << "Initializing RHaPSODIES HandTracker" << std::endl;
 
+		// parse config params into member variables
+		ReadConfig();
+		
 		// Initialize the different skin classifiers
 		SkinClassifierLogOpponentYIQ *pSkinLOYIQ =
 			new SkinClassifierLogOpponentYIQ;
@@ -122,6 +132,30 @@ namespace rhapsodies {
 		m_itCurrentClassifier = m_lClassifiers.begin();
 		
 		return true;
+	}
+
+	void HandTracker::ReadConfig() {
+		VistaIniFileParser oIniParser(true);
+		oIniParser.ReadFile(RHaPSODemo::sRDIniFile);
+
+		const VistaPropertyList oConfig = oIniParser.GetPropertyList();
+
+		if(!oConfig.HasProperty(RHaPSODemo::sTrackerSectionName)) {
+			throw std::runtime_error(
+				std::string() + "Config section ["
+				+ RHaPSODemo::sTrackerSectionName
+				+ "] not found!");			   
+		}
+
+		const VistaPropertyList oTrackerConfig =
+			oConfig.GetSubListConstRef(RHaPSODemo::sTrackerSectionName);
+
+		m_oConfig.iDepthLimit = oTrackerConfig.GetValueOrDefault(
+			sDepthLimitName, 500);
+		m_oConfig.iErosionSize = oTrackerConfig.GetValueOrDefault(
+			sErosionSizeName, 3);
+		m_oConfig.iDilationSize = oTrackerConfig.GetValueOrDefault(
+			sDilationSizeName, 5);
 	}
 	
 	void HandTracker::SetViewPBODraw(ViewType type,
@@ -215,11 +249,18 @@ namespace rhapsodies {
 		cv::Mat image_processed;
 		cv::imshow("Skin Map", image);
 
-		cv::Mat element = getStructuringElement( cv::MORPH_ELLIPSE,
-												 cv::Size(5, 5),
-												 cv::Point(2) );
+		cv::Mat erode_element = getStructuringElement(
+			cv::MORPH_ELLIPSE,
+			cv::Size(m_oConfig.iErosionSize, m_oConfig.iErosionSize),
+			cv::Point(m_oConfig.iErosionSize/2));
+		cv::Mat dilate_element = getStructuringElement(
+			cv::MORPH_ELLIPSE,
+			cv::Size(m_oConfig.iDilationSize, m_oConfig.iDilationSize),
+			cv::Point(m_oConfig.iDilationSize/2));
 
-		cv::dilate( image, image_processed, element );
+		cv::erode(image, image_processed, erode_element);
+		image = image_processed.clone();
+		cv::dilate(image, image_processed, dilate_element);
 
 		cv::imshow("Skin Map Dilated", image_processed);
 
@@ -298,7 +339,7 @@ namespace rhapsodies {
 
 			if(uvmap[2*i+0] != invalid &&
 			   uvmap[2*i+1] != invalid &&
-			   depth[i] < m_iDepthLimit) {
+			   depth[i] < m_oConfig.iDepthLimit) {
 
 				rgb[3*i+0] = color[3*color_index+0];
 				rgb[3*i+1] = color[3*color_index+1];
