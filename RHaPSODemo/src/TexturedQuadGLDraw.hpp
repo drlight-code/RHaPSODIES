@@ -33,10 +33,12 @@ namespace rhapsodies {
 		GLuint m_vaId;
 		GLuint m_vbVertId;
 		GLuint m_vbUVId;
-		GLuint m_texId;
 
 		ShaderRegistry *m_pShaderReg;
 
+	protected:
+		GLuint m_texId;
+		
 	public:
 		TexturedQuadGLDraw(ShaderRegistry *pShaderReg);
 		virtual ~TexturedQuadGLDraw();

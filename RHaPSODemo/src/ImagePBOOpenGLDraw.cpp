@@ -75,6 +75,7 @@ namespace rhapsodies {
 					 texData, GL_DYNAMIC_DRAW);
 		delete [] texData;
 
+		glBindTexture(GL_TEXTURE_2D, m_texId);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
 					 m_texWidth, m_texHeight, 0, GL_RGB,
 					 GL_UNSIGNED_BYTE, 0);

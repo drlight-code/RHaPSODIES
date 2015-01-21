@@ -72,6 +72,9 @@ namespace rhapsodies {
 
 		glGenTextures(1, &m_texId);
 		glBindTexture(GL_TEXTURE_2D, m_texId);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	TexturedQuadGLDraw::~TexturedQuadGLDraw() {
