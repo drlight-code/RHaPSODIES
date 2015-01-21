@@ -120,6 +120,7 @@ namespace rhapsodies {
 		m_camWidth(320), m_camHeight(240),
 		m_pSystem(NULL),
 		m_pShaderReg(NULL),
+		m_pHandModel(NULL),
 		m_pHandModelView(NULL),
 		m_pTracker(NULL),
 		m_pSceneTransform(NULL),
@@ -136,6 +137,7 @@ namespace rhapsodies {
 		m_pSystem = new VistaSystem;
 		m_pShaderReg = new ShaderRegistry;
 
+		m_pHandModel = new HandModel;
 		m_pTracker = new HandTracker;
 	}
 
@@ -272,6 +274,17 @@ namespace rhapsodies {
 		vec_shaders.push_back("frag_textured");		
 		m_pShaderReg->RegisterProgram("textured", vec_shaders);
 
+
+		m_pShaderReg->RegisterShader("vert_vpos_only", GL_VERTEX_SHADER,   
+									 "resources/shaders/vpos_only.vs");
+		m_pShaderReg->RegisterShader("frag_vpos_only", GL_FRAGMENT_SHADER,
+									 "resources/shaders/vpos_only.fs");
+
+		vec_shaders.clear();
+		vec_shaders.push_back("vert_vpos_only");
+		vec_shaders.push_back("frag_vpos_only");		
+		m_pShaderReg->RegisterProgram("vpos_only", vec_shaders);
+
 		return true;
 	}
 
@@ -285,10 +298,12 @@ namespace rhapsodies {
 		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
 		m_pSceneTransform->Translate(0, 0, -2.0);
 
-		// hand model view
-		m_pHandModelView = new HandModelView(
-			m_pHandModel,
-			m_pSystem->GetGraphicsManager()->GetSceneGraph());
+		// hand model and view
+		m_pHandModelView = new HandModelView(m_pHandModel,
+											 m_pShaderReg);
+		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
+		m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,
+												m_pHandModelView);
 
 		// ImageDraw for color image
 		ImagePBOOpenGLDraw *pPBODraw = 
@@ -348,6 +363,8 @@ namespace rhapsodies {
 
 		m_pDepthHistogramHandler->Enable(false);
 
+
+		
 		return true;
 	}
 

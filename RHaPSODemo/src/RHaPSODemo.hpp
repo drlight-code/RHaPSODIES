@@ -29,6 +29,7 @@
 
 class VistaSystem;
 class VistaTransformNode;
+class VistaOpenGLNode;
 
 class VistaPropertyList;
 
@@ -62,6 +63,9 @@ namespace rhapsodies {
 
 		VistaTransformNode *m_pSceneTransform;
 		VistaTransformNode *m_pDiagramTransform;
+
+		VistaTransformNode *m_pHandModelTransform;
+		VistaOpenGLNode *m_pHandModelGLNode;
 
 		ImageDraw *m_pDiagramDraw;
 		ImageDraw *m_pColorDraw, *m_pColorSegDraw;

@@ -3,9 +3,11 @@
 
 #include <vector>
 
+#include <GL/gl.h>
+
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 
-class VistaGeometry;
+class ShaderRegistry;
 
 namespace rhapsodies {
 	class HandModel;
@@ -13,7 +15,7 @@ namespace rhapsodies {
 	class HandModelView : public IVistaOpenGLDraw {
 	public:
 		HandModelView(HandModel *pModel,
-					  VistaSceneGraph *pSceneGraph);
+					  ShaderRegistry *pReg);
 		
 		virtual bool Do();
 		virtual bool GetBoundingBox(VistaBoundingBox &bb);
@@ -22,12 +24,15 @@ namespace rhapsodies {
 		void SetModel(HandModel* pModel);
 		
 	private:
+		void PrepareVertexBufferObjects();
+
 		HandModel *m_pModel;
+		ShaderRegistry *m_pShaderReg;
 
-		VistaSceneGraph *m_pSceneGraph;
-		VistaGeometry *m_pGeom;
-		std::vector<float> m_vecGeom;
-
+		std::vector<float> m_vSphereVertexData;
+		
+		GLuint m_idVA;
+		GLuint m_idVBO;
 	};
 }
 
