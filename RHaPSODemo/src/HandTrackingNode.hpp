@@ -44,6 +44,7 @@ namespace rhapsodies {
 		sPortHlp<bool> m_sPortPrevClassifier;
 		sPortHlp<bool> m_sPortFrameUpdate;
 		sPortHlp<bool> m_sPortShowImage;
+		sPortHlp<bool> m_sPortToggleSkinMap;
 
 		sPortHlp<const unsigned char*>  m_sPortColorFrame;
 		sPortHlp<const unsigned short*> m_sPortDepthFrame;

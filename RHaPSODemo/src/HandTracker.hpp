@@ -64,6 +64,7 @@ namespace rhapsodies {
 		void PrevSkinClassifier();
 
 		void ShowOpenCVImg();
+		void ToggleSkinMap();
 
 	private:
 		struct Config {
@@ -94,6 +95,7 @@ namespace rhapsodies {
 
 		bool m_bCameraUpdate;
 		bool m_bShowImage;
+		bool m_bShowSkinMap;
 
 		Config m_oConfig;
 

@@ -41,11 +41,15 @@
 	<node name="key_callback_show_image" type="KeyCallback">
      	<param name="key">i</param>
 	</node>
+	<node name="key_callback_toggle_skinmap" type="KeyCallback">
+     	<param name="key">s</param>
+	</node>
 
 	<node name="typeconvert_next" type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_prev" type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_toggle_update" type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_show_image" type="TypeConvert[int,bool]"/>
+	<node name="typeconvert_toggle_skinmap" type="TypeConvert[int,bool]"/>
 
 	<node name="toggle_update" type="Toggle">
      	<param name="mode">on_any_update</param>
@@ -96,6 +100,9 @@
 	<edge fromnode="key_callback_show_image" tonode="typeconvert_show_image" fromport="value" toport="in"/>
 	<edge fromnode="typeconvert_show_image"  tonode="handtracker"            fromport="out"   toport="show_image"/>
 
+	<edge fromnode="key_callback_toggle_skinmap" tonode="typeconvert_toggle_skinmap" fromport="value" toport="in"/>
+	<edge fromnode="typeconvert_toggle_skinmap"  tonode="handtracker"                fromport="out"   toport="toggle_skinmap"/>
+	
 	<!-- midi control -->
 	<edge fromnode="midi_sensor"  tonode="project_midi" fromport="history" toport="history"/>
 

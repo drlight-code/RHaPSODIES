@@ -86,11 +86,10 @@ namespace rhapsodies {
 	HandTracker::HandTracker() :
 		m_bCameraUpdate(true),
 		m_bShowImage(false),
+		m_bShowSkinMap(false),
 		m_pHandModel(NULL) {
 
 		m_pHandModel = new HandModel;
-		cv::namedWindow( "Skin Map", CV_WINDOW_AUTOSIZE );				
-		cv::namedWindow( "Skin Map Dilated", CV_WINDOW_AUTOSIZE );				
 	}
 
 	HandTracker::~HandTracker() {
@@ -196,7 +195,7 @@ namespace rhapsodies {
 			cv::namedWindow( "window", CV_WINDOW_AUTOSIZE ); 
 			cv::imshow("window", image);
 
-			cv::waitKey(0);
+			cv::waitKey(1);
 
 			m_bShowImage = false;
 		}
@@ -247,7 +246,8 @@ namespace rhapsodies {
 		// dilate the skin map with opencv
 		cv::Mat image = cv::Mat(240, 320, CV_8UC1, m_pSkinMap);
 		cv::Mat image_processed;
-		cv::imshow("Skin Map", image);
+		if(m_bShowSkinMap)
+			cv::imshow("Skin Map", image);
 
 		cv::Mat erode_element = getStructuringElement(
 			cv::MORPH_ELLIPSE,
@@ -262,9 +262,10 @@ namespace rhapsodies {
 		image = image_processed.clone();
 		cv::dilate(image, image_processed, dilate_element);
 
-		cv::imshow("Skin Map Dilated", image_processed);
-
-		cv::waitKey(1);
+		if(m_bShowSkinMap) {
+			cv::imshow("Skin Map Dilated", image_processed);
+			cv::waitKey(1);
+		}
 
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
 			if( image_processed.data[pixel] == 0 ) {
@@ -301,6 +302,25 @@ namespace rhapsodies {
 
 	void HandTracker::ShowOpenCVImg() {
 		m_bShowImage = true;
+	}
+	void HandTracker::ToggleSkinMap() {
+		vstr::debug() << "Toggling skin map rendering" << std::endl;
+		
+		m_bShowSkinMap = !m_bShowSkinMap;
+
+		if(m_bShowSkinMap) {
+			cv::namedWindow( "Skin Map", CV_WINDOW_AUTOSIZE );				
+			cv::namedWindow( "Skin Map Dilated", CV_WINDOW_AUTOSIZE );
+		}
+		else {
+			cv::destroyWindow("Skin Map");
+			cv::destroyWindow("Skin Map Dilated");
+			cv::waitKey(1);
+
+			cv::Mat image = cv::Mat(240, 320, CV_8UC1, m_pSkinMap);
+			cv::imshow("Skin Map", image);
+			cv::imshow("Skin Map Dilated", image);
+		}
 	}
 	
 	void HandTracker::DepthToRGB(const unsigned short *depth,
