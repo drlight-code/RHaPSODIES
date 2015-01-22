@@ -24,15 +24,22 @@ namespace rhapsodies {
 		void SetModel(HandModel* pModel);
 		
 	private:
+		enum VBOIdIndex {
+			VBO_SPHERE,
+			VBO_CYLINDER,
+			VBO_LAST
+		};
+		
 		void PrepareVertexBufferObjects();
 
 		HandModel *m_pModel;
 		ShaderRegistry *m_pShaderReg;
 
 		std::vector<float> m_vSphereVertexData;
+		std::vector<float> m_vCylinderVertexData;
 		
 		GLuint m_idVA;
-		GLuint m_idVBO;
+		GLuint m_idVBO[VBO_LAST];
 	};
 }
 

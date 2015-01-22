@@ -25,6 +25,9 @@ namespace rhapsodies {
 		std::vector<VistaVector3D> vCoords;
 		std::vector<VistaVector3D> vTexCoords;
 		std::vector<VistaVector3D> vNormals;
+		std::vector<float> vCoordsFloat;
+		std::vector<float> vTexCoordsFloat;
+		std::vector<float> vNormalsFloat;
 		std::vector<VistaColor> vColors;
 		
 		VistaGeometryFactory::CreateEllipsoidData(
@@ -39,6 +42,20 @@ namespace rhapsodies {
 			}
 		}
 
+		vIndices.clear();
+		vColors.clear();
+		VistaGeometryFactory::CreateConeData(
+			&vIndices, &vCoordsFloat, &vTexCoordsFloat, &vNormalsFloat, &vColors);
+
+		// generate vertex list from indices
+		for( std::vector<VistaIndexedVertex>::iterator it = vIndices.begin() ;
+			 it != vIndices.end() ; ++it ) {
+			for( size_t dim = 0 ; dim < 3 ; dim++ ) {
+				m_vCylinderVertexData.push_back(
+					vCoordsFloat[3*it->GetCoordinateIndex()+dim]);
+			}
+		}
+
 		PrepareVertexBufferObjects();
 	}
 
@@ -46,11 +63,16 @@ namespace rhapsodies {
 		glGenVertexArrays(1, &m_idVA);
 		glBindVertexArray(m_idVA);
 
-		glGenBuffers(1, &m_idVBO);
-		glBindBuffer(GL_ARRAY_BUFFER, m_idVBO);
+		glGenBuffers(VBO_LAST, m_idVBO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_idVBO[VBO_SPHERE]);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*m_vSphereVertexData.size(),
 					 &m_vSphereVertexData[0], GL_STATIC_DRAW);
 
+		glBindBuffer(GL_ARRAY_BUFFER, m_idVBO[VBO_CYLINDER]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*m_vCylinderVertexData.size(),
+					 &m_vCylinderVertexData[0], GL_STATIC_DRAW);
+		
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
@@ -62,11 +84,15 @@ namespace rhapsodies {
 
 		glUseProgram(m_pShaderReg->GetProgram("vpos_only"));
 
-		glBindBuffer(GL_ARRAY_BUFFER, m_idVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, m_idVBO[VBO_SPHERE]);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
 		glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size());
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_idVBO[VBO_CYLINDER]);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size());
 		
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
