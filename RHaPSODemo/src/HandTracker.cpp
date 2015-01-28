@@ -129,6 +129,8 @@ namespace rhapsodies {
 		m_lClassifiers.push_back(pSkinCl);
 
 		m_itCurrentClassifier = m_lClassifiers.begin();
+		m_itCurrentClassifier++;
+		m_itCurrentClassifier++;
 		
 		return true;
 	}
