@@ -1,13 +1,13 @@
 #version 330 compatibility
 
 uniform mat4 gl_ModelViewProjectionMatrix;
+uniform mat4 model_transform;
 
 layout(location = 0) in vec3 vertexPosition_modelspace;
-layout(location = 1) in mat4 model_transform;
 
 void main(){
-	// gl_Position = gl_ModelViewProjectionMatrix *
-	// 	model_transform * vec4(vertexPosition_modelspace,1);
 	gl_Position = gl_ModelViewProjectionMatrix *
-		vec4(vertexPosition_modelspace,1);
+		model_transform * vec4(vertexPosition_modelspace,1);
+	// gl_Position = gl_ModelViewProjectionMatrix *
+	// 	vec4(vertexPosition_modelspace,1);
 }

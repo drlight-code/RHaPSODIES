@@ -94,7 +94,13 @@ namespace rhapsodies {
 	bool HandRenderer::Do() {
 		// measure timings!
 
-		glUseProgram(m_pShaderReg->GetProgram("vpos_only"));
+		VistaTransformMatrix matModel;
+
+		GLint idProgram = m_pShaderReg->GetProgram("vpos_only");
+		glUseProgram(idProgram);
+	
+		GLint locUniform = glGetUniformLocation(idProgram,
+												"model_transform");
 
 		// for now we will upload the same model transform matrix in
 		// advance to calling glDrawArrays. If this turns out to be
@@ -102,12 +108,18 @@ namespace rhapsodies {
 		// beginning and use DrawArraysInstanced to look up the
 		// specific matrix in the vertex shader by the instance id.
 
-		// bottom palm sphere
+		// draw all spheres
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
+
+		glUniformMatrix4fv(locUniform, 1, false, matModel.GetData());
 		glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size()/3);
 
-		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
-		glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size()/3);
+		matModel.SetTranslation(VistaVector3D(1,0,0));
+		glUniformMatrix4fv(locUniform, 1, false, matModel.GetData());
+		glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size()/3);
+
+		// glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
+		// glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size()/3);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
