@@ -42,8 +42,8 @@ namespace rhapsodies {
 
 		GLint status;
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-		if (status == GL_FALSE)
-		{
+		
+		if(status == GL_FALSE)	{
 			GLint infoLogLength;
 			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
 
@@ -51,8 +51,7 @@ namespace rhapsodies {
 			glGetShaderInfoLog(shader, infoLogLength, NULL, strInfoLog);
 
 			const char *strShaderType = NULL;
-			switch(type)
-			{
+			switch(type) {
 			case GL_VERTEX_SHADER: strShaderType = "vertex"; break;
 			case GL_GEOMETRY_SHADER: strShaderType = "geometry"; break;
 			case GL_FRAGMENT_SHADER: strShaderType = "fragment"; break;
@@ -61,7 +60,7 @@ namespace rhapsodies {
 			std::cerr << "Compile failure in " << strShaderType
 					  << " shader: " << name << std::endl
 					  << strInfoLog << std::endl;
-
+			
 			delete[] strInfoLog;
 		}
 
@@ -80,8 +79,8 @@ namespace rhapsodies {
 
 		GLint status;
 		glGetProgramiv (program, GL_LINK_STATUS, &status);
-		if (status == GL_FALSE)
-		{
+
+		if(status == GL_FALSE)	{
 			GLint infoLogLength;
 			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
 

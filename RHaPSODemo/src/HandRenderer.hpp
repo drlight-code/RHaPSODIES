@@ -24,10 +24,11 @@ namespace rhapsodies {
 		void SetModel(HandModel* pModel);
 		
 	private:
-		enum VBOIdIndex {
+		enum BufferObjectId {
 			VBO_SPHERE,
 			VBO_CYLINDER,
-			VBO_LAST
+			BUFFER_OBJECT_MODELTRANSFORM,
+			BUFFER_OBJECT_LAST
 		};
 		
 		void PrepareVertexBufferObjects();
@@ -39,7 +40,7 @@ namespace rhapsodies {
 		std::vector<float> m_vCylinderVertexData;
 		
 		GLuint m_idVA;
-		GLuint m_idVBO[VBO_LAST];
+		GLuint m_idBufferObjects[BUFFER_OBJECT_LAST];
 	};
 }
 

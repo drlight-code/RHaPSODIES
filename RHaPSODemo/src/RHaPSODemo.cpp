@@ -265,9 +265,9 @@ namespace rhapsodies {
 
 	bool RHaPSODemo::RegisterShaders() {
 		m_pShaderReg->RegisterShader("vert_textured", GL_VERTEX_SHADER,   
-									 "resources/shaders/textured.vs");
+									 "resources/shaders/textured.vert");
 		m_pShaderReg->RegisterShader("frag_textured", GL_FRAGMENT_SHADER,
-									 "resources/shaders/textured.fs");
+									 "resources/shaders/textured.frag");
 
 		std::vector<std::string> vec_shaders;
 		vec_shaders.push_back("vert_textured");		
@@ -275,10 +275,10 @@ namespace rhapsodies {
 		m_pShaderReg->RegisterProgram("textured", vec_shaders);
 
 
-		m_pShaderReg->RegisterShader("vert_vpos_only", GL_VERTEX_SHADER,   
-									 "resources/shaders/vpos_only.vs");
+		m_pShaderReg->RegisterShader("vert_vpos_only", GL_VERTEX_SHADER,
+									 "resources/shaders/vpos_only.vert");
 		m_pShaderReg->RegisterShader("frag_vpos_only", GL_FRAGMENT_SHADER,
-									 "resources/shaders/vpos_only.fs");
+									 "resources/shaders/vpos_only.frag");
 
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos_only");
@@ -304,6 +304,7 @@ namespace rhapsodies {
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
 		m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,
 												m_pHandRenderer);
+		m_pHandModelTransform->SetTranslation(0,0,1);
 
 		// ImageDraw for color image
 		ImagePBOOpenGLDraw *pPBODraw = 

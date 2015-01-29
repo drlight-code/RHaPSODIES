@@ -34,8 +34,8 @@ namespace rhapsodies {
 			&vIndices, &vCoords, &vTexCoords, &vNormals, &vColors);
 
 		// generate vertex list from indices
-		for( std::vector<VistaIndexedVertex>::iterator it = vIndices.begin() ;
-			 it != vIndices.end() ; ++it ) {
+		std::vector<VistaIndexedVertex>::iterator it;
+		for( it = vIndices.begin() ; it != vIndices.end() ; ++it ) {
 			for( int dim = 0 ; dim < 3 ; dim++ ) {
 				m_vSphereVertexData.push_back(
 					vCoords[it->GetCoordinateIndex()][dim]);
@@ -45,11 +45,11 @@ namespace rhapsodies {
 		vIndices.clear();
 		vColors.clear();
 		VistaGeometryFactory::CreateConeData(
-			&vIndices, &vCoordsFloat, &vTexCoordsFloat, &vNormalsFloat, &vColors);
+			&vIndices, &vCoordsFloat, &vTexCoordsFloat,
+			&vNormalsFloat, &vColors);
 
 		// generate vertex list from indices
-		for( std::vector<VistaIndexedVertex>::iterator it = vIndices.begin() ;
-			 it != vIndices.end() ; ++it ) {
+		for( it = vIndices.begin() ; it != vIndices.end() ; ++it ) {
 			for( size_t dim = 0 ; dim < 3 ; dim++ ) {
 				m_vCylinderVertexData.push_back(
 					vCoordsFloat[3*it->GetCoordinateIndex()+dim]);
@@ -60,19 +60,37 @@ namespace rhapsodies {
 	}
 
 	void HandRenderer::PrepareVertexBufferObjects() {
+
+		// generate and bind vertex array
 		glGenVertexArrays(1, &m_idVA);
 		glBindVertexArray(m_idVA);
 
-		glGenBuffers(VBO_LAST, m_idVBO);
+		// generate buffer object names
+		glGenBuffers(BUFFER_OBJECT_LAST, m_idBufferObjects);
 
-		glBindBuffer(GL_ARRAY_BUFFER, m_idVBO[VBO_SPHERE]);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*m_vSphereVertexData.size(),
+		// set vertex attrib pointer for sphere vbo and fill with
+		// static data
+		glBindBuffer(GL_ARRAY_BUFFER, m_idBufferObjects[VBO_SPHERE]);
+		glBufferData(GL_ARRAY_BUFFER,
+					 sizeof(float)*m_vSphereVertexData.size(),
 					 &m_vSphereVertexData[0], GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-		glBindBuffer(GL_ARRAY_BUFFER, m_idVBO[VBO_CYLINDER]);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*m_vCylinderVertexData.size(),
+		// set vertex attrib pointer for cylinder vbo and fill with
+		// static data
+		glBindBuffer(GL_ARRAY_BUFFER, m_idBufferObjects[VBO_CYLINDER]);
+		glBufferData(GL_ARRAY_BUFFER,
+					 sizeof(float)*m_vCylinderVertexData.size(),
 					 &m_vCylinderVertexData[0], GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		
+		// set vertex attrib pointer for modeltransform, but don't
+		// fill with data yet
+		glBindBuffer(GL_ARRAY_BUFFER,
+					 m_idBufferObjects[BUFFER_OBJECT_MODELTRANSFORM]);
+		glVertexAttribPointer(1, 16, GL_FLOAT, GL_FALSE, 0, 0);
+		
+		// unbind everything for now
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
@@ -84,15 +102,23 @@ namespace rhapsodies {
 
 		glUseProgram(m_pShaderReg->GetProgram("vpos_only"));
 
-		glBindBuffer(GL_ARRAY_BUFFER, m_idVBO[VBO_SPHERE]);
+		// for now we will upload the same model transform matrix in
+		// advance to calling glDrawArrays. If this turns out to be
+		// slow, we might upload all the model matrices at once at the
+		// beginning and use DrawArraysInstanced to look up the
+		// specific matrix in the vertex shader by the instance id.
+
+		
+		
+		// bottom palm sphere
+		glBindBuffer(GL_ARRAY_BUFFER, m_idBufferObjects[VBO_SPHERE]);
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size());
 
-		glBindBuffer(GL_ARRAY_BUFFER, m_idVBO[VBO_CYLINDER]);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size());
+		// glBindBuffer(GL_ARRAY_BUFFER, m_idBufferObjects[VBO_CYLINDER]);
+		// glEnableVertexAttribArray(0);
+		// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		// glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size());
 		
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
