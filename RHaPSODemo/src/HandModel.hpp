@@ -119,7 +119,7 @@ namespace rhapsodies {
 	  /**
 	   * Get a skeleton bone extent in millimeters.
 	   * 
-	   * @param eExt The bone extend to retreive.
+	   * @param eExt The bone extent to retreive.
 	   * @return Length in millimeters.
 	   */
 	  float GetExtent(Extent eExt);
@@ -127,7 +127,7 @@ namespace rhapsodies {
 	  /**
 	   * Set a skeleton bone extent in millimeters.
 	   * 
-	   * @param eExt The bone extend to retreive.
+	   * @param eExt The bone extent to retreive.
 	   * @param fLengthMm Length in millimeters.
 	   */
 	  void SetExtent(Extent eExt, float fLengthMm);
