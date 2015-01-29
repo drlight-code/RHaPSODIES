@@ -33,7 +33,7 @@ namespace rhapsodies {
 	class ImagePBOOpenGLDraw;
 	class SkinClassifier;
 	class HandModel;
-	class HandModelView;
+	class HandRenderer;
 	
 	class HandTracker {
 	public:
@@ -100,7 +100,7 @@ namespace rhapsodies {
 		Config m_oConfig;
 
 		HandModel *m_pHandModel;
-		HandModelView *m_pHandModelView;
+		HandRenderer *m_pHandRenderer;
 
 		unsigned char  m_pColorBuffer[320*240*3];
 		unsigned short m_pDepthBuffer[320*240];

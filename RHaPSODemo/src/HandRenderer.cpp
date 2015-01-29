@@ -9,14 +9,14 @@
 
 #include <ShaderRegistry.hpp>
 
-#include "HandModelView.hpp"
+#include "HandRenderer.hpp"
 
 namespace {
-	const std::string sLogPrefix = "[HandModelView] ";
+	const std::string sLogPrefix = "[HandRenderer] ";
 }
 
 namespace rhapsodies {
-	HandModelView::HandModelView(HandModel *pModel,
+	HandRenderer::HandRenderer(HandModel *pModel,
 								 ShaderRegistry *pReg) :
 		m_pModel(pModel),
 		m_pShaderReg(pReg) {
@@ -59,7 +59,7 @@ namespace rhapsodies {
 		PrepareVertexBufferObjects();
 	}
 
-	void HandModelView::PrepareVertexBufferObjects() {
+	void HandRenderer::PrepareVertexBufferObjects() {
 		glGenVertexArrays(1, &m_idVA);
 		glBindVertexArray(m_idVA);
 
@@ -77,7 +77,7 @@ namespace rhapsodies {
 		glBindVertexArray(0);
 	}
 	
-	bool HandModelView::Do() {
+	bool HandRenderer::Do() {
 		// measure timings!
 
 		glBindVertexArray(m_idVA);
@@ -100,18 +100,18 @@ namespace rhapsodies {
 		return true;
 	}
 
-	bool HandModelView::GetBoundingBox(VistaBoundingBox &bb) {
+	bool HandRenderer::GetBoundingBox(VistaBoundingBox &bb) {
 		bb = VistaBoundingBox(
 			VistaVector3D(-10, -10, -10),
 			VistaVector3D( 10,  10,  10));
 		return true;
 	}	
 	
-	HandModel* HandModelView::GetModel() {
+	HandModel* HandRenderer::GetModel() {
 		return m_pModel;
 	}
 
-	void HandModelView::SetModel(HandModel* pModel) {
+	void HandRenderer::SetModel(HandModel* pModel) {
 		m_pModel = pModel;
 	}
 }

@@ -1,5 +1,5 @@
-#ifndef _RHAPSODIES_HANDMODELVIEW
-#define _RHAPSODIES_HANDMODELVIEW
+#ifndef _RHAPSODIES_HANDRENDERER
+#define _RHAPSODIES_HANDRENDERER
 
 #include <vector>
 
@@ -12,9 +12,9 @@ class ShaderRegistry;
 namespace rhapsodies {
 	class HandModel;
 	
-	class HandModelView : public IVistaOpenGLDraw {
+	class HandRenderer : public IVistaOpenGLDraw {
 	public:
-		HandModelView(HandModel *pModel,
+		HandRenderer(HandModel *pModel,
 					  ShaderRegistry *pReg);
 		
 		virtual bool Do();
@@ -43,4 +43,4 @@ namespace rhapsodies {
 	};
 }
 
-#endif // _RHAPSODIES_HANDMODELVIEW
+#endif // _RHAPSODIES_HANDRENDERER

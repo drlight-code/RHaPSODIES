@@ -61,7 +61,7 @@
 #include <HistogramUpdater.hpp>
 
 #include <HandModel.hpp>
-#include <HandModelView.hpp>
+#include <HandRenderer.hpp>
 
 #include <HandTracker.hpp>
 #include <HandTrackingNode.hpp>
@@ -121,7 +121,7 @@ namespace rhapsodies {
 		m_pSystem(NULL),
 		m_pShaderReg(NULL),
 		m_pHandModel(NULL),
-		m_pHandModelView(NULL),
+		m_pHandRenderer(NULL),
 		m_pTracker(NULL),
 		m_pSceneTransform(NULL),
 		m_pDiagramTransform(NULL),
@@ -299,11 +299,11 @@ namespace rhapsodies {
 		m_pSceneTransform->Translate(0, 0, -2.0);
 
 		// hand model and view
-		m_pHandModelView = new HandModelView(m_pHandModel,
+		m_pHandRenderer = new HandRenderer(m_pHandModel,
 											 m_pShaderReg);
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
 		m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,
-												m_pHandModelView);
+												m_pHandRenderer);
 
 		// ImageDraw for color image
 		ImagePBOOpenGLDraw *pPBODraw = 
