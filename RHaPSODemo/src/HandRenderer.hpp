@@ -15,7 +15,7 @@ namespace rhapsodies {
 	class HandRenderer : public IVistaOpenGLDraw {
 	public:
 		HandRenderer(HandModel *pModel,
-					  ShaderRegistry *pReg);
+					 ShaderRegistry *pReg);
 		
 		virtual bool Do();
 		virtual bool GetBoundingBox(VistaBoundingBox &bb);
@@ -25,9 +25,8 @@ namespace rhapsodies {
 		
 	private:
 		enum BufferObjectId {
-			VBO_SPHERE,
-			VBO_CYLINDER,
-			BUFFER_OBJECT_MODELTRANSFORM,
+			SPHERE,
+			CYLINDER,
 			BUFFER_OBJECT_LAST
 		};
 		
@@ -39,7 +38,7 @@ namespace rhapsodies {
 		std::vector<float> m_vSphereVertexData;
 		std::vector<float> m_vCylinderVertexData;
 		
-		GLuint m_idVA;
+		GLuint m_idVertexArrayObjects[BUFFER_OBJECT_LAST];
 		GLuint m_idBufferObjects[BUFFER_OBJECT_LAST];
 	};
 }
