@@ -106,7 +106,7 @@ namespace rhapsodies {
 	   * @param eDOF The joint DOF to retreive.
 	   * @return Angle in degrees.
 	   */
-	  float GetJointAngle(JointDOF eDOF);
+	  float GetJointAngle(size_t eDOF);
 
 	  /**
 	   * Set a skeleton joint angle in degrees.
@@ -114,7 +114,7 @@ namespace rhapsodies {
 	   * @param eDOF The joint DOF to set.
 	   * @param fAngleDegrees Angle in degrees.
 	   */
-	  void SetJointAngle(JointDOF eDOF, float fAngleDegrees);
+	  void SetJointAngle(size_t eDOF, float fAngleDegrees);
 
 	  /**
 	   * Get a skeleton bone extent in millimeters.
@@ -122,7 +122,7 @@ namespace rhapsodies {
 	   * @param eExt The bone extent to retreive.
 	   * @return Length in millimeters.
 	   */
-	  float GetExtent(Extent eExt);
+	  float GetExtent(size_t eExt);
 
 	  /**
 	   * Set a skeleton bone extent in millimeters.
@@ -130,7 +130,7 @@ namespace rhapsodies {
 	   * @param eExt The bone extent to retreive.
 	   * @param fLengthMm Length in millimeters.
 	   */
-	  void SetExtent(Extent eExt, float fLengthMm);
+	  void SetExtent(size_t eExt, float fLengthMm);
 
   private:
 	  std::vector<float> m_vecJointAngles;

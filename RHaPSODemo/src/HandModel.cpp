@@ -30,11 +30,19 @@ namespace rhapsodies {
 		m_vecExtents[L_DP] = 27;
 	}
 
-	float HandModel::GetJointAngle(JointDOF dof) {
-		return m_vecJointAngles[dof];
+	float HandModel::GetJointAngle(size_t eDOF) {
+		return m_vecJointAngles[eDOF];
 	}
 
-	void HandModel::SetJointAngle(JointDOF dof, float angle) {
-		m_vecJointAngles[dof] = angle;
+	void HandModel::SetJointAngle(size_t eDOF, float fAngleDegrees) {
+		m_vecJointAngles[eDOF] = fAngleDegrees;
+	}
+
+	float HandModel::GetExtent(size_t eExt) {
+		return m_vecExtents[eExt];
+	}
+
+	void HandModel::SetExtent(size_t eExt, float fLengthMm) {
+		m_vecExtents[eExt] = fLengthMm;
 	}
 }

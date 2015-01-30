@@ -316,7 +316,7 @@ namespace rhapsodies {
 		m_pHandRenderer = new HandRenderer(m_pHandModel,
 											 m_pShaderReg);
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
-		m_pHandModelTransform->SetTranslation(0,0,1);
+		m_pHandModelTransform->SetTranslation(0,-0.10,2.7);
 		m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,
 												m_pHandRenderer);
 

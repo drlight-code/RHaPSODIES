@@ -9,6 +9,8 @@
 
 #include <ShaderRegistry.hpp>
 
+#include <HandModel.hpp>
+
 #include "HandRenderer.hpp"
 
 namespace {
@@ -30,11 +32,8 @@ namespace rhapsodies {
 		std::vector<float> vNormalsFloat;
 		std::vector<VistaColor> vColors;
 
-		// create with radius 1, i.e. diameter 2!  easier for scaling
-		// if we relate everything to the sphere radius.
 		VistaGeometryFactory::CreateEllipsoidData(
-			&vIndices, &vCoords, &vTexCoords, &vNormals, &vColors,
-			1.0f, 1.0f, 1.0f);
+			&vIndices, &vCoords, &vTexCoords, &vNormals, &vColors);
 
 		// generate vertex list from indices
 		std::vector<VistaIndexedVertex>::iterator it;
@@ -97,16 +96,28 @@ namespace rhapsodies {
 	bool HandRenderer::Do() {
 		// measure timings!
 
-		GLint idProgram;
-		GLint locUniform;
+		GLint idProgramS = m_pShaderReg->GetProgram("vpos_green");
+		GLint idProgramC = m_pShaderReg->GetProgram("vpos_blue");
+		GLint locUniformS = glGetUniformLocation(idProgramS,
+												 "model_transform");
+		GLint locUniformC = glGetUniformLocation(idProgramC,
+												 "model_transform");
 
 		VistaTransformMatrix matModel;
 		VistaTransformMatrix matTransform;
 
 		// these go to extra vis parameter class for model pso yo
-		float fPalmBottomRadiusX = 0.04;
-		float fPalmBottomRadiusY = 0.02;
-		float fPalmBottomRadiusZ = 0.02;
+		float fPalmBottomRadius = 0.02;
+		float fPalmWidth    = 0.08;
+		float fPalmDiameter = fPalmWidth/4.0f;
+		float fFingerDiameter = fPalmWidth/4.0f;
+
+		// for now we average the metacarpal lengths for palm height
+		float fPalmHeight =
+			(m_pModel->GetExtent(HandModel::I_MC) +
+			 m_pModel->GetExtent(HandModel::M_MC) +
+			 m_pModel->GetExtent(HandModel::R_MC) +
+			 m_pModel->GetExtent(HandModel::L_MC))/4.0f/1000.0f;
 		
 		// for now we will upload the same model transform matrix in
 		// advance to calling glDrawArrays. If this turns out to be
@@ -114,46 +125,51 @@ namespace rhapsodies {
 		// beginning and use DrawArraysInstanced to look up the
 		// specific matrix in the vertex shader by the instance id.
 
-		// draw all spheres
-		idProgram = m_pShaderReg->GetProgram("vpos_green");
-		glUseProgram(idProgram);
-		locUniform = glGetUniformLocation(idProgram,
-										  "model_transform");
+		glUseProgram(idProgramS);
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 
-		// botton palm cap
-		matTransform.Compose(
-			VistaVector3D(0, fPalmBottomRadiusY, 0),
+		// bottom palm cap
+		matModel.Compose(
+			VistaVector3D(0, fPalmBottomRadius, 0),
 			VistaQuaternion(),
-			VistaVector3D(fPalmBottomRadiusX,
-						  fPalmBottomRadiusY,
-						  fPalmBottomRadiusZ));
+			VistaVector3D(fPalmWidth,
+						  fPalmBottomRadius*2.0f,
+						  fPalmDiameter));
+		DrawSphere(matModel, locUniformS);
 
-		matModel *= matTransform;
-		DrawSphere(matModel, locUniform);
-
-		// matTransform.SetTranslation(VistaVector3D(1,0,0));
-		// matModel *= matTransform;
-		// DrawSphere(matModel, locUniform);
+		// top palm cap
+		matModel.Compose(
+			VistaVector3D(0, fPalmBottomRadius+fPalmHeight, 0),
+			VistaQuaternion(),
+			VistaVector3D(fPalmWidth,
+						  fPalmBottomRadius*2.0f,
+						  fPalmDiameter));
+		DrawSphere(matModel, locUniformS);
 		
-
-		// draw all cylinders
-		idProgram = m_pShaderReg->GetProgram("vpos_blue");
-		glUseProgram(idProgram);
-		locUniform = glGetUniformLocation(idProgram,
-										  "model_transform");
+		// palm cylinder
+		glUseProgram(idProgramC);
 		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
-
-		matModel.SetToIdentity();
-		matTransform.SetToIdentity();
-		matTransform.Compose(
-			VistaVector3D(0, 0, 0),
+		matModel.Compose(
+			VistaVector3D(0, fPalmBottomRadius + fPalmHeight/2.0f, 0),
 			VistaQuaternion(),
-			VistaVector3D(0.02f, 0.02f, 0.02f));
-				
-		matModel *= matTransform;
-		DrawCylinder(matModel, locUniform);
-		
+			VistaVector3D(fPalmWidth, fPalmHeight, fPalmDiameter));
+		DrawCylinder(matModel, locUniformC);
+
+		// draw the fingers
+		for(int i = 0 ; i < 4 ; i++) {
+			DrawFinger(
+				VistaVector3D(-fPalmWidth/2.0f + fPalmWidth/8.0f + i*fPalmWidth/4.0f,
+							  fPalmBottomRadius + fPalmHeight, 0),
+				fFingerDiameter,
+				m_pModel->GetJointAngle(4*(1+i)),
+				m_pModel->GetJointAngle(4*(1+i)+1),
+				m_pModel->GetExtent(3+4*i+1),
+				m_pModel->GetJointAngle(4*(1+i)+2),
+				m_pModel->GetExtent(3+4*i+2),
+				m_pModel->GetJointAngle(4*(1+i)+3),
+				m_pModel->GetExtent(3+4*i+3));				
+		}
+
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 
@@ -170,6 +186,108 @@ namespace rhapsodies {
 									GLint locUniform) {
 		glUniformMatrix4fv(locUniform, 1, false, matModel.GetData());
 		glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size()/3);
+	}
+
+	void HandRenderer::DrawFinger(VistaVector3D v3Pos, float fFingerDiameter,
+								  float fAng1F, float fAng1A, float fLen1,
+								  float fAng2, float fLen2,
+								  float fAng3, float fLen3) {
+		
+		GLint idProgramS = m_pShaderReg->GetProgram("vpos_green");
+		GLint idProgramC = m_pShaderReg->GetProgram("vpos_blue");
+		GLint locUniformS = glGetUniformLocation(idProgramS,
+												 "model_transform");
+		GLint locUniformC = glGetUniformLocation(idProgramC,
+												 "model_transform");
+
+		VistaTransformMatrix matModel;  // final applied transform
+		VistaTransformMatrix matOrigin; // unscaled origin for subparts
+		VistaTransformMatrix matTransform; // auxiliary for
+										   // accumulative transforms
+
+		VistaTransformMatrix matSphereScale; // reused sphere scale
+		matSphereScale.SetToScaleMatrix(fFingerDiameter);
+		
+
+		glUseProgram(idProgramS);
+		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
+
+		// start at first joint
+		matOrigin.SetToTranslationMatrix(v3Pos);
+		matModel = matOrigin * matSphereScale;
+		DrawSphere(matModel, locUniformS);
+			
+		// move to center of first segment
+		matTransform.SetToTranslationMatrix(
+			VistaVector3D(0, fLen1/1000.0f/2.0f, 0)); // rotation missing here
+		matOrigin *= matTransform;
+
+		// set scale and draw first segment cylinder
+		glUseProgram(idProgramC);
+		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
+		matTransform.SetToScaleMatrix(
+			fFingerDiameter, fLen1/1000.0f, fFingerDiameter);
+		matModel = matOrigin * matTransform;
+		DrawCylinder(matModel, locUniformC);
+
+		// move to second joint
+		matTransform.SetToTranslationMatrix(
+			VistaVector3D(0, fLen1/1000.0f/2.0f, 0)); // rotation missing here
+		matOrigin *= matTransform;
+
+		// draw scaled sphere
+		glUseProgram(idProgramS);
+		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
+		matModel = matOrigin * matSphereScale;
+		DrawSphere(matModel, locUniformS);
+		
+		// move to center of second segment
+		matTransform.SetToTranslationMatrix(
+			VistaVector3D(0, fLen2/1000.0f/2.0f, 0)); // rotation missing here
+		matOrigin *= matTransform;
+
+		// set scale and draw second segment cylinder
+		glUseProgram(idProgramC);
+		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
+		matTransform.SetToScaleMatrix(
+			fFingerDiameter, fLen2/1000.0f, fFingerDiameter);
+		matModel = matOrigin * matTransform;
+		DrawCylinder(matModel, locUniformC);
+
+		// move to third joint
+		matTransform.SetToTranslationMatrix(
+			VistaVector3D(0, fLen2/1000.0f/2.0f, 0)); // rotation missing here
+		matOrigin *= matTransform;
+
+		// draw scaled sphere
+		glUseProgram(idProgramS);
+		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
+		matModel = matOrigin * matSphereScale;
+		DrawSphere(matModel, locUniformS);
+		
+		// move to center of third segment
+		matTransform.SetToTranslationMatrix(
+			VistaVector3D(0, fLen3/1000.0f/2.0f, 0)); // rotation missing here
+		matOrigin *= matTransform;
+
+		// set scale and draw third segment cylinder
+		glUseProgram(idProgramC);
+		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
+		matTransform.SetToScaleMatrix(
+			fFingerDiameter, fLen3/1000.0f, fFingerDiameter);
+		matModel = matOrigin * matTransform;
+		DrawCylinder(matModel, locUniformC);
+
+		// move to tip
+		matTransform.SetToTranslationMatrix(
+			VistaVector3D(0, fLen3/1000.0f/2.0f, 0)); // rotation missing here
+		matOrigin *= matTransform;
+
+		// draw scaled sphere
+		glUseProgram(idProgramS);
+		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
+		matModel = matOrigin * matSphereScale;
+		DrawSphere(matModel, locUniformS);
 	}
 
 	bool HandRenderer::GetBoundingBox(VistaBoundingBox &bb) {
