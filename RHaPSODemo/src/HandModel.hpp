@@ -93,7 +93,7 @@ namespace rhapsodies {
 		  L_PP,
 		  L_MP,
 		  L_DP
-	  }
+	  };
 
 	  enum HandOrientation {
 		  LEFT_HAND,
