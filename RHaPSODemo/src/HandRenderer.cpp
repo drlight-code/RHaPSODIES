@@ -167,8 +167,9 @@ namespace rhapsodies {
 				m_pModel->GetJointAngle(4*(1+i)+2),
 				m_pModel->GetExtent(3+4*i+2),
 				m_pModel->GetJointAngle(4*(1+i)+3),
-				m_pModel->GetExtent(3+4*i+3));				
-		}
+				m_pModel->GetExtent(3+4*i+3),
+				false);
+		}		
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
@@ -191,7 +192,8 @@ namespace rhapsodies {
 	void HandRenderer::DrawFinger(VistaVector3D v3Pos, float fFingerDiameter,
 								  float fAng1F, float fAng1A, float fLen1,
 								  float fAng2, float fLen2,
-								  float fAng3, float fLen3) {
+								  float fAng3, float fLen3,
+								  bool bThumb) {
 		
 		GLint idProgramS = m_pShaderReg->GetProgram("vpos_green");
 		GLint idProgramC = m_pShaderReg->GetProgram("vpos_blue");

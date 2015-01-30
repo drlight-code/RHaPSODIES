@@ -39,7 +39,8 @@ namespace rhapsodies {
 		inline void DrawFinger(VistaVector3D v3Pos, float fFingerDiameter,
 							   float fAng1F, float fAng1A, float fLen1,
 							   float fAng2, float fLen2,
-							   float fAng3, float fLen3);
+							   float fAng3, float fLen3,
+							   bool bThumb);
 
 		HandModel *m_pModel;
 		ShaderRegistry *m_pShaderReg;
