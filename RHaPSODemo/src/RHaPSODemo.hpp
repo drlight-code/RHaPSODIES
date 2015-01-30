@@ -27,11 +27,12 @@
 
 #include <VistaKernel/EventManager/VistaEventHandler.h>
 
+class VistaPropertyList;
+
 class VistaSystem;
 class VistaTransformNode;
 class VistaOpenGLNode;
-
-class VistaPropertyList;
+class VistaAxes;
 
 class DepthHistogramHandler;
 
@@ -58,7 +59,7 @@ namespace rhapsodies {
 		ShaderRegistry *m_pShaderReg;
 
 		HandModel     *m_pHandModel;
-		HandRenderer *m_pHandRenderer;
+		HandRenderer  *m_pHandRenderer;
 		HandTracker   *m_pTracker;
 
 		VistaTransformNode *m_pSceneTransform;
@@ -66,6 +67,9 @@ namespace rhapsodies {
 
 		VistaTransformNode *m_pHandModelTransform;
 		VistaOpenGLNode *m_pHandModelGLNode;
+
+		VistaTransformNode *m_pAxesTransform;
+		VistaAxes *m_pAxes;
 
 		ImageDraw *m_pDiagramDraw;
 		ImageDraw *m_pColorDraw, *m_pColorSegDraw;

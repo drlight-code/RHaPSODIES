@@ -42,6 +42,7 @@
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
+#include <VistaKernel/GraphicsManager/VistaAxes.h>
 #include <VistaKernel/EventManager/VistaEventManager.h>
 #include <VistaKernel/EventManager/VistaSystemEvent.h>
 
@@ -125,6 +126,10 @@ namespace rhapsodies {
 		m_pTracker(NULL),
 		m_pSceneTransform(NULL),
 		m_pDiagramTransform(NULL),
+		m_pHandModelTransform(NULL),
+		m_pHandModelGLNode(NULL),
+		m_pAxesTransform(NULL),
+		m_pAxes(NULL),
 		m_pDiagramDraw(NULL), 
 		m_pColorDraw(NULL),
 		m_pColorSegDraw(NULL),
@@ -152,6 +157,8 @@ namespace rhapsodies {
 		delete m_pUVMapSegDraw;
 		if(m_pDiagramDraw)
 			delete m_pDiagramDraw;
+
+		delete m_pAxes;
 
 		delete m_pTracker;
 		delete m_pShaderReg;
@@ -277,13 +284,20 @@ namespace rhapsodies {
 
 		m_pShaderReg->RegisterShader("vert_vpos_only", GL_VERTEX_SHADER,
 									 "resources/shaders/vpos_only.vert");
-		m_pShaderReg->RegisterShader("frag_vpos_only", GL_FRAGMENT_SHADER,
-									 "resources/shaders/vpos_only.frag");
+		m_pShaderReg->RegisterShader("frag_solid_green", GL_FRAGMENT_SHADER,
+									 "resources/shaders/solid_green.frag");
+		m_pShaderReg->RegisterShader("frag_solid_blue", GL_FRAGMENT_SHADER,
+									 "resources/shaders/solid_blue.frag");
 
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos_only");
-		vec_shaders.push_back("frag_vpos_only");		
-		m_pShaderReg->RegisterProgram("vpos_only", vec_shaders);
+		vec_shaders.push_back("frag_solid_green");		
+		m_pShaderReg->RegisterProgram("vpos_green", vec_shaders);
+
+		vec_shaders.clear();
+		vec_shaders.push_back("vert_vpos_only");
+		vec_shaders.push_back("frag_solid_blue");		
+		m_pShaderReg->RegisterProgram("vpos_blue", vec_shaders);
 
 		return true;
 	}
@@ -302,10 +316,14 @@ namespace rhapsodies {
 		m_pHandRenderer = new HandRenderer(m_pHandModel,
 											 m_pShaderReg);
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
+		m_pHandModelTransform->SetTranslation(0,0,1);
 		m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,
 												m_pHandRenderer);
-		m_pHandModelTransform->SetTranslation(0,0,1);
 
+		m_pAxesTransform = pSG->NewTransformNode(m_pHandModelTransform);
+		m_pAxesTransform->SetScale(0.05f, 0.05f, 0.05f);
+		m_pAxes = new VistaAxes(pSG, m_pAxesTransform);
+								
 		// ImageDraw for color image
 		ImagePBOOpenGLDraw *pPBODraw = 
 			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);

@@ -5,6 +5,7 @@
 
 #include <GL/gl.h>
 
+#include <VistaBase/VistaTransformMatrix.h>
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 
 class ShaderRegistry;
@@ -31,6 +32,10 @@ namespace rhapsodies {
 		};
 		
 		void PrepareVertexBufferObjects();
+		inline void DrawSphere(VistaTransformMatrix matModel,
+							   GLint locUniform);
+		inline void DrawCylinder(VistaTransformMatrix matModel,
+								 GLint locUniform);
 
 		HandModel *m_pModel;
 		ShaderRegistry *m_pShaderReg;

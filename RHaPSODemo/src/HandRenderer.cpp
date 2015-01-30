@@ -29,9 +29,12 @@ namespace rhapsodies {
 		std::vector<float> vTexCoordsFloat;
 		std::vector<float> vNormalsFloat;
 		std::vector<VistaColor> vColors;
-		
+
+		// create with radius 1, i.e. diameter 2!  easier for scaling
+		// if we relate everything to the sphere radius.
 		VistaGeometryFactory::CreateEllipsoidData(
-			&vIndices, &vCoords, &vTexCoords, &vNormals, &vColors);
+			&vIndices, &vCoords, &vTexCoords, &vNormals, &vColors,
+			1.0f, 1.0f, 1.0f);
 
 		// generate vertex list from indices
 		std::vector<VistaIndexedVertex>::iterator it;
@@ -94,14 +97,17 @@ namespace rhapsodies {
 	bool HandRenderer::Do() {
 		// measure timings!
 
+		GLint idProgram;
+		GLint locUniform;
+
 		VistaTransformMatrix matModel;
+		VistaTransformMatrix matTransform;
 
-		GLint idProgram = m_pShaderReg->GetProgram("vpos_only");
-		glUseProgram(idProgram);
-	
-		GLint locUniform = glGetUniformLocation(idProgram,
-												"model_transform");
-
+		// these go to extra vis parameter class for model pso yo
+		float fPalmBottomRadiusX = 0.04;
+		float fPalmBottomRadiusY = 0.02;
+		float fPalmBottomRadiusZ = 0.02;
+		
 		// for now we will upload the same model transform matrix in
 		// advance to calling glDrawArrays. If this turns out to be
 		// slow, we might upload all the model matrices at once at the
@@ -109,22 +115,61 @@ namespace rhapsodies {
 		// specific matrix in the vertex shader by the instance id.
 
 		// draw all spheres
+		idProgram = m_pShaderReg->GetProgram("vpos_green");
+		glUseProgram(idProgram);
+		locUniform = glGetUniformLocation(idProgram,
+										  "model_transform");
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 
-		glUniformMatrix4fv(locUniform, 1, false, matModel.GetData());
-		glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size()/3);
+		// botton palm cap
+		matTransform.Compose(
+			VistaVector3D(0, fPalmBottomRadiusY, 0),
+			VistaQuaternion(),
+			VistaVector3D(fPalmBottomRadiusX,
+						  fPalmBottomRadiusY,
+						  fPalmBottomRadiusZ));
 
-		matModel.SetTranslation(VistaVector3D(1,0,0));
-		glUniformMatrix4fv(locUniform, 1, false, matModel.GetData());
-		glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size()/3);
+		matModel *= matTransform;
+		DrawSphere(matModel, locUniform);
 
-		// glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
-		// glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size()/3);
+		// matTransform.SetTranslation(VistaVector3D(1,0,0));
+		// matModel *= matTransform;
+		// DrawSphere(matModel, locUniform);
+		
+
+		// draw all cylinders
+		idProgram = m_pShaderReg->GetProgram("vpos_blue");
+		glUseProgram(idProgram);
+		locUniform = glGetUniformLocation(idProgram,
+										  "model_transform");
+		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
+
+		matModel.SetToIdentity();
+		matTransform.SetToIdentity();
+		matTransform.Compose(
+			VistaVector3D(0, 0, 0),
+			VistaQuaternion(),
+			VistaVector3D(0.02f, 0.02f, 0.02f));
+				
+		matModel *= matTransform;
+		DrawCylinder(matModel, locUniform);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 
 		return true;
+	}
+
+	void HandRenderer::DrawSphere(VistaTransformMatrix matModel,
+								  GLint locUniform) {
+		glUniformMatrix4fv(locUniform, 1, false, matModel.GetData());
+		glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size()/3);
+	}
+
+	void HandRenderer::DrawCylinder(VistaTransformMatrix matModel,
+									GLint locUniform) {
+		glUniformMatrix4fv(locUniform, 1, false, matModel.GetData());
+		glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size()/3);
 	}
 
 	bool HandRenderer::GetBoundingBox(VistaBoundingBox &bb) {
