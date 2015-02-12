@@ -47,7 +47,6 @@ IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const float* val );
 namespace rhapsodies {
 	class ImageDraw;
 	class ShaderRegistry;
-	class HandModel;
 	class HandRenderer;
 	class HandTracker;
 	class HistogramUpdater;
@@ -58,7 +57,6 @@ namespace rhapsodies {
 		VistaSystem *m_pSystem;
 		ShaderRegistry *m_pShaderReg;
 
-		HandModel     *m_pHandModel;
 		HandRenderer  *m_pHandRenderer;
 		HandTracker   *m_pTracker;
 

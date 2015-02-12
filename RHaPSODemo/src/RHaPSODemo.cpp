@@ -121,7 +121,6 @@ namespace rhapsodies {
 		m_camWidth(320), m_camHeight(240),
 		m_pSystem(NULL),
 		m_pShaderReg(NULL),
-		m_pHandModel(NULL),
 		m_pHandRenderer(NULL),
 		m_pTracker(NULL),
 		m_pSceneTransform(NULL),
@@ -142,7 +141,6 @@ namespace rhapsodies {
 		m_pSystem = new VistaSystem;
 		m_pShaderReg = new ShaderRegistry;
 
-		m_pHandModel = new HandModel;
 		m_pTracker = new HandTracker;
 	}
 
@@ -313,8 +311,8 @@ namespace rhapsodies {
 		m_pSceneTransform->Translate(0, 0, -2.0);
 
 		// hand model and view
-		m_pHandRenderer = new HandRenderer(m_pHandModel,
-											 m_pShaderReg);
+		m_pHandRenderer = new HandRenderer(m_pTracker->GetHandModel(),
+										   m_pShaderReg);
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
 		m_pHandModelTransform->SetTranslation(0,-0.10,2.7);
 		m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,

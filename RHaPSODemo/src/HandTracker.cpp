@@ -29,6 +29,8 @@
 
 #include <VistaBase/VistaStreamUtils.h>
 
+#include <VistaTools/VistaRandomNumberGenerator.h>
+#include <VistaTools/VistaBasicProfiler.h>
 #include <VistaTools/VistaIniFileParser.h>
 
 #include <opencv2/core/core.hpp>
@@ -75,6 +77,10 @@ namespace rhapsodies {
 	const std::string sDepthLimitName   = "DEPTH_LIMIT";
 	const std::string sErosionSizeName  = "EROSION_SIZE";
 	const std::string sDilationSizeName = "DILATION_SIZE";
+
+	const int iRandomAngleMin = 0;
+	const int iRandomAngleMax = 40;
+	const int iRandomAngleAbdMinMax = 10;
 	
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
@@ -90,6 +96,7 @@ namespace rhapsodies {
 		m_pHandModel(NULL) {
 
 		m_pHandModel = new HandModel;
+		RandomizeModel();
 	}
 
 	HandTracker::~HandTracker() {
@@ -99,6 +106,15 @@ namespace rhapsodies {
 		}
 	}
 	
+	void HandTracker::SetViewPBODraw(ViewType type,
+									 ImagePBOOpenGLDraw *pPBODraw) {
+		m_mapPBO[type] = pPBODraw;
+	}
+
+	HandModel *HandTracker::GetHandModel() {
+		return m_pHandModel;
+	}
+
 	bool HandTracker::Initialize() {
 		vstr::out() << "Initializing RHaPSODIES HandTracker" << std::endl;
 
@@ -159,11 +175,6 @@ namespace rhapsodies {
 			sDilationSizeName, 5);
 	}
 	
-	void HandTracker::SetViewPBODraw(ViewType type,
-									 ImagePBOOpenGLDraw *pPBODraw) {
-		m_mapPBO[type] = pPBODraw;
-	}
-
 	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
 								  const unsigned short *depthFrame,
 								  const float          *uvMapFrame) {
@@ -226,15 +237,17 @@ namespace rhapsodies {
 									  unsigned char *depthImage,
 									  unsigned char *uvmapImage) {
 
+		VistaBasicProfiler *pProf = VistaBasicProfiler::GetSingleton();
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
-			if( (*m_itCurrentClassifier)->IsSkinPixel(colorImage+3*pixel) ) {
-				// yay! skin!
-			}
-			else {
-				colorImage[3*pixel+0] = 0;
-				colorImage[3*pixel+1] = 0;
-				colorImage[3*pixel+2] = 0;
-			}
+			// don't filter the color map since it is considerably expensive
+			// if( (*m_itCurrentClassifier)->IsSkinPixel(colorImage+3*pixel) ) {
+			// 	// yay! skin!
+			// }
+			// else {
+			// 	colorImage[3*pixel+0] = 0;
+			// 	colorImage[3*pixel+1] = 0;
+			// 	colorImage[3*pixel+2] = 0;
+			// }
 			
 			if( (*m_itCurrentClassifier)->IsSkinPixel(uvmapImage+3*pixel) ) {
 				// yay! skin!
@@ -322,6 +335,29 @@ namespace rhapsodies {
 			cv::Mat image = cv::Mat(240, 320, CV_8UC1, m_pSkinMap);
 			cv::imshow("Skin Map", image);
 			cv::imshow("Skin Map Dilated", image);
+		}
+	}
+	
+	void HandTracker::RandomizeModel() {
+		VistaRandomNumberGenerator *pRNG =
+			VistaRandomNumberGenerator::GetStandardRNG();
+		for(size_t index = 0 ; index < HandModel::JOINTDOF_LAST ; index++ ) {
+			m_pHandModel->SetJointAngle(
+				index, pRNG->GenerateInt32()%iRandomAngleMax);
+		}
+
+		std::array<size_t, 5> arDOFAbduct = {
+			HandModel::T_CMC_A,
+			HandModel::I_MCP_A,
+			HandModel::M_MCP_A,
+			HandModel::R_MCP_A,
+			HandModel::L_MCP_A
+		};
+
+		for(auto it: arDOFAbduct) {
+			m_pHandModel->SetJointAngle(
+				it,	pRNG->GenerateInt31()%(2*iRandomAngleAbdMinMax+1) -
+				    iRandomAngleAbdMinMax);
 		}
 	}
 	

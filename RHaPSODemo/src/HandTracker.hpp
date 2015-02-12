@@ -49,12 +49,14 @@ namespace rhapsodies {
 		HandTracker();
 		virtual ~HandTracker();
 		
+		void SetViewPBODraw(ViewType type,
+							ImagePBOOpenGLDraw *pPBODraw);
+
+		HandModel *GetHandModel();
+		
 		bool Initialize();
 		void ReadConfig();
 
-		void SetViewPBODraw(ViewType type,
-							ImagePBOOpenGLDraw *pPBODraw);
-		
 		bool FrameUpdate(const unsigned char  *colorFrame,
 						 const unsigned short *depthFrame,
 						 const float          *uvMapFrame);
@@ -65,6 +67,8 @@ namespace rhapsodies {
 
 		void ShowOpenCVImg();
 		void ToggleSkinMap();
+
+		void RandomizeModel();
 
 	private:
 		struct Config {

@@ -1,7 +1,8 @@
 #include <GL/glew.h>
 
-#include <VistaBase/VistaVector3D.h>
 #include <VistaBase/VistaStreamUtils.h>
+#include <VistaBase/VistaMathBasics.h>
+#include <VistaBase/VistaVector3D.h>
 
 #include <VistaMath/VistaBoundingBox.h>
 
@@ -107,10 +108,10 @@ namespace rhapsodies {
 		VistaTransformMatrix matTransform;
 
 		// these go to extra vis parameter class for model pso yo
+		float fPalmWidth        = 0.08;
 		float fPalmBottomRadius = 0.02;
-		float fPalmWidth    = 0.08;
-		float fPalmDiameter = fPalmWidth/4.0f;
-		float fFingerDiameter = fPalmWidth/4.0f;
+		float fPalmDiameter     = fPalmWidth/4.0f;
+		float fFingerDiameter   = fPalmWidth/4.0f;
 
 		// for now we average the metacarpal lengths for palm height
 		float fPalmHeight =
@@ -155,11 +156,18 @@ namespace rhapsodies {
 			VistaVector3D(fPalmWidth, fPalmHeight, fPalmDiameter));
 		DrawCylinder(matModel, locUniformC);
 
+		// @todo: if drawing turns out to be a significant bottleneck,
+		// we need to adopt the approach of pre-calculating all the
+		// primitive transforms, upload them as UBO's and doing
+		// instances drawing on the GPU side
+		
 		// draw the fingers
 		for(int i = 0 ; i < 4 ; i++) {
 			DrawFinger(
-				VistaVector3D(-fPalmWidth/2.0f + fPalmWidth/8.0f + i*fPalmWidth/4.0f,
-							  fPalmBottomRadius + fPalmHeight, 0),
+				VistaVector3D(-fPalmWidth/2.0f + fPalmWidth/8.0f +
+							  i*fPalmWidth/4.0f,
+							  fPalmBottomRadius + fPalmHeight,
+							  0),
 				fFingerDiameter,
 				m_pModel->GetJointAngle(4*(1+i)),
 				m_pModel->GetJointAngle(4*(1+i)+1),
@@ -169,7 +177,11 @@ namespace rhapsodies {
 				m_pModel->GetJointAngle(4*(1+i)+3),
 				m_pModel->GetExtent(3+4*i+3),
 				false);
-		}		
+		}
+
+		// draw the thumb
+		
+		
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
@@ -202,6 +214,12 @@ namespace rhapsodies {
 		GLint locUniformC = glGetUniformLocation(idProgramC,
 												 "model_transform");
 
+		// @todo invert axis here for left/right hand?
+		// rotate locally around X for flexion/extension
+		VistaAxisAndAngle aaaX = VistaAxisAndAngle(VistaVector3D(1,0,0), 0.0);
+		// rotate locally around Z for adduction/abduction
+		VistaAxisAndAngle aaaZ = VistaAxisAndAngle(VistaVector3D(0,0,1), 0.0);
+		
 		VistaTransformMatrix matModel;  // final applied transform
 		VistaTransformMatrix matOrigin; // unscaled origin for subparts
 		VistaTransformMatrix matTransform; // auxiliary for
@@ -210,7 +228,6 @@ namespace rhapsodies {
 		VistaTransformMatrix matSphereScale; // reused sphere scale
 		matSphereScale.SetToScaleMatrix(fFingerDiameter);
 		
-
 		glUseProgram(idProgramS);
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 
@@ -218,10 +235,20 @@ namespace rhapsodies {
 		matOrigin.SetToTranslationMatrix(v3Pos);
 		matModel = matOrigin * matSphereScale;
 		DrawSphere(matModel, locUniformS);
-			
+
+		// first joint flexion rotation
+		aaaX.m_fAngle = Vista::DegToRad(-fAng1F);
+		matTransform = VistaTransformMatrix(aaaX);
+		matOrigin *= matTransform;
+
+		// first joint abduction rotation
+		aaaZ.m_fAngle = Vista::DegToRad(fAng1A);
+		matTransform = VistaTransformMatrix(aaaZ);
+		matOrigin *= matTransform;
+		
 		// move to center of first segment
 		matTransform.SetToTranslationMatrix(
-			VistaVector3D(0, fLen1/1000.0f/2.0f, 0)); // rotation missing here
+			VistaVector3D(0, fLen1/1000.0f/2.0f, 0));
 		matOrigin *= matTransform;
 
 		// set scale and draw first segment cylinder
@@ -234,7 +261,7 @@ namespace rhapsodies {
 
 		// move to second joint
 		matTransform.SetToTranslationMatrix(
-			VistaVector3D(0, fLen1/1000.0f/2.0f, 0)); // rotation missing here
+			VistaVector3D(0, fLen1/1000.0f/2.0f, 0));
 		matOrigin *= matTransform;
 
 		// draw scaled sphere
@@ -242,7 +269,12 @@ namespace rhapsodies {
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 		matModel = matOrigin * matSphereScale;
 		DrawSphere(matModel, locUniformS);
-		
+
+		// second joint flexion rotation
+		aaaX.m_fAngle = Vista::DegToRad(-fAng2);
+		matTransform = VistaTransformMatrix(aaaX);
+		matOrigin *= matTransform;
+
 		// move to center of second segment
 		matTransform.SetToTranslationMatrix(
 			VistaVector3D(0, fLen2/1000.0f/2.0f, 0)); // rotation missing here
@@ -266,6 +298,11 @@ namespace rhapsodies {
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 		matModel = matOrigin * matSphereScale;
 		DrawSphere(matModel, locUniformS);
+
+		// third joint flexion rotation
+		aaaX.m_fAngle = Vista::DegToRad(-fAng3);
+		matTransform = VistaTransformMatrix(aaaX);
+		matOrigin *= matTransform;
 		
 		// move to center of third segment
 		matTransform.SetToTranslationMatrix(

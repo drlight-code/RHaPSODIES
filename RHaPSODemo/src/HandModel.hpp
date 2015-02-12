@@ -52,7 +52,8 @@ namespace rhapsodies {
 		  L_MCP_F,
 		  L_MCP_A,
 		  L_PIP,
-		  L_DIP
+		  L_DIP,
+		  JOINTDOF_LAST
 	  };
 
 	  /**
