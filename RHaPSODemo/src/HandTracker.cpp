@@ -78,6 +78,8 @@ namespace rhapsodies {
 	const std::string sErosionSizeName  = "EROSION_SIZE";
 	const std::string sDilationSizeName = "DILATION_SIZE";
 
+	const std::string sPSOGenerationsName = "PSO_GENERATIONS";
+
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
@@ -127,6 +129,7 @@ namespace rhapsodies {
 
 		// parse config params into member variables
 		ReadConfig();
+		PrintConfig();
 		
 		// create the different skin classifiers
 		SkinClassifierLogOpponentYIQ *pSkinLOYIQ =
@@ -166,6 +169,9 @@ namespace rhapsodies {
 
 		RandomizeModels();
 
+		// prepare FBO rendering
+		
+
 		return true;
 	}
 
@@ -191,6 +197,23 @@ namespace rhapsodies {
 			sErosionSizeName, 3);
 		m_oConfig.iDilationSize = oTrackerConfig.GetValueOrDefault(
 			sDilationSizeName, 5);
+
+		m_oConfig.iPSOGenerations = oTrackerConfig.GetValueOrDefault(
+			sPSOGenerationsName, 45);
+	}
+
+	void HandTracker::PrintConfig() {
+		vstr::out() << "* HandTracker configuration" << std::endl;
+		vstr::out() << "Depth Limit: " << m_oConfig.iDepthLimit
+					<< std::endl;
+		vstr::out() << "Erosion Size: " << m_oConfig.iErosionSize
+					<< std::endl;
+		vstr::out() << "Dilation Size: " << m_oConfig.iDilationSize
+					<< std::endl;
+
+		vstr::out() << "PSO Generations: " << m_oConfig.iPSOGenerations
+					<< std::endl;
+
 	}
 	
 	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
@@ -209,14 +232,14 @@ namespace rhapsodies {
 
 		pPBODraw = m_mapPBO[DEPTH];
 		if(pPBODraw) {
-			DepthToRGB(m_pDepthBuffer, pDepthRGBBuffer);
-			pPBODraw->FillPBOFromBuffer(pDepthRGBBuffer, 320, 240);
+			DepthToRGB(m_pDepthBuffer, m_pDepthRGBBuffer);
+			pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
 		}
 
 		pPBODraw = m_mapPBO[UVMAP];
 		if(pPBODraw) {
-			UVMapToRGB(uvMapFrame, depthFrame, colorFrame, pUVMapRGBBuffer);
-			pPBODraw->FillPBOFromBuffer(pUVMapRGBBuffer, 320, 240);
+			UVMapToRGB(uvMapFrame, depthFrame, colorFrame, m_pUVMapRGBBuffer);
+			pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
 		}
 
 		if(m_bShowImage) {
@@ -231,7 +254,7 @@ namespace rhapsodies {
 			m_bShowImage = false;
 		}
 		
-		FilterSkinAreas(m_pColorBuffer, pDepthRGBBuffer, pUVMapRGBBuffer);
+		FilterSkinAreas(m_pColorBuffer, m_pDepthRGBBuffer, m_pUVMapRGBBuffer);
 		
 		pPBODraw = m_mapPBO[COLOR_SEGMENTED];
 		if(pPBODraw) {
@@ -240,14 +263,27 @@ namespace rhapsodies {
 
 		pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
 		if(pPBODraw) {
-			pPBODraw->FillPBOFromBuffer(pDepthRGBBuffer, 320, 240);
+			pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
 		}
 
 		pPBODraw = m_mapPBO[UVMAP_SEGMENTED];
 		if(pPBODraw) {
-			pPBODraw->FillPBOFromBuffer(pUVMapRGBBuffer, 320, 240);
+			pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
 		}
 
+		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
+			// PSO for model hypotheses
+		
+			
+			// FBO rendering of tiled zbuffers
+			
+
+			// reduction with compute shader or opencl
+		
+		}
+
+		// update actual model fit
+			
 		return true;
 	}
 

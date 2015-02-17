@@ -76,8 +76,10 @@ namespace rhapsodies {
 		struct Config {
 		public:
 			int iDepthLimit;   // depth cutoff in millimeters
-			int iErosionSize;  // erosion blob size
-			int iDilationSize; // dilation blob size
+			unsigned int iErosionSize;  // erosion blob size
+			unsigned int iDilationSize; // dilation blob size
+
+			unsigned int iPSOGenerations; // max pso generation count
 		};
 
 		void FilterSkinAreas(unsigned char *colorImage,
@@ -91,6 +93,8 @@ namespace rhapsodies {
 						const unsigned short *depth,
 						const unsigned char *color,
 						unsigned char *rgb);
+
+		void PrintConfig();
 
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
 		MapPBO m_mapPBO;
@@ -115,8 +119,8 @@ namespace rhapsodies {
 		unsigned char m_pSkinMap[320*240];
 
 		// depth frame and uv map RGB buffers
-		unsigned char pDepthRGBBuffer[320*240*3];
-		unsigned char pUVMapRGBBuffer[320*240*3];
+		unsigned char m_pDepthRGBBuffer[320*240*3];
+		unsigned char m_pUVMapRGBBuffer[320*240*3];
 	};
 }
 
