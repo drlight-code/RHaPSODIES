@@ -15,6 +15,7 @@ set( DirFiles
   	ShaderRegistry.cpp
   	HandModel.cpp
   	HandRenderer.cpp
+  	HandRenderDraw.cpp
   	HandTracker.cpp
   	HandTrackingNode.cpp
 	_SourceFiles.cmake

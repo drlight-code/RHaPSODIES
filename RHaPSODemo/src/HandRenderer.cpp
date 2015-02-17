@@ -19,11 +19,7 @@ namespace {
 }
 
 namespace rhapsodies {
-	HandRenderer::HandRenderer(HandModel *pModelLeft,
-							   HandModel *pModelRight,
-							   ShaderRegistry *pReg) :
-		m_pModelLeft(pModelLeft),
-		m_pModelRight(pModelRight),
+	HandRenderer::HandRenderer(ShaderRegistry *pReg) :
 		m_pShaderReg(pReg) {
 
 		std::vector<VistaIndexedVertex> vIndices;
@@ -96,13 +92,6 @@ namespace rhapsodies {
 		glBindVertexArray(0);
 	}
 	
-	bool HandRenderer::Do() {
-		DrawHand(m_pModelLeft);
-		DrawHand(m_pModelRight);
-		
-		return true;
-	}
-
 	void HandRenderer::DrawSphere(VistaTransformMatrix matModel,
 								  GLint locUniform) {
 		glUniformMatrix4fv(locUniform, 1, false, matModel.GetData());
@@ -379,19 +368,4 @@ namespace rhapsodies {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
-	
-	bool HandRenderer::GetBoundingBox(VistaBoundingBox &bb) {
-		bb = VistaBoundingBox(
-			VistaVector3D(-10, -10, -10),
-			VistaVector3D( 10,  10,  10));
-		return true;
-	}	
-	
-	// HandModel* HandRenderer::GetModel() {
-	// 	return m_pModel;
-	// }
-
-	// void HandRenderer::SetModel(HandModel* pModel) {
-	// 	m_pModel = pModel;
-	// }
 }

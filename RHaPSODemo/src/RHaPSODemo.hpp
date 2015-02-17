@@ -48,6 +48,7 @@ namespace rhapsodies {
 	class ImageDraw;
 	class ShaderRegistry;
 	class HandRenderer;
+	class HandRenderDraw;
 	class HandTracker;
 	class HistogramUpdater;
 
@@ -57,8 +58,9 @@ namespace rhapsodies {
 		VistaSystem *m_pSystem;
 		ShaderRegistry *m_pShaderReg;
 
-		HandRenderer  *m_pHandRenderer;
-		HandTracker   *m_pTracker;
+		HandRenderer   *m_pHandRenderer;
+		HandRenderDraw *m_pHandRenderDraw;
+		HandTracker    *m_pTracker;
 
 		VistaTransformNode *m_pSceneTransform;
 		VistaTransformNode *m_pDiagramTransform;
