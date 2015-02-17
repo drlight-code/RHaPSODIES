@@ -47,7 +47,8 @@
 #include "SkinClassifiers/SkinClassifierRedMatter4.hpp"
 #include "SkinClassifiers/SkinClassifierRedMatter5.hpp"
 
-#include "HandModel.hpp"
+#include <HandModel.hpp>
+#include <HandRenderer.hpp>
 
 #include "HandTracker.hpp"
 
@@ -89,17 +90,8 @@ namespace rhapsodies {
 		m_bShowImage(false),
 		m_bShowSkinMap(false),
 		m_pHandModelLeft(NULL),
-		m_pHandModelRight(NULL) {
-
-		m_pHandModelLeft  = new HandModel;
-		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
-		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, 0, 0));
-		
-		m_pHandModelRight = new HandModel;
-		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
-		m_pHandModelRight->SetPosition(VistaVector3D(0.1, 0, 0));
-
-		RandomizeModels();
+		m_pHandModelRight(NULL),
+		m_pHandRenderer(NULL) {
 	}
 
 	HandTracker::~HandTracker() {
@@ -107,6 +99,10 @@ namespace rhapsodies {
 			it != m_lClassifiers.end() ; ++it) {
 			delete *it;
 		}
+
+		delete m_pHandModelLeft;
+		delete m_pHandModelRight;
+		delete m_pHandRenderer;
 	}
 	
 	void HandTracker::SetViewPBODraw(ViewType type,
@@ -117,8 +113,13 @@ namespace rhapsodies {
 	HandModel *HandTracker::GetHandModelLeft() {
 		return m_pHandModelLeft;
 	}
+	
 	HandModel *HandTracker::GetHandModelRight() {
 		return m_pHandModelRight;
+	}
+
+	void HandTracker::SetHandRenderer(HandRenderer *pRenderer) {
+		m_pHandRenderer = pRenderer;
 	}
 
 	bool HandTracker::Initialize() {
@@ -127,7 +128,7 @@ namespace rhapsodies {
 		// parse config params into member variables
 		ReadConfig();
 		
-		// Initialize the different skin classifiers
+		// create the different skin classifiers
 		SkinClassifierLogOpponentYIQ *pSkinLOYIQ =
 			new SkinClassifierLogOpponentYIQ;
 		m_lClassifiers.push_back(pSkinLOYIQ);
@@ -153,7 +154,18 @@ namespace rhapsodies {
 		m_itCurrentClassifier = m_lClassifiers.begin();
 		m_itCurrentClassifier++;
 		m_itCurrentClassifier++;
-		
+
+		// create hand models
+		m_pHandModelLeft  = new HandModel;
+		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
+		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, 0, 0));
+
+		m_pHandModelRight = new HandModel;
+		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
+		m_pHandModelRight->SetPosition(VistaVector3D(0.1, 0, 0));
+
+		RandomizeModels();
+
 		return true;
 	}
 

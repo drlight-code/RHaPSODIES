@@ -54,6 +54,7 @@ namespace rhapsodies {
 
 		HandModel *GetHandModelLeft();
 		HandModel *GetHandModelRight();
+		void SetHandRenderer(HandRenderer *pRenderer);
 		
 		bool Initialize();
 		void ReadConfig();

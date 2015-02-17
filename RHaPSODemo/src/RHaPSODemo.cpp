@@ -161,6 +161,8 @@ namespace rhapsodies {
 		delete m_pAxes;
 
 		delete m_pTracker;
+		delete m_pHandRenderer;
+		delete m_pHandRenderDraw;
 		delete m_pShaderReg;
 		delete m_pSystem;
 	}
@@ -259,8 +261,11 @@ namespace rhapsodies {
 
 	bool RHaPSODemo::InitTracker() {
 		bool success = true;
+
+		m_pHandRenderer = new HandRenderer(m_pShaderReg);
 		
 		success &= m_pTracker->Initialize();
+		m_pTracker->SetHandRenderer(m_pHandRenderer);
 
 		// register frame update handler
 		m_pSystem->GetEventManager()->AddEventHandler(
@@ -313,7 +318,6 @@ namespace rhapsodies {
 		m_pSceneTransform->Translate(0, 0, -2.0);
 
 		// hand model and view
-		m_pHandRenderer = new HandRenderer(m_pShaderReg);
 		m_pHandRenderDraw = new HandRenderDraw(
 			m_pTracker->GetHandModelLeft(),
 			m_pTracker->GetHandModelRight(),
@@ -406,5 +410,4 @@ namespace rhapsodies {
 			}
 		}
 	}
-
 }
