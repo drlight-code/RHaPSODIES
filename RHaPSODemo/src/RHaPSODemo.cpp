@@ -311,7 +311,8 @@ namespace rhapsodies {
 		m_pSceneTransform->Translate(0, 0, -2.0);
 
 		// hand model and view
-		m_pHandRenderer = new HandRenderer(m_pTracker->GetHandModel(),
+		m_pHandRenderer = new HandRenderer(m_pTracker->GetHandModelLeft(),
+										   m_pTracker->GetHandModelRight(),
 										   m_pShaderReg);
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
 		m_pHandModelTransform->SetTranslation(0,-0.10,2.7);

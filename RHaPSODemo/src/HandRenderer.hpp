@@ -15,14 +15,15 @@ namespace rhapsodies {
 	
 	class HandRenderer : public IVistaOpenGLDraw {
 	public:
-		HandRenderer(HandModel *pModel,
+		HandRenderer(HandModel *pModelLeft,
+					 HandModel *pModelRight,
 					 ShaderRegistry *pReg);
 		
 		virtual bool Do();
 		virtual bool GetBoundingBox(VistaBoundingBox &bb);
 
-		HandModel* GetModel();
-		void SetModel(HandModel* pModel);
+		// HandModel* GetModel();
+		// void SetModel(HandModel* pModel);
 		
 	private:
 		enum BufferObjectId {
@@ -36,13 +37,16 @@ namespace rhapsodies {
 							   GLint locUniform);
 		inline void DrawCylinder(VistaTransformMatrix matModel,
 								 GLint locUniform);
-		inline void DrawFinger(VistaVector3D v3Pos, float fFingerDiameter,
+		inline void DrawFinger(VistaTransformMatrix matOrigin,
+							   float fFingerDiameter, float fLRFactor,
 							   float fAng1F, float fAng1A, float fLen1,
 							   float fAng2, float fLen2,
 							   float fAng3, float fLen3,
 							   bool bThumb);
+		inline void DrawHand(HandModel *pModel);
 
-		HandModel *m_pModel;
+		HandModel *m_pModelLeft;
+		HandModel *m_pModelRight;
 		ShaderRegistry *m_pShaderReg;
 
 		std::vector<float> m_vSphereVertexData;

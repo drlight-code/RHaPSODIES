@@ -29,7 +29,6 @@
 
 #include <VistaBase/VistaStreamUtils.h>
 
-#include <VistaTools/VistaRandomNumberGenerator.h>
 #include <VistaTools/VistaBasicProfiler.h>
 #include <VistaTools/VistaIniFileParser.h>
 
@@ -78,10 +77,6 @@ namespace rhapsodies {
 	const std::string sErosionSizeName  = "EROSION_SIZE";
 	const std::string sDilationSizeName = "DILATION_SIZE";
 
-	const int iRandomAngleMin = 0;
-	const int iRandomAngleMax = 40;
-	const int iRandomAngleAbdMinMax = 10;
-	
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
@@ -93,10 +88,27 @@ namespace rhapsodies {
 		m_bCameraUpdate(true),
 		m_bShowImage(false),
 		m_bShowSkinMap(false),
-		m_pHandModel(NULL) {
+		m_pHandModelLeft(NULL),
+		m_pHandModelRight(NULL) {
 
-		m_pHandModel = new HandModel;
-		RandomizeModel();
+		m_pHandModelLeft  = new HandModel;
+		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
+		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, 0, 0));
+		
+		m_pHandModelRight = new HandModel;
+		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
+		m_pHandModelRight->SetPosition(VistaVector3D(0.1, 0, 0));
+
+		RandomizeModels();
+		// m_pHandModelLeft->SetJointAngle(
+		// 	HandModel::I_MCP_A, 30);
+		// m_pHandModelRight->SetJointAngle(
+		// 	HandModel::I_MCP_A, 30);
+		
+		// m_pHandModelLeft->SetJointAngle(
+		// 	HandModel::R_DIP, 30);
+		// m_pHandModelRight->SetJointAngle(
+		// 	HandModel::R_DIP, 30);
 	}
 
 	HandTracker::~HandTracker() {
@@ -111,8 +123,11 @@ namespace rhapsodies {
 		m_mapPBO[type] = pPBODraw;
 	}
 
-	HandModel *HandTracker::GetHandModel() {
-		return m_pHandModel;
+	HandModel *HandTracker::GetHandModelLeft() {
+		return m_pHandModelLeft;
+	}
+	HandModel *HandTracker::GetHandModelRight() {
+		return m_pHandModelRight;
 	}
 
 	bool HandTracker::Initialize() {
@@ -238,6 +253,8 @@ namespace rhapsodies {
 									  unsigned char *uvmapImage) {
 
 		VistaBasicProfiler *pProf = VistaBasicProfiler::GetSingleton();
+
+		pProf->StartSection("Skin classification");
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
 			// don't filter the color map since it is considerably expensive
 			// if( (*m_itCurrentClassifier)->IsSkinPixel(colorImage+3*pixel) ) {
@@ -257,6 +274,7 @@ namespace rhapsodies {
 				m_pSkinMap[pixel] = 0;
 			}
 		}
+		pProf->StopSection();
 
 		// dilate the skin map with opencv
 		cv::Mat image = cv::Mat(240, 320, CV_8UC1, m_pSkinMap);
@@ -273,15 +291,18 @@ namespace rhapsodies {
 			cv::Size(m_oConfig.iDilationSize, m_oConfig.iDilationSize),
 			cv::Point(m_oConfig.iDilationSize/2));
 
+		pProf->StartSection("SkinMap dilate/erode");
 		cv::erode(image, image_processed, erode_element);
 		image = image_processed.clone();
 		cv::dilate(image, image_processed, dilate_element);
+		pProf->StopSection();
 
 		if(m_bShowSkinMap) {
 			cv::imshow("Skin Map Dilated", image_processed);
 			cv::waitKey(1);
 		}
 
+		pProf->StartSection("Depth/UV filtering");
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
 			if( image_processed.data[pixel] == 0 ) {
 				depthImage[3*pixel+0] = 0;
@@ -293,6 +314,7 @@ namespace rhapsodies {
 				uvmapImage[3*pixel+2] = 0;
 			}
 		}
+		pProf->StopSection();
 	}
 
 	SkinClassifier *HandTracker::GetSkinClassifier() {
@@ -338,27 +360,19 @@ namespace rhapsodies {
 		}
 	}
 	
-	void HandTracker::RandomizeModel() {
-		VistaRandomNumberGenerator *pRNG =
-			VistaRandomNumberGenerator::GetStandardRNG();
-		for(size_t index = 0 ; index < HandModel::JOINTDOF_LAST ; index++ ) {
-			m_pHandModel->SetJointAngle(
-				index, pRNG->GenerateInt32()%iRandomAngleMax);
+	void HandTracker::RandomizeModels() {
+		m_pHandModelRight->Randomize();
+
+		//m_pHandModelLeft->Randomize();
+		// for comparison, choose same configuration for left hand
+		for(size_t index = 0 ; index < HandModel::JOINTDOF_LAST ; index++) {
+			m_pHandModelLeft->SetJointAngle(
+				index,
+				m_pHandModelRight->GetJointAngle(index));
 		}
 
-		std::array<size_t, 5> arDOFAbduct = {
-			HandModel::T_CMC_A,
-			HandModel::I_MCP_A,
-			HandModel::M_MCP_A,
-			HandModel::R_MCP_A,
-			HandModel::L_MCP_A
-		};
-
-		for(auto it: arDOFAbduct) {
-			m_pHandModel->SetJointAngle(
-				it,	pRNG->GenerateInt31()%(2*iRandomAngleAbdMinMax+1) -
-				    iRandomAngleAbdMinMax);
-		}
+		m_pHandModelLeft->SetOrientation(
+			m_pHandModelRight->GetOrientation());
 	}
 	
 	void HandTracker::DepthToRGB(const unsigned short *depth,

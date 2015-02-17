@@ -52,7 +52,8 @@ namespace rhapsodies {
 		void SetViewPBODraw(ViewType type,
 							ImagePBOOpenGLDraw *pPBODraw);
 
-		HandModel *GetHandModel();
+		HandModel *GetHandModelLeft();
+		HandModel *GetHandModelRight();
 		
 		bool Initialize();
 		void ReadConfig();
@@ -68,7 +69,7 @@ namespace rhapsodies {
 		void ShowOpenCVImg();
 		void ToggleSkinMap();
 
-		void RandomizeModel();
+		void RandomizeModels();
 
 	private:
 		struct Config {
@@ -103,7 +104,8 @@ namespace rhapsodies {
 
 		Config m_oConfig;
 
-		HandModel *m_pHandModel;
+		HandModel *m_pHandModelLeft;
+		HandModel *m_pHandModelRight;
 		HandRenderer *m_pHandRenderer;
 
 		unsigned char  m_pColorBuffer[320*240*3];

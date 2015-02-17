@@ -19,9 +19,11 @@ namespace {
 }
 
 namespace rhapsodies {
-	HandRenderer::HandRenderer(HandModel *pModel,
+	HandRenderer::HandRenderer(HandModel *pModelLeft,
+							   HandModel *pModelRight,
 							   ShaderRegistry *pReg) :
-		m_pModel(pModel),
+		m_pModelLeft(pModelLeft),
+		m_pModelRight(pModelRight),
 		m_pShaderReg(pReg) {
 
 		std::vector<VistaIndexedVertex> vIndices;
@@ -95,97 +97,9 @@ namespace rhapsodies {
 	}
 	
 	bool HandRenderer::Do() {
-		// measure timings!
-
-		GLint idProgramS = m_pShaderReg->GetProgram("vpos_green");
-		GLint idProgramC = m_pShaderReg->GetProgram("vpos_blue");
-		GLint locUniformS = glGetUniformLocation(idProgramS,
-												 "model_transform");
-		GLint locUniformC = glGetUniformLocation(idProgramC,
-												 "model_transform");
-
-		VistaTransformMatrix matModel;
-		VistaTransformMatrix matTransform;
-
-		// these go to extra vis parameter class for model pso yo
-		float fPalmWidth        = 0.08;
-		float fPalmBottomRadius = 0.02;
-		float fPalmDiameter     = fPalmWidth/4.0f;
-		float fFingerDiameter   = fPalmWidth/4.0f;
-
-		// for now we average the metacarpal lengths for palm height
-		float fPalmHeight =
-			(m_pModel->GetExtent(HandModel::I_MC) +
-			 m_pModel->GetExtent(HandModel::M_MC) +
-			 m_pModel->GetExtent(HandModel::R_MC) +
-			 m_pModel->GetExtent(HandModel::L_MC))/4.0f/1000.0f;
+		DrawHand(m_pModelLeft);
+		DrawHand(m_pModelRight);
 		
-		// for now we will upload the same model transform matrix in
-		// advance to calling glDrawArrays. If this turns out to be
-		// slow, we might upload all the model matrices at once at the
-		// beginning and use DrawArraysInstanced to look up the
-		// specific matrix in the vertex shader by the instance id.
-
-		glUseProgram(idProgramS);
-		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
-
-		// bottom palm cap
-		matModel.Compose(
-			VistaVector3D(0, fPalmBottomRadius, 0),
-			VistaQuaternion(),
-			VistaVector3D(fPalmWidth,
-						  fPalmBottomRadius*2.0f,
-						  fPalmDiameter));
-		DrawSphere(matModel, locUniformS);
-
-		// top palm cap
-		matModel.Compose(
-			VistaVector3D(0, fPalmBottomRadius+fPalmHeight, 0),
-			VistaQuaternion(),
-			VistaVector3D(fPalmWidth,
-						  fPalmBottomRadius*2.0f,
-						  fPalmDiameter));
-		DrawSphere(matModel, locUniformS);
-		
-		// palm cylinder
-		glUseProgram(idProgramC);
-		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
-		matModel.Compose(
-			VistaVector3D(0, fPalmBottomRadius + fPalmHeight/2.0f, 0),
-			VistaQuaternion(),
-			VistaVector3D(fPalmWidth, fPalmHeight, fPalmDiameter));
-		DrawCylinder(matModel, locUniformC);
-
-		// @todo: if drawing turns out to be a significant bottleneck,
-		// we need to adopt the approach of pre-calculating all the
-		// primitive transforms, upload them as UBO's and doing
-		// instances drawing on the GPU side
-		
-		// draw the fingers
-		for(int i = 0 ; i < 4 ; i++) {
-			DrawFinger(
-				VistaVector3D(-fPalmWidth/2.0f + fPalmWidth/8.0f +
-							  i*fPalmWidth/4.0f,
-							  fPalmBottomRadius + fPalmHeight,
-							  0),
-				fFingerDiameter,
-				m_pModel->GetJointAngle(4*(1+i)),
-				m_pModel->GetJointAngle(4*(1+i)+1),
-				m_pModel->GetExtent(3+4*i+1),
-				m_pModel->GetJointAngle(4*(1+i)+2),
-				m_pModel->GetExtent(3+4*i+2),
-				m_pModel->GetJointAngle(4*(1+i)+3),
-				m_pModel->GetExtent(3+4*i+3),
-				false);
-		}
-
-		// draw the thumb
-		
-		
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-
 		return true;
 	}
 
@@ -201,7 +115,8 @@ namespace rhapsodies {
 		glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size()/3);
 	}
 
-	void HandRenderer::DrawFinger(VistaVector3D v3Pos, float fFingerDiameter,
+	void HandRenderer::DrawFinger(VistaTransformMatrix matOrigin,
+								  float fFingerDiameter, float fLRFactor,
 								  float fAng1F, float fAng1A, float fLen1,
 								  float fAng2, float fLen2,
 								  float fAng3, float fLen3,
@@ -221,7 +136,6 @@ namespace rhapsodies {
 		VistaAxisAndAngle aaaZ = VistaAxisAndAngle(VistaVector3D(0,0,1), 0.0);
 		
 		VistaTransformMatrix matModel;  // final applied transform
-		VistaTransformMatrix matOrigin; // unscaled origin for subparts
 		VistaTransformMatrix matTransform; // auxiliary for
 										   // accumulative transforms
 
@@ -232,9 +146,10 @@ namespace rhapsodies {
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 
 		// start at first joint
-		matOrigin.SetToTranslationMatrix(v3Pos);
 		matModel = matOrigin * matSphereScale;
-		DrawSphere(matModel, locUniformS);
+		if(!bThumb) {
+			DrawSphere(matModel, locUniformS);
+		}
 
 		// first joint flexion rotation
 		aaaX.m_fAngle = Vista::DegToRad(-fAng1F);
@@ -242,7 +157,7 @@ namespace rhapsodies {
 		matOrigin *= matTransform;
 
 		// first joint abduction rotation
-		aaaZ.m_fAngle = Vista::DegToRad(fAng1A);
+		aaaZ.m_fAngle = Vista::DegToRad(fAng1A*fLRFactor);
 		matTransform = VistaTransformMatrix(aaaZ);
 		matOrigin *= matTransform;
 		
@@ -251,13 +166,25 @@ namespace rhapsodies {
 			VistaVector3D(0, fLen1/1000.0f/2.0f, 0));
 		matOrigin *= matTransform;
 
-		// set scale and draw first segment cylinder
-		glUseProgram(idProgramC);
-		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
-		matTransform.SetToScaleMatrix(
-			fFingerDiameter, fLen1/1000.0f, fFingerDiameter);
-		matModel = matOrigin * matTransform;
-		DrawCylinder(matModel, locUniformC);
+		// set scale and draw first segment
+		if(bThumb) {
+			matTransform.SetToScaleMatrix(
+				fFingerDiameter*1.5f,
+				fLen1/1000.0f*1.5f,
+				fFingerDiameter*1.5f);
+			matModel = matOrigin * matTransform;
+
+			DrawSphere(matModel, locUniformC);
+		}
+		else {
+			matTransform.SetToScaleMatrix(
+				fFingerDiameter, fLen1/1000.0f, fFingerDiameter);
+			matModel = matOrigin * matTransform;
+
+			glUseProgram(idProgramC);
+			glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
+			DrawCylinder(matModel, locUniformC);
+		}
 
 		// move to second joint
 		matTransform.SetToTranslationMatrix(
@@ -329,6 +256,130 @@ namespace rhapsodies {
 		DrawSphere(matModel, locUniformS);
 	}
 
+	void HandRenderer::DrawHand(HandModel *pModel) {
+		// measure timings!
+
+		GLint idProgramS = m_pShaderReg->GetProgram("vpos_green");
+		GLint idProgramC = m_pShaderReg->GetProgram("vpos_blue");
+		GLint locUniformS = glGetUniformLocation(idProgramS,
+												 "model_transform");
+		GLint locUniformC = glGetUniformLocation(idProgramC,
+												 "model_transform");
+
+		VistaTransformMatrix matModel;
+		VistaTransformMatrix matTransform;
+		VistaTransformMatrix matOrigin;
+
+		// these go to extra vis parameter class for model pso yo
+		float fPalmWidth        = 0.08;
+		float fPalmBottomRadius = 0.02;
+		float fPalmDiameter     = fPalmWidth/2.0f;
+		float fFingerDiameter   = fPalmWidth/4.0f;
+
+		// for now we average the metacarpal lengths for palm height
+		float fPalmHeight =
+			(pModel->GetExtent(HandModel::I_MC) +
+			 pModel->GetExtent(HandModel::M_MC) +
+			 pModel->GetExtent(HandModel::R_MC) +
+			 pModel->GetExtent(HandModel::L_MC))/4.0f/1000.0f;
+
+		float fLRFactor =
+			(pModel->GetType() == HandModel::LEFT_HAND) ?
+			-1.0f : 1.0f;
+		
+		// for now we will upload the same model transform matrix in
+		// advance to calling glDrawArrays. If this turns out to be
+		// slow, we might upload all the model matrices at once at the
+		// beginning and use DrawArraysInstanced to look up the
+		// specific matrix in the vertex shader by the instance id.
+
+		glUseProgram(idProgramS);
+		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
+
+		matOrigin.Compose(
+			pModel->GetPosition(),
+			pModel->GetOrientation(),
+			VistaVector3D(1,1,1));
+		
+		// bottom palm cap
+		matTransform.Compose(
+			VistaVector3D(0, fPalmBottomRadius, 0),
+			VistaQuaternion(),
+			VistaVector3D(fPalmWidth,
+						  fPalmBottomRadius*2.0f,
+						  fPalmDiameter));
+		matModel = matOrigin * matTransform;		
+		DrawSphere(matModel, locUniformS);
+
+		// top palm cap
+		matTransform.Compose(
+			VistaVector3D(0, fPalmBottomRadius+fPalmHeight, 0),
+			VistaQuaternion(),
+			VistaVector3D(fPalmWidth,
+						  fPalmBottomRadius*2.0f,
+						  fPalmDiameter));
+		matModel = matOrigin * matTransform;		
+		DrawSphere(matModel, locUniformS);
+		
+		// palm cylinder
+		matTransform.Compose(
+			VistaVector3D(0, fPalmBottomRadius + fPalmHeight/2.0f, 0),
+			VistaQuaternion(),
+			VistaVector3D(fPalmWidth, fPalmHeight, fPalmDiameter));
+		matModel = matOrigin * matTransform;		
+
+		glUseProgram(idProgramC);
+		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
+		DrawCylinder(matModel, locUniformC);
+
+		// @todo: if drawing turns out to be a significant bottleneck,
+		// we need to adopt the approach of pre-calculating all the
+		// primitive transforms, upload them as UBO's and doing
+		// instances drawing on the GPU side
+		
+		// draw the fingers
+		for(int i = 0 ; i < 4 ; i++) {
+			matTransform.SetToTranslationMatrix(
+				VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/8.0f +
+							  i*fPalmWidth/4.0f) * fLRFactor,
+							  fPalmBottomRadius + fPalmHeight,
+							  0));
+			
+			DrawFinger(
+				matOrigin * matTransform,
+				fFingerDiameter, fLRFactor,
+				pModel->GetJointAngle(4*(1+i)),
+				pModel->GetJointAngle(4*(1+i)+1),
+				pModel->GetExtent(3+4*i+1),
+				pModel->GetJointAngle(4*(1+i)+2),
+				pModel->GetExtent(3+4*i+2),
+				pModel->GetJointAngle(4*(1+i)+3),
+				pModel->GetExtent(3+4*i+3),
+				false);
+		}
+
+		// draw the thumb
+		matTransform.SetToTranslationMatrix(
+			VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/8.0f)*fLRFactor,
+						  fPalmBottomRadius,
+						  0));
+			
+		DrawFinger(
+			matOrigin * matTransform,
+			fFingerDiameter*1.2, fLRFactor,
+			pModel->GetJointAngle(HandModel::T_CMC_F),
+			pModel->GetJointAngle(HandModel::T_CMC_A),
+			pModel->GetExtent(HandModel::T_MC),
+			pModel->GetJointAngle(HandModel::T_MCP),
+			pModel->GetExtent(HandModel::T_PP),
+			pModel->GetJointAngle(HandModel::T_IP),
+			pModel->GetExtent(HandModel::T_DP),
+			true);	
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+	
 	bool HandRenderer::GetBoundingBox(VistaBoundingBox &bb) {
 		bb = VistaBoundingBox(
 			VistaVector3D(-10, -10, -10),
@@ -336,11 +387,11 @@ namespace rhapsodies {
 		return true;
 	}	
 	
-	HandModel* HandRenderer::GetModel() {
-		return m_pModel;
-	}
+	// HandModel* HandRenderer::GetModel() {
+	// 	return m_pModel;
+	// }
 
-	void HandRenderer::SetModel(HandModel* pModel) {
-		m_pModel = pModel;
-	}
+	// void HandRenderer::SetModel(HandModel* pModel) {
+	// 	m_pModel = pModel;
+	// }
 }

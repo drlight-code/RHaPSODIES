@@ -122,7 +122,7 @@ namespace rhapsodies {
 		}
 
 		if(m_sPortRandomizeModel.HasNewData()) {
-			m_pTracker->RandomizeModel();
+			m_pTracker->RandomizeModels();
 		}
 		
 		return true;

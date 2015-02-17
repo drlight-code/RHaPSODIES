@@ -96,11 +96,20 @@ namespace rhapsodies {
 		  L_DP
 	  };
 
-	  enum HandOrientation {
+	  enum HandType {
 		  LEFT_HAND,
 		  RIGHT_HAND
 	  };
 
+	  void SetPosition(const VistaVector3D &vPos);
+	  VistaVector3D GetPosition();
+	  
+	  void SetOrientation(const VistaQuaternion &vPos);
+	  VistaQuaternion GetOrientation();
+
+	  void SetType(HandType eType);
+	  HandType GetType();
+	  
 	  /**
 	   * Get a skeleton joint angle in degrees.
 	   * 
@@ -133,11 +142,21 @@ namespace rhapsodies {
 	   */
 	  void SetExtent(size_t eExt, float fLengthMm);
 
+	  
+	  /**
+	   * Randomize the angular DOFs.
+	   */
+	  void Randomize();
+
+	  
   private:
-	  std::vector<float> m_vecJointAngles;
-	  std::vector<float> m_vecExtents;
 	  VistaVector3D   m_vPosition;
 	  VistaQuaternion m_qOrientation;
+
+	  HandType m_eType;
+
+	  std::vector<float> m_vecJointAngles;
+	  std::vector<float> m_vecExtents;
   };
 }
 
