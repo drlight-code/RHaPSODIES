@@ -100,15 +100,6 @@ namespace rhapsodies {
 		m_pHandModelRight->SetPosition(VistaVector3D(0.1, 0, 0));
 
 		RandomizeModels();
-		// m_pHandModelLeft->SetJointAngle(
-		// 	HandModel::I_MCP_A, 30);
-		// m_pHandModelRight->SetJointAngle(
-		// 	HandModel::I_MCP_A, 30);
-		
-		// m_pHandModelLeft->SetJointAngle(
-		// 	HandModel::R_DIP, 30);
-		// m_pHandModelRight->SetJointAngle(
-		// 	HandModel::R_DIP, 30);
 	}
 
 	HandTracker::~HandTracker() {
@@ -362,17 +353,17 @@ namespace rhapsodies {
 	
 	void HandTracker::RandomizeModels() {
 		m_pHandModelRight->Randomize();
+		m_pHandModelLeft->Randomize();
 
-		//m_pHandModelLeft->Randomize();
 		// for comparison, choose same configuration for left hand
-		for(size_t index = 0 ; index < HandModel::JOINTDOF_LAST ; index++) {
-			m_pHandModelLeft->SetJointAngle(
-				index,
-				m_pHandModelRight->GetJointAngle(index));
-		}
+		// for(size_t index = 0 ; index < HandModel::JOINTDOF_LAST ; index++) {
+		// 	m_pHandModelLeft->SetJointAngle(
+		// 		index,
+		// 		m_pHandModelRight->GetJointAngle(index));
+		// }
 
-		m_pHandModelLeft->SetOrientation(
-			m_pHandModelRight->GetOrientation());
+		// m_pHandModelLeft->SetOrientation(
+		// 	m_pHandModelRight->GetOrientation());
 	}
 	
 	void HandTracker::DepthToRGB(const unsigned short *depth,

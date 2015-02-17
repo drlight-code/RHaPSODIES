@@ -96,15 +96,15 @@ namespace rhapsodies {
 		}
 
 		// for now, randomize orientation quat as well
-		// VistaVector3D vAxis(
-		// 	pRNG->GenerateFloat(-1.0, 1.0),
-		// 	pRNG->GenerateFloat(-1.0, 1.0),
-		// 	pRNG->GenerateFloat(-1.0, 1.0));
-		// vAxis.Normalize();
+		VistaVector3D vAxis(
+			pRNG->GenerateFloat(-1.0, 1.0),
+			pRNG->GenerateFloat(-1.0, 1.0),
+			pRNG->GenerateFloat(-1.0, 1.0));
+		vAxis.Normalize();
 
-		// SetOrientation(
-		// 	VistaQuaternion(
-		// 		VistaAxisAndAngle(
-		// 			vAxis, pRNG->GenerateFloat1())));
+		SetOrientation(
+			VistaQuaternion(
+				VistaAxisAndAngle(
+					vAxis, pRNG->GenerateFloat1())));
 	}
 }
