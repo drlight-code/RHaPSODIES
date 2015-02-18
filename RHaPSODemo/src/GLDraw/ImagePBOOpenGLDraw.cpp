@@ -56,7 +56,7 @@ namespace rhapsodies {
 			int px = i/3;
 			if( i%3 == 0 && 
 				(px%m_texWidth%raster_offset == 0 || 
-				 px/m_texWidth%raster_offset==0) )
+				 px/m_texWidth%raster_offset == 0) )
 				texData[i] = 255;
 		}
 

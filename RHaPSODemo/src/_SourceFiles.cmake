@@ -2,22 +2,18 @@
 
 set( RelativeDir "src" )
 set( RelativeSourceGroup "source" )
-set( SubDirs SkinClassifiers )
+set( SubDirs SkinClassifiers GLDraw )
 
 set( DirFiles
 	main.cpp
 	RHaPSODemo.cpp
-  	ImageDraw.cpp
-	TexturedQuadGLDraw.cpp
-	ImagePBOOpenGLDraw.cpp
-	DepthHistogramHandler.cpp
-	HistogramUpdater.cpp
   	ShaderRegistry.cpp
   	HandModel.cpp
   	HandRenderer.cpp
-  	HandRenderDraw.cpp
   	HandTracker.cpp
   	HandTrackingNode.cpp
+#	DepthHistogramHandler.cpp
+#	HistogramUpdater.cpp
 	_SourceFiles.cmake
 )
 set( DirFiles_SourceGroup "${RelativeSourceGroup}" )

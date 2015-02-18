@@ -27,6 +27,8 @@
 #include <list>
 #include <map>
 
+#include <GL/glcorearb.h>
+
 #include <VistaAspects/VistaPropertyList.h>
 
 namespace rhapsodies {
@@ -42,6 +44,7 @@ namespace rhapsodies {
 			COLOR_SEGMENTED,
 			DEPTH,
 			DEPTH_SEGMENTED,
+			DEPTH_RENDERED,
 			UVMAP,
 			UVMAP_SEGMENTED
 		};
@@ -121,6 +124,9 @@ namespace rhapsodies {
 		// depth frame and uv map RGB buffers
 		unsigned char m_pDepthRGBBuffer[320*240*3];
 		unsigned char m_pUVMapRGBBuffer[320*240*3];
+
+		GLuint m_idFBO;
+		GLuint m_idDepthTexture;
 	};
 }
 

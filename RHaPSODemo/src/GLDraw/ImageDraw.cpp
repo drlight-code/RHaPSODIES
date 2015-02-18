@@ -25,7 +25,7 @@
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 
-#include <ImagePBOOpenGLDraw.hpp>
+#include <GLDraw/ImagePBOOpenGLDraw.hpp>
 
 #include "ImageDraw.hpp"
 

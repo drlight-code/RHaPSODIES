@@ -27,6 +27,8 @@
 #include <limits>
 #include <exception>
 
+#include <GL/glew.h>
+
 #include <VistaBase/VistaStreamUtils.h>
 
 #include <VistaTools/VistaBasicProfiler.h>
@@ -36,16 +38,16 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "RHaPSODemo.hpp"
-#include "ImagePBOOpenGLDraw.hpp"
+#include <RHaPSODemo.hpp>
+#include <GLDraw/ImagePBOOpenGLDraw.hpp>
 
-#include "SkinClassifiers/SkinClassifierLogOpponentYIQ.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter0.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter1.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter2.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter3.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter4.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter5.hpp"
+#include <SkinClassifiers/SkinClassifierLogOpponentYIQ.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter0.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter1.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter2.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter3.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter4.hpp>
+#include <SkinClassifiers/SkinClassifierRedMatter5.hpp>
 
 #include <HandModel.hpp>
 #include <HandRenderer.hpp>
@@ -104,7 +106,6 @@ namespace rhapsodies {
 
 		delete m_pHandModelLeft;
 		delete m_pHandModelRight;
-		delete m_pHandRenderer;
 	}
 	
 	void HandTracker::SetViewPBODraw(ViewType type,
@@ -170,7 +171,21 @@ namespace rhapsodies {
 		RandomizeModels();
 
 		// prepare FBO rendering
-		
+		glGenFramebuffers(1, &m_idFBO);
+			
+		glGenTextures(1, &m_idDepthTexture);
+		glBindTexture(GL_TEXTURE_2D, m_idDepthTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 320, 240, 0,
+					 GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+
+		if(glCheckFramebufferStatus(m_idFBO) != GL_FRAMEBUFFER_COMPLETE) {
+			vstr::err() << "FrameBuffer not complete! Aborting." << std::endl;
+			return false;
+		}
 
 		return true;
 	}
@@ -271,16 +286,23 @@ namespace rhapsodies {
 			pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
 		}
 
-		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_idFBO);
+		//for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// PSO for model hypotheses
 		
 			
 			// FBO rendering of tiled zbuffers
-			
+
+		// @todo required?
+		//glClear(GL_DEPTH_BUFFER_BIT);
+		
+		// m_pHandRenderer->DrawHand(m_pHandModelLeft);
+		// m_pHandRenderer->DrawHand(m_pHandModelRight);
 
 			// reduction with compute shader or opencl
 		
-		}
+		//}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// update actual model fit
 			

@@ -1,3 +1,5 @@
+#include <array>
+
 #include <VistaTools/VistaRandomNumberGenerator.h>
 
 #include "HandModel.hpp"

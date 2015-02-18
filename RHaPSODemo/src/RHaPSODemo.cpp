@@ -53,20 +53,19 @@
 #include <Vfl2DDiagrams/Diagrams/V2dDiagramDefault.h>
 #include <Vfl2DDiagrams/V2dDiagramTextureVista.h>
 
-#include <ImageDraw.hpp>
-#include <ImagePBOOpenGLDraw.hpp>
-
-#include <DepthHistogramHandler.hpp>
-
 #include <ShaderRegistry.hpp>
-#include <HistogramUpdater.hpp>
 
 #include <HandModel.hpp>
 #include <HandRenderer.hpp>
-#include <HandRenderDraw.hpp>
-
 #include <HandTracker.hpp>
 #include <HandTrackingNode.hpp>
+
+#include <GLDraw/ImageDraw.hpp>
+#include <GLDraw/ImagePBOOpenGLDraw.hpp>
+#include <GLDraw/HandRenderDraw.hpp>
+
+#include <DepthHistogramHandler.hpp>
+#include <HistogramUpdater.hpp>
 
 #include "RHaPSODemo.hpp"
 
@@ -157,6 +156,7 @@ namespace rhapsodies {
 		delete m_pUVMapSegDraw;
 		if(m_pDiagramDraw)
 			delete m_pDiagramDraw;
+		delete m_pDepthRenderedDraw;
 
 		delete m_pAxes;
 
@@ -276,31 +276,37 @@ namespace rhapsodies {
 	}
 
 	bool RHaPSODemo::RegisterShaders() {
-		m_pShaderReg->RegisterShader("vert_textured", GL_VERTEX_SHADER,   
-									 "resources/shaders/textured.vert");
+		m_pShaderReg->RegisterShader("vert_vpos", GL_VERTEX_SHADER,
+									 "resources/shaders/vpos.vert");
+		m_pShaderReg->RegisterShader("vert_vpos_uv", GL_VERTEX_SHADER,   
+									 "resources/shaders/vpos_uv.vert");
+
 		m_pShaderReg->RegisterShader("frag_textured", GL_FRAGMENT_SHADER,
 									 "resources/shaders/textured.frag");
-
-		std::vector<std::string> vec_shaders;
-		vec_shaders.push_back("vert_textured");		
-		vec_shaders.push_back("frag_textured");		
-		m_pShaderReg->RegisterProgram("textured", vec_shaders);
-
-
-		m_pShaderReg->RegisterShader("vert_vpos_only", GL_VERTEX_SHADER,
-									 "resources/shaders/vpos_only.vert");
+		m_pShaderReg->RegisterShader("frag_depthtexture", GL_FRAGMENT_SHADER,
+									 "resources/shaders/depthtexture.frag");
 		m_pShaderReg->RegisterShader("frag_solid_green", GL_FRAGMENT_SHADER,
 									 "resources/shaders/solid_green.frag");
 		m_pShaderReg->RegisterShader("frag_solid_blue", GL_FRAGMENT_SHADER,
 									 "resources/shaders/solid_blue.frag");
 
+		std::vector<std::string> vec_shaders;
+		vec_shaders.push_back("vert_vpos_uv");		
+		vec_shaders.push_back("frag_textured");		
+		m_pShaderReg->RegisterProgram("textured", vec_shaders);
+
 		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos_only");
+		vec_shaders.push_back("vert_vpos_uv");
+		vec_shaders.push_back("frag_depthtexture");		
+		m_pShaderReg->RegisterProgram("depthtexture", vec_shaders);
+
+		vec_shaders.clear();
+		vec_shaders.push_back("vert_vpos");
 		vec_shaders.push_back("frag_solid_green");		
 		m_pShaderReg->RegisterProgram("vpos_green", vec_shaders);
 
 		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos_only");
+		vec_shaders.push_back("vert_vpos");
 		vec_shaders.push_back("frag_solid_blue");		
 		m_pShaderReg->RegisterProgram("vpos_blue", vec_shaders);
 
@@ -346,7 +352,7 @@ namespace rhapsodies {
 
 		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pDepthDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,1,0));
-		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
+//		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
 
 		// ImageDraw for UV map
 		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
@@ -377,6 +383,13 @@ namespace rhapsodies {
 		m_pUVMapSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pUVMapSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,-1,0));
 		
+		// ImageDraw for rendered depth map
+		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		m_pTracker->SetViewPBODraw(HandTracker::DEPTH_RENDERED, pPBODraw); 
+
+		m_pDepthRenderedDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		m_pDepthRenderedDraw->GetTransformNode()->SetTranslation(VistaVector3D(4,0,0));
+		
 
 		// // ImageDraw for histogram
 		// m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
@@ -388,7 +401,7 @@ namespace rhapsodies {
 		//   	m_pDepthHistogramHandler->GetHistogramUpdater(),
 		//  	VistaSystemEvent::GetTypeId());
 
-		m_pDepthHistogramHandler->Enable(false);
+		//m_pDepthHistogramHandler->Enable(false);
 
 
 		

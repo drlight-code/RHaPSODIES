@@ -75,6 +75,7 @@ namespace rhapsodies {
 		ImageDraw *m_pColorDraw, *m_pColorSegDraw;
 		ImageDraw *m_pDepthDraw, *m_pDepthSegDraw;
 		ImageDraw *m_pUVMapDraw, *m_pUVMapSegDraw;
+		ImageDraw *m_pDepthRenderedDraw;
 
 		DepthHistogramHandler *m_pDepthHistogramHandler;
 

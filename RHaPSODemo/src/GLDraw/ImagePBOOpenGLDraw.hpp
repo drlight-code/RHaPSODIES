@@ -26,7 +26,7 @@
 
 #include <GL/gl.h>
 
-#include <TexturedQuadGLDraw.hpp>
+#include <GLDraw/TexturedQuadGLDraw.hpp>
 
 namespace rhapsodies {
 	class ShaderRegistry;
