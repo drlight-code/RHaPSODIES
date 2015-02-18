@@ -127,6 +127,7 @@ namespace rhapsodies {
 
 		GLuint m_idFBO;
 		GLuint m_idDepthTexture;
+		GLuint m_idColorTexture;
 	};
 }
 

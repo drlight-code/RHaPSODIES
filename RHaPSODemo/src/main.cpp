@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
 	RHaPSODemo demo;
 
 	if(!demo.Initialize(argc, argv)) {
-		std::cerr << "failed to initialize RHaPSODemo. Aborting!"
+		std::cerr << "Failed to initialize RHaPSODemo! Aborting."
 				  << std::endl;
 		return -1;
 	}

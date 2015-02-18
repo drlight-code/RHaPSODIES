@@ -73,6 +73,54 @@ namespace {
 
 		return ret;
 	}
+
+	bool CheckFrameBufferStatus(GLuint idFBO) {
+		GLenum status = glCheckFramebufferStatus(idFBO);
+		if(status != GL_FRAMEBUFFER_COMPLETE) {
+			vstr::err() << "FrameBuffer not complete: " << std::hex << status
+						<< std::endl;
+			
+			switch(status) {
+			case GL_FRAMEBUFFER_UNDEFINED:
+				vstr::err() << "GL_FRAMEBUFFER_UNDEFINED"
+							<< std::endl;
+				break;
+			case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+				vstr::err() << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"
+							<< std::endl;
+				break;
+			case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+				vstr::err() << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"
+							<< std::endl;
+				break;
+			case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+				vstr::err() << "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"
+							<< std::endl;
+				break;
+			case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+				vstr::err() << "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"
+							<< std::endl;
+				break;
+			case GL_FRAMEBUFFER_UNSUPPORTED:
+				vstr::err() << "GL_FRAMEBUFFER_UNSUPPORTED"
+							<< std::endl;
+				break;
+			case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+				vstr::err() << "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"
+							<< std::endl;
+				break;
+			case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+				vstr::err() << "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"
+							<< std::endl;
+				break;
+			}
+
+			return false;
+		}
+		return true;
+	}
+
+	
 }
 
 namespace rhapsodies {
@@ -179,15 +227,26 @@ namespace rhapsodies {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 320, 240, 0,
-					 GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+		// glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 320, 240, 0,
+		// 			 GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
 
-		if(glCheckFramebufferStatus(m_idFBO) != GL_FRAMEBUFFER_COMPLETE) {
-			vstr::err() << "FrameBuffer not complete! Aborting." << std::endl;
-			return false;
-		}
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 320, 240, 0,
+					 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
-		return true;
+		glGenTextures(1, &m_idColorTexture);
+		glBindTexture(GL_TEXTURE_2D, m_idColorTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 320, 240, 0,
+					 GL_RGBA, GL_FLOAT, NULL);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_idFBO);
+		CheckFrameBufferStatus(m_idFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+		return false;
 	}
 
 	void HandTracker::ReadConfig() {
