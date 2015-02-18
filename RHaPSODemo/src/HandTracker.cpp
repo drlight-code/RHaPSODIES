@@ -75,7 +75,7 @@ namespace {
 	}
 
 	bool CheckFrameBufferStatus(GLuint idFBO) {
-		GLenum status = glCheckFramebufferStatus(idFBO);
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if(status != GL_FRAMEBUFFER_COMPLETE) {
 			vstr::err() << "FrameBuffer not complete: " << std::hex << status
 						<< std::endl;
@@ -117,6 +117,7 @@ namespace {
 
 			return false;
 		}
+		vstr::err() << "FrameBuffer status complete!" << std::endl;
 		return true;
 	}
 
@@ -173,6 +174,10 @@ namespace rhapsodies {
 		m_pHandRenderer = pRenderer;
 	}
 
+	GLuint HandTracker::GetDepthTextureId() {
+		return m_idDepthTexture;
+	}
+
 	bool HandTracker::Initialize() {
 		vstr::out() << "Initializing RHaPSODIES HandTracker" << std::endl;
 
@@ -227,26 +232,22 @@ namespace rhapsodies {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
 		// glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 320, 240, 0,
 		// 			 GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 320, 240, 0,
 					 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
-		glGenTextures(1, &m_idColorTexture);
-		glBindTexture(GL_TEXTURE_2D, m_idColorTexture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 320, 240, 0,
-					 GL_RGBA, GL_FLOAT, NULL);
-
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idFBO);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+							   GL_TEXTURE_2D, m_idDepthTexture, 0);
+
 		CheckFrameBufferStatus(m_idFBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
-		return false;
+		return true;
 	}
 
 	void HandTracker::ReadConfig() {
@@ -353,15 +354,25 @@ namespace rhapsodies {
 			// FBO rendering of tiled zbuffers
 
 		// @todo required?
-		//glClear(GL_DEPTH_BUFFER_BIT);
+		glViewport(0, 0, 320, 240);
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0); 
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
 		
-		// m_pHandRenderer->DrawHand(m_pHandModelLeft);
-		// m_pHandRenderer->DrawHand(m_pHandModelRight);
+		glClear(GL_DEPTH_BUFFER_BIT);
+//		glDisable(GL_ALPHA_TEST);
+		
+		m_pHandRenderer->DrawHand(m_pHandModelLeft);
+		m_pHandRenderer->DrawHand(m_pHandModelRight);
 
 			// reduction with compute shader or opencl
 		
 		//}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//		glEnable(GL_ALPHA_TEST);
 
 		// update actual model fit
 			

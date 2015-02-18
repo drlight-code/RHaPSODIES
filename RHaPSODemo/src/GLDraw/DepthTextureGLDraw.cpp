@@ -89,7 +89,7 @@ namespace rhapsodies {
 
 		glBindTexture(GL_TEXTURE_2D, m_texId);
 
-		glUseProgram(m_pShaderReg->GetProgram("textured"));
+		glUseProgram(m_pShaderReg->GetProgram("depthtexture"));
 
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbVertId);
 		glEnableVertexAttribArray(0);

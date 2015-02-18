@@ -58,6 +58,8 @@ namespace rhapsodies {
 		HandModel *GetHandModelLeft();
 		HandModel *GetHandModelRight();
 		void SetHandRenderer(HandRenderer *pRenderer);
+
+		GLuint GetDepthTextureId();
 		
 		bool Initialize();
 		void ReadConfig();
@@ -127,7 +129,6 @@ namespace rhapsodies {
 
 		GLuint m_idFBO;
 		GLuint m_idDepthTexture;
-		GLuint m_idColorTexture;
 	};
 }
 

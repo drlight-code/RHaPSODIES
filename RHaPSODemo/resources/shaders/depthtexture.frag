@@ -1,16 +1,19 @@
 #version 330 core
 
-// Interpolated values from the vertex shaders
-in vec2 UV;
+//in vec2 TexCoord0;
 
-// Ouput data
-out vec3 color;
+smooth in vec3 vNormal;
+smooth in vec3 vWorldPos;
+in mat4 ProjectionMatrix;
 
-// Values that stay constant for the whole mesh.
-uniform sampler2D myTextureSampler;
+uniform sampler2D uDepthTex;
+//uniform float uWidth;
+//uniform float uHeight;
 
-void main(){
-    // Output color = color of the texture at the specified UV
-  	color = texture( myTextureSampler, UV ).rgb;
-//	color = vec3(1,0,0);
+out vec4 color;
+
+void main() {
+//    vec2 res = gl_FragCoord.xy / vec2(uWidth, uHeight);
+	vec2 res = gl_FragCoord.xy / vec2(320, 240);
+    color = texture(uDepthTex, res);
 }

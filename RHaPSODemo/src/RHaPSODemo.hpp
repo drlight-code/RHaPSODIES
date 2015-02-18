@@ -60,7 +60,7 @@ namespace rhapsodies {
 
 		HandRenderer   *m_pHandRenderer;
 		HandRenderDraw *m_pHandRenderDraw;
-		HandTracker    *m_pTracker;
+		HandTracker    *m_pHandTracker;
 
 		VistaTransformNode *m_pSceneTransform;
 		VistaTransformNode *m_pDiagramTransform;
