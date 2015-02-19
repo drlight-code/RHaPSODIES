@@ -34,7 +34,9 @@
 namespace rhapsodies {
 	class ImagePBOOpenGLDraw;
 	class SkinClassifier;
+
 	class HandModel;
+	class HandModelRep;
 	class HandRenderer;
 	
 	class HandTracker {
@@ -57,6 +59,8 @@ namespace rhapsodies {
 
 		HandModel *GetHandModelLeft();
 		HandModel *GetHandModelRight();
+		HandModelRep *GetHandModelRep();
+
 		void SetHandRenderer(HandRenderer *pRenderer);
 
 		GLuint GetDepthTextureId();
@@ -116,6 +120,8 @@ namespace rhapsodies {
 
 		HandModel *m_pHandModelLeft;
 		HandModel *m_pHandModelRight;
+		HandModelRep *m_pHandModelRep;
+		
 		HandRenderer *m_pHandRenderer;
 
 		unsigned char  m_pColorBuffer[320*240*3];

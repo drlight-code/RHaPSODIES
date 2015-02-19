@@ -40,7 +40,7 @@ namespace rhapsodies {
 		GLuint m_texId;
 		
 	public:
-		TexturedQuadGLDraw(GLuint texId,
+		TexturedQuadGLDraw(GLuint texId, bool bYFlip,
 						   ShaderRegistry *pShaderReg);
 		virtual ~TexturedQuadGLDraw();
 

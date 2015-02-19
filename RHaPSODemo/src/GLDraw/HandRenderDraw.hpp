@@ -13,6 +13,7 @@ namespace rhapsodies {
 	public:
 		HandRenderDraw(HandModel *pModelLeft,
 					   HandModel *pModelRight,
+					   HandModelRep *pModelRep,
 					   HandRenderer *pRenderer);
 		
 		virtual bool Do();
@@ -24,6 +25,8 @@ namespace rhapsodies {
 	private:
 		HandModel *m_pModelLeft;
 		HandModel *m_pModelRight;
+
+		HandModelRep *m_pModelRep;
 
 		HandRenderer *m_pRenderer;
 	};

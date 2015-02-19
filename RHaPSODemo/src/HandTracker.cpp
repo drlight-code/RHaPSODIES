@@ -50,6 +50,8 @@
 #include <SkinClassifiers/SkinClassifierRedMatter5.hpp>
 
 #include <HandModel.hpp>
+#include <HandModelRep.hpp>
+
 #include <HandRenderer.hpp>
 
 #include "HandTracker.hpp"
@@ -155,6 +157,8 @@ namespace rhapsodies {
 
 		delete m_pHandModelLeft;
 		delete m_pHandModelRight;
+
+		delete m_pHandModelRep;
 	}
 	
 	void HandTracker::SetViewPBODraw(ViewType type,
@@ -168,6 +172,10 @@ namespace rhapsodies {
 	
 	HandModel *HandTracker::GetHandModelRight() {
 		return m_pHandModelRight;
+	}
+
+	HandModelRep *HandTracker::GetHandModelRep() {
+		return m_pHandModelRep;
 	}
 
 	void HandTracker::SetHandRenderer(HandRenderer *pRenderer) {
@@ -221,6 +229,8 @@ namespace rhapsodies {
 		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
 		m_pHandModelRight->SetPosition(VistaVector3D(0.1, 0, 0));
 
+		m_pHandModelRep = new HandModelRep;
+
 		RandomizeModels();
 
 		// prepare FBO rendering
@@ -233,7 +243,8 @@ namespace rhapsodies {
 		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 320, 240, 0,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16,
+					 320*8, 240*8, 0,
 					 GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idFBO);
@@ -350,7 +361,6 @@ namespace rhapsodies {
 			
 			// FBO rendering of tiled zbuffers
 
-		// @todo required?
 		glViewport(0, 0, 320, 240);
 
 		glMatrixMode(GL_PROJECTION);
@@ -363,10 +373,8 @@ namespace rhapsodies {
 		glEnable(GL_DEPTH_TEST);
 
 
-//		glDisable(GL_CULL_FACE);
-		
-		m_pHandRenderer->DrawHand(m_pHandModelLeft);
-		m_pHandRenderer->DrawHand(m_pHandModelRight);
+		m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
+		m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
 
 			// reduction with compute shader or opencl
 		

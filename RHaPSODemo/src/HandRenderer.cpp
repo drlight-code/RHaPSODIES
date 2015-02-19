@@ -11,6 +11,7 @@
 #include <ShaderRegistry.hpp>
 
 #include <HandModel.hpp>
+#include <HandModelRep.hpp>
 
 #include "HandRenderer.hpp"
 
@@ -245,7 +246,8 @@ namespace rhapsodies {
 		DrawSphere(matModel, locUniformS);
 	}
 
-	void HandRenderer::DrawHand(HandModel *pModel) {
+	void HandRenderer::DrawHand(HandModel *pModel,
+								HandModelRep *pModelRep) {
 		// measure timings!
 
 		GLint idProgramS = m_pShaderReg->GetProgram("vpos_green");
@@ -267,10 +269,10 @@ namespace rhapsodies {
 
 		// for now we average the metacarpal lengths for palm height
 		float fPalmHeight =
-			(pModel->GetExtent(HandModel::I_MC) +
-			 pModel->GetExtent(HandModel::M_MC) +
-			 pModel->GetExtent(HandModel::R_MC) +
-			 pModel->GetExtent(HandModel::L_MC))/4.0f/1000.0f;
+			(pModelRep->GetExtent(HandModelRep::I_MC) +
+			 pModelRep->GetExtent(HandModelRep::M_MC) +
+			 pModelRep->GetExtent(HandModelRep::R_MC) +
+			 pModelRep->GetExtent(HandModelRep::L_MC))/4.0f/1000.0f;
 
 		float fLRFactor =
 			(pModel->GetType() == HandModel::LEFT_HAND) ?
@@ -339,11 +341,11 @@ namespace rhapsodies {
 				fFingerDiameter, fLRFactor,
 				pModel->GetJointAngle(4*(1+i)),
 				pModel->GetJointAngle(4*(1+i)+1),
-				pModel->GetExtent(3+4*i+1),
+				pModelRep->GetExtent(3+4*i+1),
 				pModel->GetJointAngle(4*(1+i)+2),
-				pModel->GetExtent(3+4*i+2),
+				pModelRep->GetExtent(3+4*i+2),
 				pModel->GetJointAngle(4*(1+i)+3),
-				pModel->GetExtent(3+4*i+3),
+				pModelRep->GetExtent(3+4*i+3),
 				false);
 		}
 
@@ -358,11 +360,11 @@ namespace rhapsodies {
 			fFingerDiameter*1.2, fLRFactor,
 			pModel->GetJointAngle(HandModel::T_CMC_F),
 			pModel->GetJointAngle(HandModel::T_CMC_A),
-			pModel->GetExtent(HandModel::T_MC),
+			pModelRep->GetExtent(HandModelRep::T_MC),
 			pModel->GetJointAngle(HandModel::T_MCP),
-			pModel->GetExtent(HandModel::T_PP),
+			pModelRep->GetExtent(HandModelRep::T_PP),
 			pModel->GetJointAngle(HandModel::T_IP),
-			pModel->GetExtent(HandModel::T_DP),
+			pModelRep->GetExtent(HandModelRep::T_DP),
 			true);	
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);

@@ -44,7 +44,7 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	TexturedQuadGLDraw::TexturedQuadGLDraw(GLuint texId,
+	TexturedQuadGLDraw::TexturedQuadGLDraw(GLuint texId, bool bYFlip,
 										   ShaderRegistry *pShaderReg) :
 		m_pShaderReg(pShaderReg),
 		m_texId(texId)
@@ -62,12 +62,20 @@ namespace rhapsodies {
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbVertId);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(afCoords), afCoords, GL_STATIC_DRAW);
 
-		const GLfloat afUV[] = {
+		GLfloat afUV[] = {
 			0.0f, 0.0f,
 			1.0f, 0.0f,
 			0.0f, 1.0f,
 			1.0f, 1.0f,
 		};
+
+		if(bYFlip) {
+			afUV[1] = 1.0f;
+			afUV[3] = 1.0f;
+			afUV[5] = 0.0f;
+			afUV[7] = 0.0f;
+		}
+		
 		glGenBuffers(1, &m_vbUVId);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbUVId);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(afUV), afUV, GL_STATIC_DRAW);

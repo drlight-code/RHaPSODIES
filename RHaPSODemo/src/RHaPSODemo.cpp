@@ -322,6 +322,7 @@ namespace rhapsodies {
 		m_pHandRenderDraw = new HandRenderDraw(
 			m_pHandTracker->GetHandModelLeft(),
 			m_pHandTracker->GetHandModelRight(),
+			m_pHandTracker->GetHandModelRep(),
 			m_pHandRenderer);
 		
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
@@ -380,7 +381,7 @@ namespace rhapsodies {
 		
 		// ImageDraw for rendered depth map
 		TexturedQuadGLDraw *pDTDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetDepthTextureId(), m_pShaderReg);
+			m_pHandTracker->GetDepthTextureId(), false, m_pShaderReg);
 		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_RENDERED, pPBODraw); 
 
 		m_pDepthRenderedDraw = new ImageDraw(m_pSceneTransform, pDTDraw, pSG);

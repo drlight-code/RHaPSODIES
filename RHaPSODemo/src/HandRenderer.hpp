@@ -11,11 +11,13 @@ class ShaderRegistry;
 
 namespace rhapsodies {
 	class HandModel;
+	class HandModelRep;
 	
 	class HandRenderer {
 	public:
 		HandRenderer(ShaderRegistry *pReg);
-		void DrawHand(HandModel *pModel);
+		void DrawHand(HandModel *pModel,
+					  HandModelRep *pModelRep);
 		
 	private:
 		enum BufferObjectId {

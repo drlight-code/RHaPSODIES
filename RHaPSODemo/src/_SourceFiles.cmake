@@ -9,6 +9,7 @@ set( DirFiles
 	RHaPSODemo.cpp
   	ShaderRegistry.cpp
   	HandModel.cpp
+  	HandModelRep.cpp
   	HandRenderer.cpp
   	HandTracker.cpp
   	HandTrackingNode.cpp
