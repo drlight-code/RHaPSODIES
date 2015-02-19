@@ -63,10 +63,10 @@ namespace rhapsodies {
 		glBufferData(GL_ARRAY_BUFFER, sizeof(afCoords), afCoords, GL_STATIC_DRAW);
 
 		const GLfloat afUV[] = {
-			0.0f, 1.0f,
-			1.0f, 1.0f,
 			0.0f, 0.0f,
 			1.0f, 0.0f,
+			0.0f, 1.0f,
+			1.0f, 1.0f,
 		};
 		glGenBuffers(1, &m_vbUVId);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbUVId);

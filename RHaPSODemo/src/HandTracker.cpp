@@ -355,12 +355,15 @@ namespace rhapsodies {
 
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glOrtho(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3); 
+		glOrtho(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		
 		glClear(GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
+
+
+//		glDisable(GL_CULL_FACE);
 		
 		m_pHandRenderer->DrawHand(m_pHandModelLeft);
 		m_pHandRenderer->DrawHand(m_pHandModelRight);
