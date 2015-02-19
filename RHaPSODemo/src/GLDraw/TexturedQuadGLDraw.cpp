@@ -44,8 +44,10 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	TexturedQuadGLDraw::TexturedQuadGLDraw(ShaderRegistry *pShaderReg) :
-		m_pShaderReg(pShaderReg)
+	TexturedQuadGLDraw::TexturedQuadGLDraw(GLuint texId,
+										   ShaderRegistry *pShaderReg) :
+		m_pShaderReg(pShaderReg),
+		m_texId(texId)
 	{
 		glGenVertexArrays(1, &m_vaId);
 		glBindVertexArray(m_vaId);
@@ -70,9 +72,6 @@ namespace rhapsodies {
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbUVId);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(afUV), afUV, GL_STATIC_DRAW);
 
-		glGenTextures(1, &m_texId);
-		glBindTexture(GL_TEXTURE_2D, m_texId);
-
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
@@ -89,8 +88,6 @@ namespace rhapsodies {
 		glBindVertexArray(m_vaId);
 
 		glBindTexture(GL_TEXTURE_2D, m_texId);
-		UpdateTexture();
-
 		glUseProgram(m_pShaderReg->GetProgram("textured"));
 
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbVertId);

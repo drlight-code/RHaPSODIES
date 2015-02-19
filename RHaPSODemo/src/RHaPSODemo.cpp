@@ -63,7 +63,6 @@
 #include <GLDraw/ImageDraw.hpp>
 #include <GLDraw/ImagePBOOpenGLDraw.hpp>
 #include <GLDraw/HandRenderDraw.hpp>
-#include <GLDraw/DepthTextureGLDraw.hpp>
 
 #include <DepthHistogramHandler.hpp>
 #include <HistogramUpdater.hpp>
@@ -297,11 +296,6 @@ namespace rhapsodies {
 		m_pShaderReg->RegisterProgram("textured", vec_shaders);
 
 		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos_uv");
-		vec_shaders.push_back("frag_depthtexture");		
-		m_pShaderReg->RegisterProgram("depthtexture", vec_shaders);
-
-		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos");
 		vec_shaders.push_back("frag_solid_green");		
 		m_pShaderReg->RegisterProgram("vpos_green", vec_shaders);
@@ -385,7 +379,7 @@ namespace rhapsodies {
 		m_pUVMapSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,-1,0));
 		
 		// ImageDraw for rendered depth map
-		DepthTextureGLDraw *pDTDraw = new DepthTextureGLDraw(
+		TexturedQuadGLDraw *pDTDraw = new TexturedQuadGLDraw(
 			m_pHandTracker->GetDepthTextureId(), m_pShaderReg);
 		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_RENDERED, pPBODraw); 
 

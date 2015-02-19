@@ -8,7 +8,6 @@ set( DirFiles
 	TexturedQuadGLDraw.cpp
 	ImagePBOOpenGLDraw.cpp
   	HandRenderDraw.cpp
-	DepthTextureGLDraw.cpp
 	_SourceFiles.cmake
 )
 set( DirFiles_SourceGroup "${RelativeSourceGroup}" )

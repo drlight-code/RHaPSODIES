@@ -40,13 +40,12 @@ namespace rhapsodies {
 		GLuint m_texId;
 		
 	public:
-		TexturedQuadGLDraw(ShaderRegistry *pShaderReg);
+		TexturedQuadGLDraw(GLuint texId,
+						   ShaderRegistry *pShaderReg);
 		virtual ~TexturedQuadGLDraw();
 
 		virtual bool Do();
 		virtual bool GetBoundingBox(VistaBoundingBox &bb);
-
-		virtual void UpdateTexture()=0;
 	};
 }
 

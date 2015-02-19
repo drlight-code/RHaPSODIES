@@ -230,14 +230,11 @@ namespace rhapsodies {
 		glBindTexture(GL_TEXTURE_2D, m_idDepthTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-		// glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 320, 240, 0,
-		// 			 GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 320, 240, 0,
-					 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 320, 240, 0,
+					 GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idFBO);
 
@@ -358,12 +355,12 @@ namespace rhapsodies {
 
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0); 
+		glOrtho(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3); 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		
 		glClear(GL_DEPTH_BUFFER_BIT);
-//		glDisable(GL_ALPHA_TEST);
+		glEnable(GL_DEPTH_TEST);
 		
 		m_pHandRenderer->DrawHand(m_pHandModelLeft);
 		m_pHandRenderer->DrawHand(m_pHandModelRight);
@@ -372,7 +369,7 @@ namespace rhapsodies {
 		
 		//}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//		glEnable(GL_ALPHA_TEST);
+
 
 		// update actual model fit
 			

@@ -40,12 +40,14 @@ namespace rhapsodies {
 		int m_texHeight;
 		bool m_texUpdate;
 
+		void UpdateTexture();
+
 	public:
 		ImagePBOOpenGLDraw(int width, int height,
 						   ShaderRegistry *pShaderReg);
 		virtual ~ImagePBOOpenGLDraw();
 
-		virtual void UpdateTexture();
+		bool Do();
 
 		bool FillPBOFromBuffer(const unsigned char*,
 							   int width, int height);

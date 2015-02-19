@@ -42,7 +42,7 @@ namespace rhapsodies {
 /*============================================================================*/
 	ImagePBOOpenGLDraw::ImagePBOOpenGLDraw(int width, int height,
 										   ShaderRegistry *pShaderReg) :
-		TexturedQuadGLDraw(pShaderReg),
+		TexturedQuadGLDraw(0, pShaderReg),
 		m_pboIndex(0),
 		m_texWidth(width),
 		m_texHeight(height),
@@ -75,6 +75,8 @@ namespace rhapsodies {
 					 texData, GL_DYNAMIC_DRAW);
 		delete [] texData;
 
+		glGenTextures(1, &m_texId);
+
 		glBindTexture(GL_TEXTURE_2D, m_texId);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
 					 m_texWidth, m_texHeight, 0, GL_RGB,
@@ -98,9 +100,17 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
+	bool ImagePBOOpenGLDraw::Do() {
+		UpdateTexture();
+		return TexturedQuadGLDraw::Do();
+	}
+
+	
 	void ImagePBOOpenGLDraw::UpdateTexture() {
 		if(m_texUpdate) {
 			m_texUpdate = false;
+
+			glBindTexture(GL_TEXTURE_2D, m_texId);
 
 			glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
 						 m_pboIds[m_pboIndex]);
