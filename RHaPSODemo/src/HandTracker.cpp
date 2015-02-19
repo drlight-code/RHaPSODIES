@@ -298,11 +298,12 @@ namespace rhapsodies {
 					<< std::endl;
 
 	}
-	
-	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
-								  const unsigned short *depthFrame,
-								  const float          *uvMapFrame) {
 
+	void HandTracker::ProcessCameraFrames(
+		const unsigned char  *colorFrame,
+		const unsigned short *depthFrame,
+		const float          *uvMapFrame) {
+		
 		// create writable copy of sensor measurement buffers
 		memcpy(m_pColorBuffer, colorFrame, 320*240*3);
 		memcpy(m_pDepthBuffer, depthFrame, 320*240*2);
@@ -353,16 +354,15 @@ namespace rhapsodies {
 		if(pPBODraw) {
 			pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
 		}
+	}
 
+	void HandTracker::PerformPSOTracking() {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idFBO);
 		//for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// PSO for model hypotheses
 		
 			
 			// FBO rendering of tiled zbuffers
-
-		glViewport(0, 0, 320, 240);
-
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3);
@@ -373,16 +373,30 @@ namespace rhapsodies {
 		glEnable(GL_DEPTH_TEST);
 
 
-		m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
-		m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
+		for(int row = 0 ; row < 8 ; row++) {
+			for(int col = 0 ; col < 8 ; col++) {
+				glViewport(col*320, row*240, 320, 240);
 
+				RandomizeModels();
+				m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
+				m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
+			}
+		}
 			// reduction with compute shader or opencl
 		
 		//}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-		// update actual model fit
+		// update actual model fit		
+	}
+	
+	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
+								  const unsigned short *depthFrame,
+								  const float          *uvMapFrame) {
+
+		ProcessCameraFrames(colorFrame, depthFrame, uvMapFrame);
+		PerformPSOTracking();
 			
 		return true;
 	}

@@ -68,6 +68,13 @@ namespace rhapsodies {
 		bool Initialize();
 		void ReadConfig();
 
+		void ProcessCameraFrames(
+			const unsigned char  *colorFrame,
+			const unsigned short *depthFrame,
+			const float          *uvMapFrame);
+
+		void PerformPSOTracking();
+		
 		bool FrameUpdate(const unsigned char  *colorFrame,
 						 const unsigned short *depthFrame,
 						 const float          *uvMapFrame);
