@@ -92,6 +92,13 @@ namespace {
 							new TVdfnTranscodePortSet<T>,
 							new VdfnTypedPortStringGet<T> ) );
 	}
+
+	template<class T> void CondDelete(T* p) {
+		if(p) {
+			delete p;
+			p = NULL;
+		}
+	}
 }
 
 IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned char* val )
@@ -137,6 +144,7 @@ namespace rhapsodies {
 		m_pDepthSegDraw(NULL), 
 		m_pUVMapDraw(NULL),
 		m_pUVMapSegDraw(NULL),
+		m_pDepthRenderedDraw(NULL),
 		m_pDepthHistogramHandler(NULL) {
 
 		m_pSystem = new VistaSystem;
@@ -146,25 +154,24 @@ namespace rhapsodies {
 	}
 
 	RHaPSODemo::~RHaPSODemo() {
-		delete m_pDepthHistogramHandler;
+		CondDelete(m_pDepthHistogramHandler);
 
-		delete m_pColorDraw;
-		delete m_pColorSegDraw;
-		delete m_pDepthDraw;
-		delete m_pDepthSegDraw;
-		delete m_pUVMapDraw;
-		delete m_pUVMapSegDraw;
-		if(m_pDiagramDraw)
-			delete m_pDiagramDraw;
-		delete m_pDepthRenderedDraw;
+		CondDelete(m_pColorDraw);
+		CondDelete(m_pColorSegDraw);
+		CondDelete(m_pDepthDraw);
+		CondDelete(m_pDepthSegDraw);
+		CondDelete(m_pUVMapDraw);
+		CondDelete(m_pUVMapSegDraw);
+		CondDelete(m_pDiagramDraw);
+		CondDelete(m_pDepthRenderedDraw);
 
-		delete m_pAxes;
+		CondDelete(m_pAxes);
 
-		delete m_pHandTracker;
-		delete m_pHandRenderer;
-		delete m_pHandRenderDraw;
-		delete m_pShaderReg;
-		delete m_pSystem;
+		CondDelete(m_pHandTracker);
+		CondDelete(m_pHandRenderer);
+		CondDelete(m_pHandRenderDraw);
+		CondDelete(m_pShaderReg);
+		CondDelete(m_pSystem);
 	}
 
 /*============================================================================*/
