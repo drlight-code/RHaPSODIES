@@ -30,6 +30,8 @@
 #include <GL/glew.h>
 
 #include <VistaBase/VistaStreamUtils.h>
+#include <VistaBase/VistaTimeUtils.h>
+#include <VistaBase/VistaTimer.h>
 
 #include <VistaTools/VistaBasicProfiler.h>
 #include <VistaTools/VistaIniFileParser.h>
@@ -64,17 +66,17 @@
 /* LOCAL VARS AND FUNCS                                                       */
 /*============================================================================*/
 namespace {
-	float MapRangeExp(float value) {
-		// map range 0-1 exponentially
-		float base = 0.01;
-		float ret = (1 - pow(base, value))/(1-base);
+	// float MapRangeExp(float value) {
+	// 	// map range 0-1 exponentially
+	// 	float base = 0.01;
+	// 	float ret = (1 - pow(base, value))/(1-base);
 		
-		// clamp
-		ret = ret < 0.0 ? 0.0 : ret;
-		ret = ret > 1.0 ? 1.0 : ret;
+	// 	// clamp
+	// 	ret = ret < 0.0 ? 0.0 : ret;
+	// 	ret = ret > 1.0 ? 1.0 : ret;
 
-		return ret;
-	}
+	// 	return ret;
+	// }
 
 	bool CheckFrameBufferStatus(GLuint idFBO) {
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -186,6 +188,10 @@ namespace rhapsodies {
 		return m_idDepthTexture;
 	}
 
+	GLuint HandTracker::GetCameraTextureId() {
+		return m_idCameraTexture;
+	}
+
 	bool HandTracker::Initialize() {
 		vstr::out() << "Initializing RHaPSODIES HandTracker" << std::endl;
 
@@ -223,36 +229,48 @@ namespace rhapsodies {
 		// create hand models
 		m_pHandModelLeft  = new HandModel;
 		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
-		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, 0, 0));
+		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, 0, -0.3));
 
 		m_pHandModelRight = new HandModel;
 		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
-		m_pHandModelRight->SetPosition(VistaVector3D(0.1, 0, 0));
+		m_pHandModelRight->SetPosition(VistaVector3D(0.1, 0, -0.3));
 
 		m_pHandModelRep = new HandModelRep;
 
 		RandomizeModels();
 
+		// prepare texture and PBO for camera depth map
+		glGenTextures(1, &m_idCameraTexture);
+		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16,
+					 320*8, 240*8, 0,
+					 GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+
+		glGenBuffers(1, &m_idCameraTexturePBO);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
+		glBufferData(GL_PIXEL_UNPACK_BUFFER,
+					 320*240*2, 0, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
 		// prepare FBO rendering
-		glGenFramebuffers(1, &m_idFBO);
-			
 		glGenTextures(1, &m_idDepthTexture);
 		glBindTexture(GL_TEXTURE_2D, m_idDepthTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16,
 					 320*8, 240*8, 0,
 					 GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_idFBO);
+		glGenFramebuffers(1, &m_idDepthTextureFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_idDepthTextureFBO);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
 							   GL_TEXTURE_2D, m_idDepthTexture, 0);
 
-		CheckFrameBufferStatus(m_idFBO);
+		CheckFrameBufferStatus(m_idDepthTextureFBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
 		return true;
@@ -303,28 +321,32 @@ namespace rhapsodies {
 		const unsigned char  *colorFrame,
 		const unsigned short *depthFrame,
 		const float          *uvMapFrame) {
-		
+
+		// const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
+		// VistaType::microtime tStart = oTimer.GetMicroTime();
 		// create writable copy of sensor measurement buffers
 		memcpy(m_pColorBuffer, colorFrame, 320*240*3);
 		memcpy(m_pDepthBuffer, depthFrame, 320*240*2);
+		// VistaType::microtime tMemcpy = oTimer.GetMicroTime() - tStart;
+		// vstr::out() << "memcopy time: " << tMemcpy << std::endl;
 
 		ImagePBOOpenGLDraw *pPBODraw;
-		pPBODraw = m_mapPBO[COLOR];
-		if(pPBODraw) {
-			pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
-		}
+		// pPBODraw = m_mapPBO[COLOR];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
+		// }
 
-		pPBODraw = m_mapPBO[DEPTH];
-		if(pPBODraw) {
-			DepthToRGB(m_pDepthBuffer, m_pDepthRGBBuffer);
-			pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
-		}
+		// pPBODraw = m_mapPBO[DEPTH];
+		// if(pPBODraw) {
+		DepthToRGB(m_pDepthBuffer, m_pDepthRGBBuffer);
+		// 	pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
+		// }
 
-		pPBODraw = m_mapPBO[UVMAP];
-		if(pPBODraw) {
-			UVMapToRGB(uvMapFrame, depthFrame, colorFrame, m_pUVMapRGBBuffer);
-			pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
-		}
+		// pPBODraw = m_mapPBO[UVMAP];
+		// if(pPBODraw) {
+		UVMapToRGB(uvMapFrame, depthFrame, colorFrame, m_pUVMapRGBBuffer);
+		// 	pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
+		// }
 
 		if(m_bShowImage) {
 			vstr::debug() << "showing opencv image" << std::endl;
@@ -338,26 +360,46 @@ namespace rhapsodies {
 			m_bShowImage = false;
 		}
 		
-		FilterSkinAreas(m_pColorBuffer, m_pDepthRGBBuffer, m_pUVMapRGBBuffer);
+		FilterSkinAreas();
 		
-		pPBODraw = m_mapPBO[COLOR_SEGMENTED];
-		if(pPBODraw) {
-			pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
-		}
+		// pPBODraw = m_mapPBO[COLOR_SEGMENTED];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
+		// }
 
 		pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
 		if(pPBODraw) {
 			pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
 		}
 
-		pPBODraw = m_mapPBO[UVMAP_SEGMENTED];
-		if(pPBODraw) {
-			pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
-		}
+		// pPBODraw = m_mapPBO[UVMAP_SEGMENTED];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
+		// }
 	}
 
 	void HandTracker::PerformPSOTracking() {
-		glBindFramebuffer(GL_FRAMEBUFFER, m_idFBO);
+ 		// upload camera image to tiled texture
+ 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
+ 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
+
+ 		m_pCameraTexturePBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
+ 										  GL_WRITE_ONLY);		
+		memcpy(m_pCameraTexturePBO, m_pDepthBuffer, 320*240*2);
+		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+
+		for(int row = 0 ; row < 8 ; row++) {
+			for(int col = 0 ; col < 8 ; col++) {
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 
+								320*col, 240*row, 320, 240,
+								GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+			}
+		}
+
+ 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+ 		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_idDepthTextureFBO);
 		//for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// PSO for model hypotheses
 		
@@ -365,7 +407,7 @@ namespace rhapsodies {
 			// FBO rendering of tiled zbuffers
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glOrtho(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3);
+		glOrtho(-0.3, 0.3, -0.3, 0.3, 0.0, 32.0);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		
@@ -395,15 +437,25 @@ namespace rhapsodies {
 								  const unsigned short *depthFrame,
 								  const float          *uvMapFrame) {
 
+		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
+
+		VistaType::microtime tStart = oTimer.GetMicroTime();
 		ProcessCameraFrames(colorFrame, depthFrame, uvMapFrame);
+		VistaType::microtime tProcessFrames =
+			oTimer.GetMicroTime() - tStart;
+		tStart = oTimer.GetMicroTime();		   
 		PerformPSOTracking();
-			
+		VistaType::microtime tPSO =
+			oTimer.GetMicroTime() - tStart;
+		// vstr::out() << "Overall time: " << tProcessFrames + tPSO << std::endl;
+		// vstr::out() << "ProcessCameraFrames: " << tProcessFrames << std::endl;
+		// vstr::out() << "PerformPSOTracking: " << tPSO
+		//<< std::endl << std::endl;
+		
 		return true;
 	}
 
-	void HandTracker::FilterSkinAreas(unsigned char *colorImage,
-									  unsigned char *depthImage,
-									  unsigned char *uvmapImage) {
+	void HandTracker::FilterSkinAreas() {
 
 		VistaBasicProfiler *pProf = VistaBasicProfiler::GetSingleton();
 
@@ -419,12 +471,12 @@ namespace rhapsodies {
 			// 	colorImage[3*pixel+2] = 0;
 			// }
 			
-			if( (*m_itCurrentClassifier)->IsSkinPixel(uvmapImage+3*pixel) ) {
+			if( (*m_itCurrentClassifier)->IsSkinPixel(m_pUVMapRGBBuffer+3*pixel) ) {
 				// yay! skin!
 				m_pSkinMap[pixel] = 255;
 			}
 			else {
-				m_pSkinMap[pixel] = 0;
+			 	m_pSkinMap[pixel] = 0;
 			}
 		}
 		pProf->StopSection();
@@ -458,13 +510,14 @@ namespace rhapsodies {
 		pProf->StartSection("Depth/UV filtering");
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
 			if( image_processed.data[pixel] == 0 ) {
-				depthImage[3*pixel+0] = 0;
-				depthImage[3*pixel+1] = 0;
-				depthImage[3*pixel+2] = 0;
+				m_pDepthRGBBuffer[3*pixel+0] = 0;
+				m_pDepthRGBBuffer[3*pixel+1] = 0;
+				m_pDepthRGBBuffer[3*pixel+2] = 0;
+				m_pDepthBuffer[pixel] = 0xffff;
 
-				uvmapImage[3*pixel+0] = 0;
-				uvmapImage[3*pixel+1] = 0;
-				uvmapImage[3*pixel+2] = 0;
+				m_pUVMapRGBBuffer[3*pixel+0] = 0;
+				m_pUVMapRGBBuffer[3*pixel+1] = 0;
+				m_pUVMapRGBBuffer[3*pixel+2] = 0;
 			}
 		}
 		pProf->StopSection();
@@ -535,7 +588,8 @@ namespace rhapsodies {
 
 			if(val > 0) {
 				float linearvalue = val/2000.0;
-				float mappedvalue = MapRangeExp(linearvalue);
+//				float mappedvalue = MapRangeExp(linearvalue);
+				float mappedvalue = linearvalue;
 
 				rgb[3*i+0] = 255*(1-mappedvalue);
 				rgb[3*i+1] = 255*(1-mappedvalue);

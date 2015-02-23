@@ -27,10 +27,8 @@ namespace rhapsodies {
 		};
 		
 		void PrepareVertexBufferObjects();
-		inline void DrawSphere(VistaTransformMatrix matModel,
-							   GLint locUniform);
-		inline void DrawCylinder(VistaTransformMatrix matModel,
-								 GLint locUniform);
+		inline void DrawSphere(VistaTransformMatrix matModel);
+		inline void DrawCylinder(VistaTransformMatrix matModel);
 		inline void DrawFinger(VistaTransformMatrix matOrigin,
 							   float fFingerDiameter, float fLRFactor,
 							   float fAng1F, float fAng1A, float fLen1,
@@ -45,6 +43,9 @@ namespace rhapsodies {
 		
 		GLuint m_idVertexArrayObjects[BUFFER_OBJECT_LAST];
 		GLuint m_idBufferObjects[BUFFER_OBJECT_LAST];
+
+		GLint m_idProgram;
+		GLint m_locUniform;
 	};
 }
 

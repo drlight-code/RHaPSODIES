@@ -145,6 +145,7 @@ namespace rhapsodies {
 		m_pUVMapDraw(NULL),
 		m_pUVMapSegDraw(NULL),
 		m_pDepthRenderedDraw(NULL),
+		m_pDepthCameraDraw(NULL),
 		m_pDepthHistogramHandler(NULL) {
 
 		m_pSystem = new VistaSystem;
@@ -164,6 +165,7 @@ namespace rhapsodies {
 		CondDelete(m_pUVMapSegDraw);
 		CondDelete(m_pDiagramDraw);
 		CondDelete(m_pDepthRenderedDraw);
+		CondDelete(m_pDepthCameraDraw);
 
 		CondDelete(m_pAxes);
 
@@ -342,15 +344,16 @@ namespace rhapsodies {
 		m_pAxes = new VistaAxes(pSG, m_pAxesTransform);
 								
 		// ImageDraw for color image
-		ImagePBOOpenGLDraw *pPBODraw = 
-			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
-		m_pHandTracker->SetViewPBODraw(HandTracker::COLOR, pPBODraw); 
+		// ImagePBOOpenGLDraw *pPBODraw = 
+		// 	new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		// m_pHandTracker->SetViewPBODraw(HandTracker::COLOR, pPBODraw); 
 
-		m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,1,0));
+		// m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		// m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,1,0));
 
 		// ImageDraw for depth image
-		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		ImagePBOOpenGLDraw *pPBODraw =
+			new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
 		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH, pPBODraw); 
 
 		m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
@@ -387,13 +390,21 @@ namespace rhapsodies {
 		m_pUVMapSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(2,-1,0));
 		
 		// ImageDraw for rendered depth map
-		TexturedQuadGLDraw *pDTDraw = new TexturedQuadGLDraw(
+		TexturedQuadGLDraw *pTexDraw = new TexturedQuadGLDraw(
 			m_pHandTracker->GetDepthTextureId(), false, m_pShaderReg);
-		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_RENDERED, pPBODraw); 
+		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_PSO_RENDERED, pPBODraw); 
 
-		m_pDepthRenderedDraw = new ImageDraw(m_pSceneTransform, pDTDraw, pSG);
+		m_pDepthRenderedDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
 		m_pDepthRenderedDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,-1,0));
-		
+
+		// ImageDraw for camera depth map
+		pTexDraw = new TexturedQuadGLDraw(
+			m_pHandTracker->GetCameraTextureId(), true, m_pShaderReg);
+		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_PSO_CAMERA, pPBODraw); 
+
+		m_pDepthCameraDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
+		m_pDepthCameraDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2, 1,0));
+
 
 		// // ImageDraw for histogram
 		// m_pDiagramDraw = new ImageDraw(m_pSceneTransform,

@@ -59,6 +59,10 @@ namespace rhapsodies {
 		}
 
 		PrepareVertexBufferObjects();
+
+		m_idProgram  = m_pShaderReg->GetProgram("vpos_green");
+		m_locUniform = glGetUniformLocation(m_idProgram,
+											"model_transform");
 	}
 
 	void HandRenderer::PrepareVertexBufferObjects() {
@@ -93,15 +97,13 @@ namespace rhapsodies {
 		glBindVertexArray(0);
 	}
 	
-	void HandRenderer::DrawSphere(VistaTransformMatrix matModel,
-								  GLint locUniform) {
-		glUniformMatrix4fv(locUniform, 1, false, matModel.GetData());
+	void HandRenderer::DrawSphere(VistaTransformMatrix matModel) {
+		glUniformMatrix4fv(m_locUniform, 1, false, matModel.GetData());
 		glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size()/3);
 	}
 
-	void HandRenderer::DrawCylinder(VistaTransformMatrix matModel,
-									GLint locUniform) {
-		glUniformMatrix4fv(locUniform, 1, false, matModel.GetData());
+	void HandRenderer::DrawCylinder(VistaTransformMatrix matModel) {
+		glUniformMatrix4fv(m_locUniform, 1, false, matModel.GetData());
 		glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size()/3);
 	}
 
@@ -112,13 +114,6 @@ namespace rhapsodies {
 								  float fAng3, float fLen3,
 								  bool bThumb) {
 		
-		GLint idProgramS = m_pShaderReg->GetProgram("vpos_green");
-		GLint idProgramC = m_pShaderReg->GetProgram("vpos_blue");
-		GLint locUniformS = glGetUniformLocation(idProgramS,
-												 "model_transform");
-		GLint locUniformC = glGetUniformLocation(idProgramC,
-												 "model_transform");
-
 		// @todo invert axis here for left/right hand?
 		// rotate locally around X for flexion/extension
 		VistaAxisAndAngle aaaX = VistaAxisAndAngle(VistaVector3D(1,0,0), 0.0);
@@ -132,13 +127,12 @@ namespace rhapsodies {
 		VistaTransformMatrix matSphereScale; // reused sphere scale
 		matSphereScale.SetToScaleMatrix(fFingerDiameter);
 		
-		glUseProgram(idProgramS);
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 
 		// start at first joint
 		matModel = matOrigin * matSphereScale;
 		if(!bThumb) {
-			DrawSphere(matModel, locUniformS);
+			DrawSphere(matModel);
 		}
 
 		// first joint flexion rotation
@@ -164,16 +158,15 @@ namespace rhapsodies {
 				fFingerDiameter*1.5f);
 			matModel = matOrigin * matTransform;
 
-			DrawSphere(matModel, locUniformC);
+			DrawSphere(matModel);
 		}
 		else {
 			matTransform.SetToScaleMatrix(
 				fFingerDiameter, fLen1/1000.0f, fFingerDiameter);
 			matModel = matOrigin * matTransform;
 
-			glUseProgram(idProgramC);
 			glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
-			DrawCylinder(matModel, locUniformC);
+			DrawCylinder(matModel);
 		}
 
 		// move to second joint
@@ -182,10 +175,9 @@ namespace rhapsodies {
 		matOrigin *= matTransform;
 
 		// draw scaled sphere
-		glUseProgram(idProgramS);
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 		matModel = matOrigin * matSphereScale;
-		DrawSphere(matModel, locUniformS);
+		DrawSphere(matModel);
 
 		// second joint flexion rotation
 		aaaX.m_fAngle = Vista::DegToRad(-fAng2);
@@ -198,12 +190,11 @@ namespace rhapsodies {
 		matOrigin *= matTransform;
 
 		// set scale and draw second segment cylinder
-		glUseProgram(idProgramC);
 		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
 		matTransform.SetToScaleMatrix(
 			fFingerDiameter, fLen2/1000.0f, fFingerDiameter);
 		matModel = matOrigin * matTransform;
-		DrawCylinder(matModel, locUniformC);
+		DrawCylinder(matModel);
 
 		// move to third joint
 		matTransform.SetToTranslationMatrix(
@@ -211,10 +202,9 @@ namespace rhapsodies {
 		matOrigin *= matTransform;
 
 		// draw scaled sphere
-		glUseProgram(idProgramS);
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 		matModel = matOrigin * matSphereScale;
-		DrawSphere(matModel, locUniformS);
+		DrawSphere(matModel);
 
 		// third joint flexion rotation
 		aaaX.m_fAngle = Vista::DegToRad(-fAng3);
@@ -227,12 +217,11 @@ namespace rhapsodies {
 		matOrigin *= matTransform;
 
 		// set scale and draw third segment cylinder
-		glUseProgram(idProgramC);
 		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
 		matTransform.SetToScaleMatrix(
 			fFingerDiameter, fLen3/1000.0f, fFingerDiameter);
 		matModel = matOrigin * matTransform;
-		DrawCylinder(matModel, locUniformC);
+		DrawCylinder(matModel);
 
 		// move to tip
 		matTransform.SetToTranslationMatrix(
@@ -240,22 +229,13 @@ namespace rhapsodies {
 		matOrigin *= matTransform;
 
 		// draw scaled sphere
-		glUseProgram(idProgramS);
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 		matModel = matOrigin * matSphereScale;
-		DrawSphere(matModel, locUniformS);
+		DrawSphere(matModel);
 	}
 
 	void HandRenderer::DrawHand(HandModel *pModel,
 								HandModelRep *pModelRep) {
-		// measure timings!
-
-		GLint idProgramS = m_pShaderReg->GetProgram("vpos_green");
-		GLint idProgramC = m_pShaderReg->GetProgram("vpos_blue");
-		GLint locUniformS = glGetUniformLocation(idProgramS,
-												 "model_transform");
-		GLint locUniformC = glGetUniformLocation(idProgramC,
-												 "model_transform");
 
 		VistaTransformMatrix matModel;
 		VistaTransformMatrix matTransform;
@@ -284,7 +264,7 @@ namespace rhapsodies {
 		// beginning and use DrawArraysInstanced to look up the
 		// specific matrix in the vertex shader by the instance id.
 
-		glUseProgram(idProgramS);
+		glUseProgram(m_idProgram);
 		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 
 		matOrigin.Compose(
@@ -292,7 +272,7 @@ namespace rhapsodies {
 			pModel->GetOrientation(),
 			VistaVector3D(1,1,1));
 		
-		// bottom palm cap
+		// // bottom palm cap
 		matTransform.Compose(
 			VistaVector3D(0, fPalmBottomRadius, 0),
 			VistaQuaternion(),
@@ -300,7 +280,7 @@ namespace rhapsodies {
 						  fPalmBottomRadius*2.0f,
 						  fPalmDiameter));
 		matModel = matOrigin * matTransform;		
-		DrawSphere(matModel, locUniformS);
+		DrawSphere(matModel);
 
 		// top palm cap
 		matTransform.Compose(
@@ -310,7 +290,7 @@ namespace rhapsodies {
 						  fPalmBottomRadius*2.0f,
 						  fPalmDiameter));
 		matModel = matOrigin * matTransform;		
-		DrawSphere(matModel, locUniformS);
+		DrawSphere(matModel);
 		
 		// palm cylinder
 		matTransform.Compose(
@@ -319,9 +299,8 @@ namespace rhapsodies {
 			VistaVector3D(fPalmWidth, fPalmHeight, fPalmDiameter));
 		matModel = matOrigin * matTransform;		
 
-		glUseProgram(idProgramC);
 		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
-		DrawCylinder(matModel, locUniformC);
+		DrawCylinder(matModel);
 
 		// @todo: if drawing turns out to be a significant bottleneck,
 		// we need to adopt the approach of pre-calculating all the

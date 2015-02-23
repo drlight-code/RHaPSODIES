@@ -101,32 +101,31 @@ namespace rhapsodies {
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
 	bool ImagePBOOpenGLDraw::Do() {
-		UpdateTexture();
+		if(m_texUpdate) {
+			m_texUpdate = false;
+			UpdateTexture();
+		}
 		return TexturedQuadGLDraw::Do();
 	}
 
 	
 	void ImagePBOOpenGLDraw::UpdateTexture() {
-		if(m_texUpdate) {
-			m_texUpdate = false;
+		glBindTexture(GL_TEXTURE_2D, m_texId);
 
-			glBindTexture(GL_TEXTURE_2D, m_texId);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
+					 m_pboIds[m_pboIndex]);
+		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
-						 m_pboIds[m_pboIndex]);
-			glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 
+						0, 0, m_texWidth, m_texHeight,
+						GL_RGB, GL_UNSIGNED_BYTE, 0);
 
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 
-							0, 0, m_texWidth, m_texHeight,
-							GL_RGB, GL_UNSIGNED_BYTE, 0);
-
-			m_pboIndex = 1-m_pboIndex;
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
-						 m_pboIds[m_pboIndex]);
-			m_pPBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
-								 GL_WRITE_ONLY);
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-		}
+		m_pboIndex = 1-m_pboIndex;
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER,
+					 m_pboIds[m_pboIndex]);
+		m_pPBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
+							 GL_WRITE_ONLY);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 	}
 
 	bool ImagePBOOpenGLDraw::FillPBOFromBuffer(const unsigned char* pData,

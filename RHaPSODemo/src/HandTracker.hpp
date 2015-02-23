@@ -44,9 +44,10 @@ namespace rhapsodies {
 		enum ViewType {
 			COLOR,
 			COLOR_SEGMENTED,
-			DEPTH,
-			DEPTH_SEGMENTED,
-			DEPTH_RENDERED,
+			DEPTH,           // native camera depth map
+			DEPTH_SEGMENTED, // segmented camera depth map
+			DEPTH_PSO_RENDERED,  // tiled rendered depth map
+			DEPTH_PSO_CAMERA,    // tiled camera depth map
 			UVMAP,
 			UVMAP_SEGMENTED
 		};
@@ -64,6 +65,7 @@ namespace rhapsodies {
 		void SetHandRenderer(HandRenderer *pRenderer);
 
 		GLuint GetDepthTextureId();
+		GLuint GetCameraTextureId();
 		
 		bool Initialize();
 		void ReadConfig();
@@ -98,9 +100,7 @@ namespace rhapsodies {
 			unsigned int iPSOGenerations; // max pso generation count
 		};
 
-		void FilterSkinAreas(unsigned char *colorImage,
-							 unsigned char *depthImage,
-							 unsigned char *uvmapImage);
+		void FilterSkinAreas();
 
 		void DepthToRGB(const unsigned short *depth,
 						unsigned char *rgb);
@@ -140,8 +140,12 @@ namespace rhapsodies {
 		unsigned char m_pDepthRGBBuffer[320*240*3];
 		unsigned char m_pUVMapRGBBuffer[320*240*3];
 
-		GLuint m_idFBO;
 		GLuint m_idDepthTexture;
+		GLuint m_idDepthTextureFBO;
+
+		GLuint m_idCameraTexture;		
+		GLuint m_idCameraTexturePBO;
+		void *m_pCameraTexturePBO;
 	};
 }
 
