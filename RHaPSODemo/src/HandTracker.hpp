@@ -124,6 +124,7 @@ namespace rhapsodies {
 		bool m_bShowSkinMap;
 
 		Config m_oConfig;
+		VistaPropertyList m_oCameraIntrinsics;
 
 		HandModel *m_pHandModelLeft;
 		HandModel *m_pHandModelRight;

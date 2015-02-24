@@ -301,6 +301,13 @@ namespace rhapsodies {
 
 		m_oConfig.iPSOGenerations = oTrackerConfig.GetValueOrDefault(
 			sPSOGenerationsName, 45);
+
+		const VistaPropertyList &oCameraConfig =
+			oConfig.GetSubListConstRef(RHaPSODemo::sCameraSectionName);
+
+		std::string sIntrinsicSection =
+			oCameraConfig.GetValue<std::string>("INTRINSICS");
+		m_oCameraIntrinsics = oConfig.GetSubListCopy(sIntrinsicSection);
 	}
 
 	void HandTracker::PrintConfig() {
@@ -395,17 +402,35 @@ namespace rhapsodies {
  		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idDepthTextureFBO);
+
+		// set up camera projection from intrinsic parameters
+		// we don't do non-linear radial distortion corretion for now.
+		float cx = m_oCameraIntrinsics.GetValue<float>("CX");
+		float cy = m_oCameraIntrinsics.GetValue<float>("CY");
+		float fx = m_oCameraIntrinsics.GetValue<float>("FX");
+		float fy = m_oCameraIntrinsics.GetValue<float>("FY");
+
+		float znear = 0.0;
+		float zfar  = 32.0;
+
+		float left   = -znear / fx * cx;
+		float right  =  znear / fx * (320-cx);
+		float bottom = -znear / fy * cy;
+		float top    =  znear / fy * (240-cy);
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glFrustum(left, right, bottom, top, znear, zfar);
+		//glOrtho(-0.3, 0.3, -0.3, 0.3, 0.0, 32.0);
+
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// PSO for model hypotheses
 		
 			
 			// FBO rendering of tiled zbuffers
-			glMatrixMode(GL_PROJECTION);
-			glLoadIdentity();
-			glOrtho(-0.3, 0.3, -0.3, 0.3, 0.0, 32.0);
-			glMatrixMode(GL_MODELVIEW);
-			glLoadIdentity();
-		
 			glClear(GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_DEPTH_TEST);
 
