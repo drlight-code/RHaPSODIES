@@ -229,11 +229,11 @@ namespace rhapsodies {
 		// create hand models
 		m_pHandModelLeft  = new HandModel;
 		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
-		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, 0, -0.3));
+		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, 0, -0.5));
 
 		m_pHandModelRight = new HandModel;
 		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
-		m_pHandModelRight->SetPosition(VistaVector3D(0.1, 0, -0.3));
+		m_pHandModelRight->SetPosition(VistaVector3D(0.1, 0, -0.5));
 
 		m_pHandModelRep = new HandModelRep;
 
@@ -344,11 +344,11 @@ namespace rhapsodies {
 		// 	pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
 		// }
 
-		// pPBODraw = m_mapPBO[UVMAP];
-		// if(pPBODraw) {
-		UVMapToRGB(uvMapFrame, depthFrame, colorFrame, m_pUVMapRGBBuffer);
-		// 	pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
-		// }
+		pPBODraw = m_mapPBO[UVMAP];
+		if(pPBODraw) {
+			UVMapToRGB(uvMapFrame, depthFrame, colorFrame, m_pUVMapRGBBuffer);
+			pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
+		}
 
 		if(m_bShowImage) {
 			vstr::debug() << "showing opencv image" << std::endl;
@@ -381,6 +381,7 @@ namespace rhapsodies {
 	}
 
 	void HandTracker::PerformPSOTracking() {
+		
  		// upload camera image to tiled texture
  		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
@@ -397,11 +398,8 @@ namespace rhapsodies {
 								GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
 			}
 		}
-
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
  		glBindTexture(GL_TEXTURE_2D, 0);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, m_idDepthTextureFBO);
 
 		// set up camera projection from intrinsic parameters
 		// we don't do non-linear radial distortion corretion for now.
@@ -410,22 +408,55 @@ namespace rhapsodies {
 		float fx = m_oCameraIntrinsics.GetValue<float>("FX");
 		float fy = m_oCameraIntrinsics.GetValue<float>("FY");
 
-		float znear = 0.0;
-		float zfar  = 32.0;
+		// we measure in m, focal length given in mm
+		cx /= 1000.0f;
+		cy /= 1000.0f;
+		fx /= 1000.0f;
+		fy /= 1000.0f;		
 
-		float left   = -znear / fx * cx;
-		float right  =  znear / fx * (320-cx);
-		float bottom = -znear / fy * cy;
-		float top    =  znear / fy * (240-cy);
+//		float znear = 100.0f;
+//		float zfar  = 32000.0f;
+//		float zfar  = 1100.0f;
 
+		// float znear = -0.1f;
+		// float zfar  = -1.1f;
+		
+		// float left   = -znear / fx * cx;
+		// float right  =  znear / fx * (0.320f-cx);
+		// float bottom = -znear / fy * cy;
+		// float top    =  znear / fy * (0.240f-cy);
+
+		// znear  /= 1000.0f;
+		// zfar   /= 1000.0f;
+		// left   /= 1000.0f;
+		// right  /= 1000.0f;
+		// bottom /= 1000.0f;
+		// top    /= 1000.0f;
+
+		// https://sightations.wordpress.com/2010/08/03/simulating-calibrated-cameras-in-opengl/
+		float znear = -0.1f;
+		float zfar  = -1.1f;
+		float x = znear + zfar;
+		float y = znear * zfar;
+
+		VistaTransformMatrix mProj(
+			fx, 0, -cx, 0,
+			0, fy, -cy, 0,
+			0,  0,   x, y,
+			0,  0,  -1, 0 );
+		
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glFrustum(left, right, bottom, top, znear, zfar);
+		
+		//glFrustum(left, right, bottom, top, znear, zfar);
+		glMultMatrixf(mProj.GetData());
 		//glOrtho(-0.3, 0.3, -0.3, 0.3, 0.0, 32.0);
+		glOrtho(0.0, 0.32, 0.24, 0.0, znear, zfar);
 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		
+		glBindFramebuffer(GL_FRAMEBUFFER, m_idDepthTextureFBO);	
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// PSO for model hypotheses
 		
@@ -446,7 +477,6 @@ namespace rhapsodies {
 			}
 			// reduction with compute shader or opencl
 		}
-
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
@@ -491,13 +521,13 @@ namespace rhapsodies {
 			// 	colorImage[3*pixel+2] = 0;
 			// }
 			
-			if( (*m_itCurrentClassifier)->IsSkinPixel(m_pUVMapRGBBuffer+3*pixel) ) {
+//			if( (*m_itCurrentClassifier)->IsSkinPixel(m_pUVMapRGBBuffer+3*pixel) ) {
 				// yay! skin!
 				m_pSkinMap[pixel] = 255;
-			}
-			else {
-			 	m_pSkinMap[pixel] = 0;
-			}
+			// }
+			// else {
+			//  	m_pSkinMap[pixel] = 0;
+			// }
 		}
 		pProf->StopSection();
 
@@ -533,11 +563,30 @@ namespace rhapsodies {
 				m_pDepthRGBBuffer[3*pixel+0] = 0;
 				m_pDepthRGBBuffer[3*pixel+1] = 0;
 				m_pDepthRGBBuffer[3*pixel+2] = 0;
+				
 				m_pDepthBuffer[pixel] = 0xffff;
 
 				m_pUVMapRGBBuffer[3*pixel+0] = 0;
 				m_pUVMapRGBBuffer[3*pixel+1] = 0;
 				m_pUVMapRGBBuffer[3*pixel+2] = 0;
+			}
+			else {
+				// transform depth value range, in millimeters:
+				// 100  -> 0
+				// 1100 -> ffff
+				// @todo get rid of hard coding
+				
+				unsigned int val = m_pDepthBuffer[pixel];
+
+				// valid values [100,1100]
+				if( val < 100 || val > 1100 ) {
+					val = 0xffff;
+				}
+				else {
+					val -= 100;
+					val = val * 0xffff / 1000;
+				}
+				m_pDepthBuffer[pixel] = (unsigned short)(val);
 			}
 		}
 		pProf->StopSection();
@@ -589,16 +638,6 @@ namespace rhapsodies {
 	void HandTracker::RandomizeModels() {
 		m_pHandModelRight->Randomize();
 		m_pHandModelLeft->Randomize();
-
-		// for comparison, choose same configuration for left hand
-		// for(size_t index = 0 ; index < HandModel::JOINTDOF_LAST ; index++) {
-		// 	m_pHandModelLeft->SetJointAngle(
-		// 		index,
-		// 		m_pHandModelRight->GetJointAngle(index));
-		// }
-
-		// m_pHandModelLeft->SetOrientation(
-		// 	m_pHandModelRight->GetOrientation());
 	}
 	
 	void HandTracker::DepthToRGB(const unsigned short *depth,
