@@ -46,12 +46,12 @@
 #include <VistaKernel/EventManager/VistaEventManager.h>
 #include <VistaKernel/EventManager/VistaSystemEvent.h>
 
-#include <VflTextRendering/VtrFontManager.h>
-#include <VistaOGLExt/VistaShaderRegistry.h>
+//#include <VflTextRendering/VtrFontManager.h>
+//#include <VistaOGLExt/VistaShaderRegistry.h>
 
-#include <Vfl2DDiagrams/V2dGlobalConfig.h>
-#include <Vfl2DDiagrams/Diagrams/V2dDiagramDefault.h>
-#include <Vfl2DDiagrams/V2dDiagramTextureVista.h>
+// #include <Vfl2DDiagrams/V2dGlobalConfig.h>
+// #include <Vfl2DDiagrams/Diagrams/V2dDiagramDefault.h>
+// #include <Vfl2DDiagrams/V2dDiagramTextureVista.h>
 
 #include <ShaderRegistry.hpp>
 
@@ -196,12 +196,12 @@ namespace rhapsodies {
 			exit(1);
 		}
 
-		VtrFontManager::GetInstance()
-			->SetFontDirectory("resources/fonts/");
-		VistaShaderRegistry::GetInstance()
-			.AddSearchDirectory("resources/shaders/");
-		V2dGlobalConfig::GetInstance()
-			->SetDefaultFont("FreeSans.ttf");
+		// VtrFontManager::GetInstance()
+		// 	->SetFontDirectory("resources/fonts/");
+		// VistaShaderRegistry::GetInstance()
+		// 	.AddSearchDirectory("resources/shaders/");
+		// V2dGlobalConfig::GetInstance()
+		// 	->SetDefaultFont("FreeSans.ttf");
 
    		success &= RegisterShaders();
 		success &= InitTracker();

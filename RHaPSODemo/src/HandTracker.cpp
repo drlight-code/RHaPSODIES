@@ -322,13 +322,8 @@ namespace rhapsodies {
 		const unsigned short *depthFrame,
 		const float          *uvMapFrame) {
 
-		// const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
-		// VistaType::microtime tStart = oTimer.GetMicroTime();
-		// create writable copy of sensor measurement buffers
 		memcpy(m_pColorBuffer, colorFrame, 320*240*3);
 		memcpy(m_pDepthBuffer, depthFrame, 320*240*2);
-		// VistaType::microtime tMemcpy = oTimer.GetMicroTime() - tStart;
-		// vstr::out() << "memcopy time: " << tMemcpy << std::endl;
 
 		ImagePBOOpenGLDraw *pPBODraw;
 		// pPBODraw = m_mapPBO[COLOR];
@@ -447,10 +442,10 @@ namespace rhapsodies {
 		PerformPSOTracking();
 		VistaType::microtime tPSO =
 			oTimer.GetMicroTime() - tStart;
-		// vstr::out() << "Overall time: " << tProcessFrames + tPSO << std::endl;
-		// vstr::out() << "ProcessCameraFrames: " << tProcessFrames << std::endl;
-		// vstr::out() << "PerformPSOTracking: " << tPSO
-		//<< std::endl << std::endl;
+		vstr::out() << "Overall time: " << tProcessFrames + tPSO << std::endl;
+		vstr::out() << "ProcessCameraFrames: " << tProcessFrames << std::endl;
+		vstr::out() << "PerformPSOTracking: " << tPSO
+					<< std::endl << std::endl;
 		
 		return true;
 	}

@@ -10,7 +10,7 @@ include( VistaCommon )
 vista_set_version( RHaPSODemo HEAD HEAD 0 1 0 svn_rev )
 
 vista_use_package( VistaCoreLibs "HEAD" REQUIRED FIND_DEPENDENCIES )
-vista_use_package( Vfl2DDiagrams REQUIRED FIND_DEPENDENCIES )
+#vista_use_package( Vfl2DDiagrams REQUIRED FIND_DEPENDENCIES )
 vista_use_package( OpenCV REQUIRED FIND_DEPENDENCIES )
 
 set(CMAKE_CXX_FLAGS "-Wall -std=c++0x -pg")

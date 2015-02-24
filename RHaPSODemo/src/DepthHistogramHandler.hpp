@@ -25,7 +25,7 @@
 #define _RHAPSODIES_DEPTHFRAMEHANDLER
 
 // @todo forward declare the data series, mon!
-#include <Vfl2DDiagrams/Data/V2dDataSeriesTypes.h>
+//#include <Vfl2DDiagrams/Data/V2dDataSeriesTypes.h>
 
 class V2dDiagramDefault;
 class V2dDiagramTextureVista;
@@ -39,9 +39,9 @@ namespace rhapsodies {
 
 		ImagePBOOpenGLDraw *m_pDraw;
 
-		V2dDiagramDefault *m_pDiagram;
-		V2dDiagramTextureVista *m_pDiagramTexture;
-		V2dDataSeriesIntContinuousOverString *m_pDataSeries;
+		// V2dDiagramDefault *m_pDiagram;
+		// V2dDiagramTextureVista *m_pDiagramTexture;
+		// V2dDataSeriesIntContinuousOverString *m_pDataSeries;
 
 		int m_iHistNumBins;
 		int m_iHistDrawCounter;
@@ -52,7 +52,7 @@ namespace rhapsodies {
 		DepthHistogramHandler(ImagePBOOpenGLDraw *pDraw);
 		virtual ~DepthHistogramHandler();
 
-		V2dDiagramTextureVista *GetDiagramTexture();
+//		V2dDiagramTextureVista *GetDiagramTexture();
 		HistogramUpdater       *GetHistogramUpdater();
 		ImagePBOOpenGLDraw     *GetPBODraw();
 
