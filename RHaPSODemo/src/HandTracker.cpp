@@ -395,33 +395,33 @@ namespace rhapsodies {
  		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idDepthTextureFBO);
-		//for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
+		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// PSO for model hypotheses
 		
 			
 			// FBO rendering of tiled zbuffers
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(-0.3, 0.3, -0.3, 0.3, 0.0, 32.0);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			glOrtho(-0.3, 0.3, -0.3, 0.3, 0.0, 32.0);
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
 		
-		glClear(GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			glEnable(GL_DEPTH_TEST);
 
 
-		for(int row = 0 ; row < 8 ; row++) {
-			for(int col = 0 ; col < 8 ; col++) {
-				glViewport(col*320, row*240, 320, 240);
+			for(int row = 0 ; row < 8 ; row++) {
+				for(int col = 0 ; col < 8 ; col++) {
+					glViewport(col*320, row*240, 320, 240);
 
-				RandomizeModels();
-				m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
-				m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
+					RandomizeModels();
+					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
+					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
+				}
 			}
-		}
 			// reduction with compute shader or opencl
-		
-		//}
+		}
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
