@@ -71,9 +71,14 @@ namespace rhapsodies {
 			pRNG->GenerateFloat(-1.0, 1.0));
 		vAxis.Normalize();
 
-		SetOrientation(
+		VistaQuaternion qRot =
+			// VistaQuaternion(
+			// 	VistaAxisAndAngle(
+			// 		VistaVector3D(0, 1, 0), Vista::Pi)) *
 			VistaQuaternion(
 				VistaAxisAndAngle(
-					vAxis, pRNG->GenerateFloat1())));
+					vAxis, pRNG->GenerateFloat1()));
+		
+		SetOrientation(qRot);
 	}
 }

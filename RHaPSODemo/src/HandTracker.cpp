@@ -434,8 +434,8 @@ namespace rhapsodies {
 		// top    /= 1000.0f;
 
 		// https://sightations.wordpress.com/2010/08/03/simulating-calibrated-cameras-in-opengl/
-		float znear = -0.1f;
-		float zfar  = -1.1f;
+		float znear = 0.1f;
+		float zfar  = 1.1f;
 		float x = znear + zfar;
 		float y = znear * zfar;
 
@@ -449,13 +449,21 @@ namespace rhapsodies {
 		glLoadIdentity();
 		
 		//glFrustum(left, right, bottom, top, znear, zfar);
+		glOrtho(0.0, 0.32, 0.0, 0.24, znear, zfar);
 		glMultMatrixf(mProj.GetData());
 		//glOrtho(-0.3, 0.3, -0.3, 0.3, 0.0, 32.0);
-		glOrtho(0.0, 0.32, 0.24, 0.0, znear, zfar);
 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
-		
+
+		// VistaQuaternion qRotY =
+		// 	VistaQuaternion(
+		// 		VistaAxisAndAngle(
+		// 			VistaVector3D(0, 1, 0), Vista::Pi));
+
+		// VistaTransformMatrix mRotY(qRotY);
+		// glMultMatrixf(mRotY.GetData());
+
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idDepthTextureFBO);	
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// PSO for model hypotheses
@@ -521,13 +529,13 @@ namespace rhapsodies {
 			// 	colorImage[3*pixel+2] = 0;
 			// }
 			
-//			if( (*m_itCurrentClassifier)->IsSkinPixel(m_pUVMapRGBBuffer+3*pixel) ) {
+			if( (*m_itCurrentClassifier)->IsSkinPixel(m_pUVMapRGBBuffer+3*pixel) ) {
 				// yay! skin!
 				m_pSkinMap[pixel] = 255;
-			// }
-			// else {
-			//  	m_pSkinMap[pixel] = 0;
-			// }
+			}
+			else {
+			 	m_pSkinMap[pixel] = 0;
+			}
 		}
 		pProf->StopSection();
 
@@ -583,8 +591,16 @@ namespace rhapsodies {
 					val = 0xffff;
 				}
 				else {
-					val -= 100;
-					val = val * 0xffff / 1000;
+					// val -= 100;
+					// val = val * 0xffff / 1000;
+					float near = 0.1f;
+					float far  = 1.1f;
+
+					float zS =
+						((near + far - 2.0f*near*far/(float(val)/1000.0f)) /
+						 (far - near) + 1.0f) / 2.0f;
+
+					val = zS * 0xffff;
 				}
 				m_pDepthBuffer[pixel] = (unsigned short)(val);
 			}
