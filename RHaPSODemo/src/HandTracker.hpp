@@ -68,6 +68,10 @@ namespace rhapsodies {
 		GLuint GetCameraTextureId();
 		
 		bool Initialize();
+		bool InitSkinClassifiers();
+		bool InitHandModels();
+		bool InitRendering();
+
 		void ReadConfig();
 
 		void ProcessCameraFrames(

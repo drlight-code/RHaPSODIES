@@ -199,7 +199,14 @@ namespace rhapsodies {
 		ReadConfig();
 		PrintConfig();
 		
-		// create the different skin classifiers
+		InitSkinClassifiers();
+		InitHandModels();
+		InitRendering();
+		
+		return true;
+	}
+
+	bool HandTracker::InitSkinClassifiers() {
 		SkinClassifierLogOpponentYIQ *pSkinLOYIQ =
 			new SkinClassifierLogOpponentYIQ;
 		m_lClassifiers.push_back(pSkinLOYIQ);
@@ -226,7 +233,10 @@ namespace rhapsodies {
 		m_itCurrentClassifier++;
 		m_itCurrentClassifier++;
 
-		// create hand models
+		return true;
+	}
+
+	bool HandTracker::InitHandModels() {
 		m_pHandModelLeft  = new HandModel;
 		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
 		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, 0, -0.5));
@@ -239,6 +249,10 @@ namespace rhapsodies {
 
 		RandomizeModels();
 
+		return true;
+	}
+
+	bool HandTracker::InitRendering() {
 		// prepare texture and PBO for camera depth map
 		glGenTextures(1, &m_idCameraTexture);
 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
@@ -272,7 +286,7 @@ namespace rhapsodies {
 
 		CheckFrameBufferStatus(m_idDepthTextureFBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		
+
 		return true;
 	}
 
@@ -414,25 +428,6 @@ namespace rhapsodies {
 		fx /= 1000.0f;
 		fy /= 1000.0f;		
 
-//		float znear = 100.0f;
-//		float zfar  = 32000.0f;
-//		float zfar  = 1100.0f;
-
-		// float znear = -0.1f;
-		// float zfar  = -1.1f;
-		
-		// float left   = -znear / fx * cx;
-		// float right  =  znear / fx * (0.320f-cx);
-		// float bottom = -znear / fy * cy;
-		// float top    =  znear / fy * (0.240f-cy);
-
-		// znear  /= 1000.0f;
-		// zfar   /= 1000.0f;
-		// left   /= 1000.0f;
-		// right  /= 1000.0f;
-		// bottom /= 1000.0f;
-		// top    /= 1000.0f;
-
 		// https://sightations.wordpress.com/2010/08/03/simulating-calibrated-cameras-in-opengl/
 		float znear = 0.1f;
 		float zfar  = 1.1f;
@@ -483,7 +478,9 @@ namespace rhapsodies {
 					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
 				}
 			}
-			// reduction with compute shader or opencl
+			// reduction with compute shader
+			
+			
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
