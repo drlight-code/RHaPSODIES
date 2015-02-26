@@ -58,7 +58,6 @@ namespace rhapsodies {
 		VistaSystem *m_pSystem;
 		ShaderRegistry *m_pShaderReg;
 
-		HandRenderer   *m_pHandRenderer;
 		HandRenderDraw *m_pHandRenderDraw;
 		HandTracker    *m_pHandTracker;
 

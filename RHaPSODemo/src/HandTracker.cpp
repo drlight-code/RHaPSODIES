@@ -142,13 +142,13 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	HandTracker::HandTracker() :
+	HandTracker::HandTracker(ShaderRegistry *pReg) :
 		m_bCameraUpdate(true),
 		m_bShowImage(false),
 		m_bShowSkinMap(false),
 		m_pHandModelLeft(NULL),
 		m_pHandModelRight(NULL),
-		m_pHandRenderer(NULL) {
+		m_pHandRenderer(new HandRenderer(pReg)) {
 	}
 
 	HandTracker::~HandTracker() {
@@ -156,6 +156,8 @@ namespace rhapsodies {
 			it != m_lClassifiers.end() ; ++it) {
 			delete *it;
 		}
+
+		delete m_pHandRenderer;
 
 		delete m_pHandModelLeft;
 		delete m_pHandModelRight;
@@ -490,18 +492,20 @@ namespace rhapsodies {
 			glClear(GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_DEPTH_TEST);
 
-
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
 					glViewport(col*320, row*240, 320, 240);
 
-					RandomizeModels();
+					//RandomizeModels();
 					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
 					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
+					m_pHandRenderer->PerformDraw();
 				}
 			}
+
+			glFinish();
+
 			// reduction with compute shader
-			
 			
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

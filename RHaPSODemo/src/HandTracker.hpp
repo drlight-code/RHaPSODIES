@@ -32,6 +32,8 @@
 #include <VistaAspects/VistaPropertyList.h>
 
 namespace rhapsodies {
+	class ShaderRegistry;
+	
 	class ImagePBOOpenGLDraw;
 	class SkinClassifier;
 
@@ -52,7 +54,7 @@ namespace rhapsodies {
 			UVMAP_SEGMENTED
 		};
 
-		HandTracker();
+		HandTracker(ShaderRegistry *pReg);
 		virtual ~HandTracker();
 		
 		void SetViewPBODraw(ViewType type,

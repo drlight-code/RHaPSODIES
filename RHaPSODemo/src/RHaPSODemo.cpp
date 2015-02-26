@@ -128,7 +128,6 @@ namespace rhapsodies {
 		m_camWidth(320), m_camHeight(240),
 		m_pSystem(NULL),
 		m_pShaderReg(NULL),
-		m_pHandRenderer(NULL),
 		m_pHandRenderDraw(NULL),
 		m_pHandTracker(NULL),
 		m_pSceneTransform(NULL),
@@ -150,8 +149,6 @@ namespace rhapsodies {
 
 		m_pSystem = new VistaSystem;
 		m_pShaderReg = new ShaderRegistry;
-
-		m_pHandTracker = new HandTracker;
 	}
 
 	RHaPSODemo::~RHaPSODemo() {
@@ -170,7 +167,6 @@ namespace rhapsodies {
 		CondDelete(m_pAxes);
 
 		CondDelete(m_pHandTracker);
-		CondDelete(m_pHandRenderer);
 		CondDelete(m_pHandRenderDraw);
 		CondDelete(m_pShaderReg);
 		CondDelete(m_pSystem);
@@ -271,10 +267,8 @@ namespace rhapsodies {
 	bool RHaPSODemo::InitTracker() {
 		bool success = true;
 
-		m_pHandRenderer = new HandRenderer(m_pShaderReg);
-		
+		m_pHandTracker = new HandTracker(m_pShaderReg);
 		success &= m_pHandTracker->Initialize();
-		m_pHandTracker->SetHandRenderer(m_pHandRenderer);
 
 		// register frame update handler
 		m_pSystem->GetEventManager()->AddEventHandler(
@@ -285,19 +279,28 @@ namespace rhapsodies {
 	}
 
 	bool RHaPSODemo::RegisterShaders() {
-		m_pShaderReg->RegisterShader("vert_vpos", GL_VERTEX_SHADER,
-									 "resources/shaders/vpos.vert");
-		m_pShaderReg->RegisterShader("vert_vpos_uv", GL_VERTEX_SHADER,   
-									 "resources/shaders/vpos_uv.vert");
+		m_pShaderReg->RegisterShader(
+			"vert_vpos", GL_VERTEX_SHADER,
+			"resources/shaders/vpos.vert");
+		m_pShaderReg->RegisterShader(
+			"vert_vpos_indexedtransform", GL_VERTEX_SHADER,
+			"resources/shaders/vpos_indexedtransform.vert");
+		m_pShaderReg->RegisterShader(
+			"vert_vpos_uv", GL_VERTEX_SHADER,   
+			"resources/shaders/vpos_uv.vert");
 
-		m_pShaderReg->RegisterShader("frag_textured", GL_FRAGMENT_SHADER,
-									 "resources/shaders/textured.frag");
-		m_pShaderReg->RegisterShader("frag_depthtexture", GL_FRAGMENT_SHADER,
-									 "resources/shaders/depthtexture.frag");
-		m_pShaderReg->RegisterShader("frag_solid_green", GL_FRAGMENT_SHADER,
-									 "resources/shaders/solid_green.frag");
-		m_pShaderReg->RegisterShader("frag_solid_blue", GL_FRAGMENT_SHADER,
-									 "resources/shaders/solid_blue.frag");
+		m_pShaderReg->RegisterShader(
+			"frag_textured", GL_FRAGMENT_SHADER,
+			"resources/shaders/textured.frag");
+		m_pShaderReg->RegisterShader(
+			"frag_depthtexture", GL_FRAGMENT_SHADER,
+			"resources/shaders/depthtexture.frag");
+		m_pShaderReg->RegisterShader(
+			"frag_solid_green", GL_FRAGMENT_SHADER,
+			"resources/shaders/solid_green.frag");
+		m_pShaderReg->RegisterShader(
+			"frag_solid_blue", GL_FRAGMENT_SHADER,
+			"resources/shaders/solid_blue.frag");
 
 		std::vector<std::string> vec_shaders;
 		vec_shaders.push_back("vert_vpos_uv");		
@@ -308,6 +311,11 @@ namespace rhapsodies {
 		vec_shaders.push_back("vert_vpos");
 		vec_shaders.push_back("frag_solid_green");		
 		m_pShaderReg->RegisterProgram("vpos_green", vec_shaders);
+
+		vec_shaders.clear();
+		vec_shaders.push_back("vert_vpos_indexedtransform");
+		vec_shaders.push_back("frag_solid_green");		
+		m_pShaderReg->RegisterProgram("vpos_green_indexedtransform", vec_shaders);
 
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos");
@@ -332,7 +340,7 @@ namespace rhapsodies {
 			m_pHandTracker->GetHandModelLeft(),
 			m_pHandTracker->GetHandModelRight(),
 			m_pHandTracker->GetHandModelRep(),
-			m_pHandRenderer);
+			m_pShaderReg);
 		
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
 		m_pHandModelTransform->SetTranslation(0,-0.10,2.7);

@@ -8,17 +8,22 @@ namespace rhapsodies {
 	HandRenderDraw::HandRenderDraw(HandModel *pModelLeft,
 								   HandModel *pModelRight,
 								   HandModelRep *pModelRep,
-								   HandRenderer *pRenderer) :
+								   ShaderRegistry *pReg) :
 		m_pModelLeft(pModelLeft),
 		m_pModelRight(pModelRight),
 		m_pModelRep(pModelRep),
-		m_pRenderer(pRenderer) {
+		m_pRenderer(new HandRenderer(pReg)) {
 
+	}
+
+	HandRenderDraw::~HandRenderDraw() {
+		delete m_pRenderer;
 	}
 
 	bool HandRenderDraw::Do() {
 		m_pRenderer->DrawHand(m_pModelLeft,  m_pModelRep);
 		m_pRenderer->DrawHand(m_pModelRight, m_pModelRep);
+		m_pRenderer->PerformDraw();
 		return true;
 	}
 

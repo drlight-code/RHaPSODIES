@@ -7,9 +7,9 @@
 
 #include <VistaBase/VistaTransformMatrix.h>
 
-class ShaderRegistry;
 
 namespace rhapsodies {
+	class ShaderRegistry;
 	class HandModel;
 	class HandModelRep;
 	
@@ -18,6 +18,8 @@ namespace rhapsodies {
 		HandRenderer(ShaderRegistry *pReg);
 		void DrawHand(HandModel *pModel,
 					  HandModelRep *pModelRep);
+
+		void PerformDraw();
 		
 	private:
 		enum BufferObjectId {
@@ -26,7 +28,7 @@ namespace rhapsodies {
 			BUFFER_OBJECT_LAST
 		};
 		
-		void PrepareVertexBufferObjects();
+		void PrepareBufferObjects();
 		inline void DrawSphere(VistaTransformMatrix matModel);
 		inline void DrawCylinder(VistaTransformMatrix matModel);
 		inline void DrawFinger(VistaTransformMatrix matOrigin,
@@ -38,14 +40,25 @@ namespace rhapsodies {
 
 		ShaderRegistry *m_pShaderReg;
 
-		std::vector<float> m_vSphereVertexData;
-		std::vector<float> m_vCylinderVertexData;
-		
-		GLuint m_idVertexArrayObjects[BUFFER_OBJECT_LAST];
-		GLuint m_idBufferObjects[BUFFER_OBJECT_LAST];
+		size_t m_szSphereData;
+		size_t m_szCylinderData;
+
+		std::vector<float> m_vVertexData;
+		// std::array<VistaTransformMatrix, 64*2*22> m_aSphereTransforms;
+		// std::array<VistaTransformMatrix, 64*2*15> m_aCylinderTransforms;
+		std::vector<VistaTransformMatrix> m_vSphereTransforms;
+		std::vector<VistaTransformMatrix> m_vCylinderTransforms;
+
+//		GLuint m_idVertexArrayObjects[BUFFER_OBJECT_LAST];
+//		GLuint m_idBufferObjects[BUFFER_OBJECT_LAST];
+		GLuint m_idVertexArrayObject;
+		GLuint m_idVertexBufferObject;
+
+		GLuint m_idUBOSphereTransforms;
+		GLuint m_idUBOCylinderTransforms;
 
 		GLint m_idProgram;
-		GLint m_locUniform;
+		GLint m_idTransformBlock;
 	};
 }
 

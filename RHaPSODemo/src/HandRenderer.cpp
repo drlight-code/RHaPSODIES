@@ -21,7 +21,12 @@ namespace {
 
 namespace rhapsodies {
 	HandRenderer::HandRenderer(ShaderRegistry *pReg) :
-		m_pShaderReg(pReg) {
+		m_pShaderReg(pReg),
+		m_szSphereData(0),
+		m_szCylinderData(0) {
+
+		m_vSphereTransforms.reserve(22*64*2);
+		m_vCylinderTransforms.reserve(15*64*2);
 
 		std::vector<VistaIndexedVertex> vIndices;
 		std::vector<VistaVector3D> vCoords;
@@ -39,10 +44,11 @@ namespace rhapsodies {
 		std::vector<VistaIndexedVertex>::iterator it;
 		for( it = vIndices.begin() ; it != vIndices.end() ; ++it ) {
 			for( int dim = 0 ; dim < 3 ; dim++ ) {
-				m_vSphereVertexData.push_back(
+				m_vVertexData.push_back(
 					vCoords[it->GetCoordinateIndex()][dim]);
 			}
 		}
+		m_szSphereData = vIndices.size();
 
 		vIndices.clear();
 		vColors.clear();
@@ -53,58 +59,68 @@ namespace rhapsodies {
 		// generate vertex list from indices
 		for( it = vIndices.begin() ; it != vIndices.end() ; ++it ) {
 			for( size_t dim = 0 ; dim < 3 ; dim++ ) {
-				m_vCylinderVertexData.push_back(
+				m_vVertexData.push_back(
 					vCoordsFloat[3*it->GetCoordinateIndex()+dim]);
 			}
 		}
+		m_szCylinderData = vIndices.size();
 
-		PrepareVertexBufferObjects();
+		PrepareBufferObjects();
 
-		m_idProgram  = m_pShaderReg->GetProgram("vpos_green");
-		m_locUniform = glGetUniformLocation(m_idProgram,
-											"model_transform");
+		m_idProgram  = m_pShaderReg->GetProgram("vpos_green_indexedtransform");
+
+		m_idTransformBlock =
+			glGetUniformBlockIndex(m_idProgram, "TransformBlock");
+
 	}
 
-	void HandRenderer::PrepareVertexBufferObjects() {
+	void HandRenderer::PrepareBufferObjects() {
 
 		// generate vertex array object names
-		glGenVertexArrays(BUFFER_OBJECT_LAST, m_idVertexArrayObjects);
+		glGenVertexArrays(1, &m_idVertexArrayObject);
 		// generate vertex buffer object names
-		glGenBuffers(BUFFER_OBJECT_LAST, m_idBufferObjects);
+		glGenBuffers(1, &m_idVertexBufferObject);
 
 		// set vertex attrib pointer for sphere and fill with static
 		// data
-		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
-		glBindBuffer(GL_ARRAY_BUFFER, m_idBufferObjects[SPHERE]);
+		glBindVertexArray(m_idVertexArrayObject);
+		glBindBuffer(GL_ARRAY_BUFFER, m_idVertexBufferObject);
 		glBufferData(GL_ARRAY_BUFFER,
-					 sizeof(float)*m_vSphereVertexData.size(),
-					 &m_vSphereVertexData[0], GL_STATIC_DRAW);
+					 sizeof(float)*m_vVertexData.size(),
+					 &m_vVertexData[0], GL_STATIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(0);
 
-		// set vertex attrib pointer for cylinder and fill with static
-		// data
-		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
-		glBindBuffer(GL_ARRAY_BUFFER, m_idBufferObjects[CYLINDER]);
-		glBufferData(GL_ARRAY_BUFFER,
-					 sizeof(float)*m_vCylinderVertexData.size(),
-					 &m_vCylinderVertexData[0], GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(0);
-		
-		// unbind everything for now
+
+		// initialize sphere and cylinder UBOs for transformation matrices
+		glGenBuffers(1, &m_idUBOSphereTransforms);
+		glGenBuffers(1, &m_idUBOCylinderTransforms);
+
+		glBindBuffer(GL_UNIFORM_BUFFER, m_idUBOSphereTransforms);
+		glBufferData(GL_UNIFORM_BUFFER, 64*2*22*sizeof(VistaTransformMatrix),
+					 NULL, GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_UNIFORM_BUFFER, m_idUBOCylinderTransforms);
+		glBufferData(GL_UNIFORM_BUFFER, 64*2*15*sizeof(VistaTransformMatrix),
+					 NULL, GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
 	
 	void HandRenderer::DrawSphere(VistaTransformMatrix matModel) {
-		glUniformMatrix4fv(m_locUniform, 1, false, matModel.GetData());
-		glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size()/3);
+		// glUniformMatrix4fv(m_locUniform, 1, false, matModel.GetData());
+		// glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size()/3);
+		m_vSphereTransforms.push_back(matModel);
+//		m_aSphereTransforms.push_back(matModel);
 	}
 
 	void HandRenderer::DrawCylinder(VistaTransformMatrix matModel) {
-		glUniformMatrix4fv(m_locUniform, 1, false, matModel.GetData());
-		glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size()/3);
+		// glUniformMatrix4fv(m_locUniform, 1, false, matModel.GetData());
+		// glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size()/3);
+//		m_aCylinderTransforms.emplace_back(matModel);
+		m_vCylinderTransforms.push_back(matModel);
 	}
 
 	void HandRenderer::DrawFinger(VistaTransformMatrix matOrigin,
@@ -127,8 +143,6 @@ namespace rhapsodies {
 		VistaTransformMatrix matSphereScale; // reused sphere scale
 		matSphereScale.SetToScaleMatrix(fFingerDiameter);
 		
-		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
-
 		// start at first joint
 		matModel = matOrigin * matSphereScale;
 		if(!bThumb) {
@@ -165,7 +179,6 @@ namespace rhapsodies {
 				fFingerDiameter, fLen1/1000.0f, fFingerDiameter);
 			matModel = matOrigin * matTransform;
 
-			glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
 			DrawCylinder(matModel);
 		}
 
@@ -175,7 +188,6 @@ namespace rhapsodies {
 		matOrigin *= matTransform;
 
 		// draw scaled sphere
-		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 		matModel = matOrigin * matSphereScale;
 		DrawSphere(matModel);
 
@@ -190,7 +202,6 @@ namespace rhapsodies {
 		matOrigin *= matTransform;
 
 		// set scale and draw second segment cylinder
-		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
 		matTransform.SetToScaleMatrix(
 			fFingerDiameter, fLen2/1000.0f, fFingerDiameter);
 		matModel = matOrigin * matTransform;
@@ -202,7 +213,6 @@ namespace rhapsodies {
 		matOrigin *= matTransform;
 
 		// draw scaled sphere
-		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 		matModel = matOrigin * matSphereScale;
 		DrawSphere(matModel);
 
@@ -217,7 +227,6 @@ namespace rhapsodies {
 		matOrigin *= matTransform;
 
 		// set scale and draw third segment cylinder
-		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
 		matTransform.SetToScaleMatrix(
 			fFingerDiameter, fLen3/1000.0f, fFingerDiameter);
 		matModel = matOrigin * matTransform;
@@ -229,7 +238,6 @@ namespace rhapsodies {
 		matOrigin *= matTransform;
 
 		// draw scaled sphere
-		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
 		matModel = matOrigin * matSphereScale;
 		DrawSphere(matModel);
 	}
@@ -264,9 +272,6 @@ namespace rhapsodies {
 		// beginning and use DrawArraysInstanced to look up the
 		// specific matrix in the vertex shader by the instance id.
 
-		glUseProgram(m_idProgram);
-		glBindVertexArray(m_idVertexArrayObjects[SPHERE]);
-
 		matOrigin.Compose(
 			pModel->GetPosition(),
 			pModel->GetOrientation(),
@@ -299,7 +304,6 @@ namespace rhapsodies {
 			VistaVector3D(fPalmWidth, fPalmHeight, fPalmDiameter));
 		matModel = matOrigin * matTransform;		
 
-		glBindVertexArray(m_idVertexArrayObjects[CYLINDER]);
 		DrawCylinder(matModel);
 
 		// @todo: if drawing turns out to be a significant bottleneck,
@@ -308,23 +312,23 @@ namespace rhapsodies {
 		// instances drawing on the GPU side
 		
 		// draw the fingers
-		for(int i = 0 ; i < 4 ; i++) {
+		for(int finger = 0 ; finger < 4 ; finger++) {
 			matTransform.SetToTranslationMatrix(
 				VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/8.0f +
-							  i*fPalmWidth/4.0f) * fLRFactor,
+							   finger*fPalmWidth/4.0f) * fLRFactor,
 							  fPalmBottomRadius + fPalmHeight,
 							  0));
 			
 			DrawFinger(
 				matOrigin * matTransform,
 				fFingerDiameter, fLRFactor,
-				pModel->GetJointAngle(4*(1+i)),
-				pModel->GetJointAngle(4*(1+i)+1),
-				pModelRep->GetExtent(3+4*i+1),
-				pModel->GetJointAngle(4*(1+i)+2),
-				pModelRep->GetExtent(3+4*i+2),
-				pModel->GetJointAngle(4*(1+i)+3),
-				pModelRep->GetExtent(3+4*i+3),
+				pModel->GetJointAngle(4*(1+finger)),
+				pModel->GetJointAngle(4*(1+finger)+1),
+				pModelRep->GetExtent(3+4*finger+1),
+				pModel->GetJointAngle(4*(1+finger)+2),
+				pModelRep->GetExtent(3+4*finger+2),
+				pModel->GetJointAngle(4*(1+finger)+3),
+				pModelRep->GetExtent(3+4*finger+3),
 				false);
 		}
 
@@ -346,7 +350,50 @@ namespace rhapsodies {
 			pModelRep->GetExtent(HandModelRep::T_DP),
 			true);	
 
+	}
+
+	void HandRenderer::PerformDraw() {
+		glUseProgram(m_idProgram);
+		glBindVertexArray(m_idVertexArrayObject);
+
+		// bind and fill sphere transform UBO
+		size_t sizeUBO = sizeof(VistaTransformMatrix)*m_vSphereTransforms.size();
+
+		glBindBuffer(GL_UNIFORM_BUFFER, m_idUBOSphereTransforms);
+		glBufferSubData( GL_UNIFORM_BUFFER, 0,
+						 sizeUBO,
+						 &m_vSphereTransforms[0]);
+
+		glUniformBlockBinding(m_idProgram, m_idTransformBlock, 0);
+		glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_idUBOSphereTransforms);
+
+		// draw all shperes
+		glDrawArraysInstanced(GL_TRIANGLES, 0, m_szSphereData,
+							  m_vSphereTransforms.size());
+		
+		// bind and fill cylinder transform UBO
+		sizeUBO = sizeof(VistaTransformMatrix)*m_vCylinderTransforms.size();
+
+		glBindBuffer(GL_UNIFORM_BUFFER, m_idUBOCylinderTransforms);
+		glBufferSubData( GL_UNIFORM_BUFFER, 0,
+						 sizeUBO,
+						 &m_vCylinderTransforms[0]);
+
+		glUniformBlockBinding(m_idProgram, m_idTransformBlock, 0);
+		glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_idUBOCylinderTransforms);
+
+		// draw all cylinders
+		glDrawArraysInstanced(GL_TRIANGLES, m_szSphereData, m_szCylinderData,
+							  m_vCylinderTransforms.size());
+
+		
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
+		glUseProgram(0);
+
+		// clear transform matrix vectors
+		m_vSphereTransforms.clear();
+		m_vCylinderTransforms.clear();
 	}
 }

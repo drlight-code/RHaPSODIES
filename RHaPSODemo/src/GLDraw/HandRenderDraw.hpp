@@ -3,9 +3,8 @@
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 
-class ShaderRegistry;
-
 namespace rhapsodies {
+	class ShaderRegistry;
 	class HandModel;
 	class HandRenderer;
 	
@@ -14,14 +13,13 @@ namespace rhapsodies {
 		HandRenderDraw(HandModel *pModelLeft,
 					   HandModel *pModelRight,
 					   HandModelRep *pModelRep,
-					   HandRenderer *pRenderer);
+					   ShaderRegistry *pReg);
+
+		~HandRenderDraw();
 		
 		virtual bool Do();
 		virtual bool GetBoundingBox(VistaBoundingBox &bb);
 
-		// HandModel* GetModel();
-		// void SetModel(HandModel* pModel);
-		
 	private:
 		HandModel *m_pModelLeft;
 		HandModel *m_pModelRight;
