@@ -35,12 +35,14 @@
 
 #include <VistaTools/VistaBasicProfiler.h>
 #include <VistaTools/VistaIniFileParser.h>
+#include <VistaTools/VistaRandomNumberGenerator.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <RHaPSODemo.hpp>
+#include <ShaderRegistry.hpp>
 #include <GLDraw/ImagePBOOpenGLDraw.hpp>
 
 #include <SkinClassifiers/SkinClassifierLogOpponentYIQ.hpp>
@@ -53,7 +55,6 @@
 
 #include <HandModel.hpp>
 #include <HandModelRep.hpp>
-
 #include <HandRenderer.hpp>
 
 #include "HandTracker.hpp"
@@ -146,9 +147,12 @@ namespace rhapsodies {
 		m_bCameraUpdate(true),
 		m_bShowImage(false),
 		m_bShowSkinMap(false),
+		m_pShaderReg(pReg),
 		m_pHandModelLeft(NULL),
 		m_pHandModelRight(NULL),
 		m_pHandRenderer(new HandRenderer(pReg)) {
+
+		m_idReductionProgram = pReg->GetProgram("reduction");
 	}
 
 	HandTracker::~HandTracker() {
@@ -194,6 +198,10 @@ namespace rhapsodies {
 		return m_idCameraTexture;
 	}
 
+	GLuint HandTracker::GetResultTextureId() {
+		return m_idResultTexture;
+	}
+
 	bool HandTracker::Initialize() {
 		vstr::out() << "Initializing RHaPSODIES HandTracker" << std::endl;
 
@@ -204,6 +212,7 @@ namespace rhapsodies {
 		InitSkinClassifiers();
 		InitHandModels();
 		InitRendering();
+		InitReduction();
 		
 		return true;
 	}
@@ -292,6 +301,36 @@ namespace rhapsodies {
 		return true;
 	}
 
+	bool HandTracker::InitReduction() {
+		// prepare result texture
+		glGenTextures(1, &m_idResultTexture);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		size_t texSize = 320*240*8*8;
+		float *data;
+		data = new float[texSize];
+
+		for(size_t index = 0 ; index < texSize ; index++) {
+			data[index] = float(index)/texSize;
+		}
+		
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 320*8, 240*8, 0, GL_RED, GL_FLOAT, data);
+		delete data;
+		
+//		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+
+		// prepare compute shader
+		glUseProgram(m_idReductionProgram);
+		glUniform1i(glGetUniformLocation(m_idReductionProgram, "texResult"), 0);
+		
+		return true;
+	}
+
 	void HandTracker::ReadConfig() {
 		VistaIniFileParser oIniParser(true);
 		oIniParser.ReadFile(RHaPSODemo::sRDIniFile);
@@ -354,9 +393,9 @@ namespace rhapsodies {
 		PerformPSOTracking();
 		VistaType::microtime tPSO =
 			oTimer.GetMicroTime() - tStart;
-		vstr::out() << "Overall time: " << tProcessFrames + tPSO << std::endl;
+		vstr::out() << "Overall time:        " << tProcessFrames + tPSO << std::endl;
 		vstr::out() << "ProcessCameraFrames: " << tProcessFrames << std::endl;
-		vstr::out() << "PerformPSOTracking: " << tPSO
+		vstr::out() << "PerformPSOTracking:  " << tPSO
 					<< std::endl << std::endl;
 		
 		return true;
@@ -495,7 +534,7 @@ namespace rhapsodies {
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-					RandomizeModels();
+//					RandomizeModels();
 					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
 					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
 
@@ -512,9 +551,11 @@ namespace rhapsodies {
 				}
 			}
 
-			glFlush();
+//			glFlush(); // or glFinish()? memory barrier? execution barrier?
 
 			// reduction with compute shader
+			glUseProgram(m_idReductionProgram);
+			glDispatchCompute(8, 8, 1);
 			
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

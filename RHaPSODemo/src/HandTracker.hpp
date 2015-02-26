@@ -48,8 +48,6 @@ namespace rhapsodies {
 			COLOR_SEGMENTED,
 			DEPTH,           // native camera depth map
 			DEPTH_SEGMENTED, // segmented camera depth map
-			DEPTH_PSO_RENDERED,  // tiled rendered depth map
-			DEPTH_PSO_CAMERA,    // tiled camera depth map
 			UVMAP,
 			UVMAP_SEGMENTED
 		};
@@ -68,11 +66,13 @@ namespace rhapsodies {
 
 		GLuint GetDepthTextureId();
 		GLuint GetCameraTextureId();
+		GLuint GetResultTextureId();
 		
 		bool Initialize();
 		bool InitSkinClassifiers();
 		bool InitHandModels();
 		bool InitRendering();
+		bool InitReduction();
 
 		void ReadConfig();
 
@@ -132,6 +132,8 @@ namespace rhapsodies {
 		Config m_oConfig;
 		VistaPropertyList m_oCameraIntrinsics;
 
+		ShaderRegistry *m_pShaderReg;
+		
 		HandModel *m_pHandModelLeft;
 		HandModel *m_pHandModelRight;
 		HandModelRep *m_pHandModelRep;
@@ -154,6 +156,9 @@ namespace rhapsodies {
 		GLuint m_idCameraTexture;		
 		GLuint m_idCameraTexturePBO;
 		void *m_pCameraTexturePBO;
+
+		GLuint m_idReductionProgram;
+		GLuint m_idResultTexture;
 	};
 }
 

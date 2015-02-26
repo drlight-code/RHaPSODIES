@@ -116,15 +116,15 @@ namespace rhapsodies {
 	void HandRenderer::DrawSphere(VistaTransformMatrix matModel) {
 		// glUniformMatrix4fv(m_locUniform, 1, false, matModel.GetData());
 		// glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size()/3);
-		m_vSphereTransforms.push_back(matModel);
-//		m_aSphereTransforms.push_back(matModel);
+		m_vSphereTransforms.emplace_back(matModel);
+//		m_vSphereTransforms.push_back(matModel);
 	}
 
 	void HandRenderer::DrawCylinder(VistaTransformMatrix matModel) {
 		// glUniformMatrix4fv(m_locUniform, 1, false, matModel.GetData());
 		// glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size()/3);
-//		m_aCylinderTransforms.emplace_back(matModel);
-		m_vCylinderTransforms.push_back(matModel);
+		m_vCylinderTransforms.emplace_back(matModel);
+//		m_vCylinderTransforms.push_back(matModel);
 	}
 
 	void HandRenderer::DrawFinger(VistaTransformMatrix matOrigin,
