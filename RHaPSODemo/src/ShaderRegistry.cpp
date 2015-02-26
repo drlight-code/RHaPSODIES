@@ -78,7 +78,7 @@ namespace rhapsodies {
 		glLinkProgram(program);
 
 		GLint status;
-		glGetProgramiv (program, GL_LINK_STATUS, &status);
+		glGetProgramiv(program, GL_LINK_STATUS, &status);
 
 		if(status == GL_FALSE)	{
 			GLint infoLogLength;

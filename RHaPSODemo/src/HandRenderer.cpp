@@ -67,11 +67,13 @@ namespace rhapsodies {
 
 		PrepareBufferObjects();
 
-		m_idProgram  = m_pShaderReg->GetProgram("vpos_green_indexedtransform");
+		m_idProgram = m_pShaderReg->GetProgram("indexedtransform");
 
 		m_idTransformBlock =
 			glGetUniformBlockIndex(m_idProgram, "TransformBlock");
 
+		m_locInstancesPerViewportUniform = glGetUniformLocation(
+			m_idProgram, "instances_per_viewport");
 	}
 
 	void HandRenderer::PrepareBufferObjects() {
@@ -356,6 +358,29 @@ namespace rhapsodies {
 		glUseProgram(m_idProgram);
 		glBindVertexArray(m_idVertexArrayObject);
 
+		// generate viewport array
+		std::vector<float> vViewportData;
+		vViewportData.reserve(64*4);
+		vViewportData.clear();
+		
+		for(int row = 0 ; row < 8 ; ++row) {
+			for(int col = 0 ; col < 8 ; ++col) {
+				vViewportData.push_back(col*320);
+				vViewportData.push_back(row*240);
+				vViewportData.push_back(320);
+				vViewportData.push_back(240);
+			}
+		}
+//		glViewportArrayv(0, 64, &vViewportData[0]);
+//		glViewport(0, 0, 320, 240);
+		glViewportIndexedf(0, 0, 0, 320, 240);
+		glViewportIndexedf(1, 320, 240, 320, 240);
+		glViewportIndexedf(2, 640, 480, 320, 240);
+
+		int maxvp = 0;
+		glGetIntegerv(GL_MAX_VIEWPORTS, &maxvp);
+		std::cout << maxvp << std::endl;
+
 		// bind and fill sphere transform UBO
 		size_t sizeUBO = sizeof(VistaTransformMatrix)*m_vSphereTransforms.size();
 
@@ -367,6 +392,9 @@ namespace rhapsodies {
 		glUniformBlockBinding(m_idProgram, m_idTransformBlock, 0);
 		glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_idUBOSphereTransforms);
 
+		// set uniform for viewport indexing
+		glUniform1i(m_locInstancesPerViewportUniform, 22*2);
+		
 		// draw all shperes
 		glDrawArraysInstanced(GL_TRIANGLES, 0, m_szSphereData,
 							  m_vSphereTransforms.size());
@@ -381,6 +409,9 @@ namespace rhapsodies {
 
 		glUniformBlockBinding(m_idProgram, m_idTransformBlock, 0);
 		glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_idUBOCylinderTransforms);
+
+		// set uniform for viewport indexing
+		glUniform1i(m_locInstancesPerViewportUniform, 15*2);
 
 		// draw all cylinders
 		glDrawArraysInstanced(GL_TRIANGLES, m_szSphereData, m_szCylinderData,

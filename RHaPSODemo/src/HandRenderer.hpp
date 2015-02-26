@@ -59,6 +59,8 @@ namespace rhapsodies {
 
 		GLint m_idProgram;
 		GLint m_idTransformBlock;
+		
+		GLint m_locInstancesPerViewportUniform;
 	};
 }
 

@@ -467,10 +467,8 @@ namespace rhapsodies {
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		
-		//glFrustum(left, right, bottom, top, znear, zfar);
 		glOrtho(0.0, 0.32, 0.0, 0.24, znear, zfar);
 		glMultMatrixf(mProj.GetData());
-		//glOrtho(-0.3, 0.3, -0.3, 0.3, 0.0, 32.0);
 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -494,15 +492,13 @@ namespace rhapsodies {
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-					glViewport(col*320, row*240, 320, 240);
-
-					//RandomizeModels();
+					RandomizeModels();
 					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
 					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
-					m_pHandRenderer->PerformDraw();
 				}
 			}
 
+			m_pHandRenderer->PerformDraw();
 			glFinish();
 
 			// reduction with compute shader

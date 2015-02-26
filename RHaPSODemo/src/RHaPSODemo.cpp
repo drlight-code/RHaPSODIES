@@ -302,6 +302,10 @@ namespace rhapsodies {
 			"frag_solid_blue", GL_FRAGMENT_SHADER,
 			"resources/shaders/solid_blue.frag");
 
+		m_pShaderReg->RegisterShader(
+			"indexed_viewport", GL_GEOMETRY_SHADER,
+			"resources/shaders/indexed_viewport.geom");
+
 		std::vector<std::string> vec_shaders;
 		vec_shaders.push_back("vert_vpos_uv");		
 		vec_shaders.push_back("frag_textured");		
@@ -315,7 +319,8 @@ namespace rhapsodies {
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos_indexedtransform");
 		vec_shaders.push_back("frag_solid_green");		
-		m_pShaderReg->RegisterProgram("vpos_green_indexedtransform", vec_shaders);
+		vec_shaders.push_back("indexed_viewport");		
+		m_pShaderReg->RegisterProgram("indexedtransform", vec_shaders);
 
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos");
@@ -336,20 +341,20 @@ namespace rhapsodies {
 		m_pSceneTransform->Translate(0, 0, -2.0);
 
 		// hand model and view
-		m_pHandRenderDraw = new HandRenderDraw(
-			m_pHandTracker->GetHandModelLeft(),
-			m_pHandTracker->GetHandModelRight(),
-			m_pHandTracker->GetHandModelRep(),
-			m_pShaderReg);
+		// m_pHandRenderDraw = new HandRenderDraw(
+		// 	m_pHandTracker->GetHandModelLeft(),
+		// 	m_pHandTracker->GetHandModelRight(),
+		// 	m_pHandTracker->GetHandModelRep(),
+		// 	m_pShaderReg);
 		
-		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
-		m_pHandModelTransform->SetTranslation(0,-0.10,2.7);
-		m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,
-												m_pHandRenderDraw);
+		// m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
+		// m_pHandModelTransform->SetTranslation(0,-0.10,2.7);
+		// m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,
+		// 										m_pHandRenderDraw);
 
-		m_pAxesTransform = pSG->NewTransformNode(m_pHandModelTransform);
-		m_pAxesTransform->SetScale(0.05f, 0.05f, 0.05f);
-		m_pAxes = new VistaAxes(pSG, m_pAxesTransform);
+		// m_pAxesTransform = pSG->NewTransformNode(m_pHandModelTransform);
+		// m_pAxesTransform->SetScale(0.05f, 0.05f, 0.05f);
+		// m_pAxes = new VistaAxes(pSG, m_pAxesTransform);
 								
 		// ImageDraw for color image
 		// ImagePBOOpenGLDraw *pPBODraw = 
