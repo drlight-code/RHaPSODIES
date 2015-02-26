@@ -74,6 +74,10 @@ namespace rhapsodies {
 
 		void ReadConfig();
 
+		bool FrameUpdate(const unsigned char  *colorFrame,
+						 const unsigned short *depthFrame,
+						 const float          *uvMapFrame);
+
 		void ProcessCameraFrames(
 			const unsigned char  *colorFrame,
 			const unsigned short *depthFrame,
@@ -81,10 +85,6 @@ namespace rhapsodies {
 
 		void PerformPSOTracking();
 		
-		bool FrameUpdate(const unsigned char  *colorFrame,
-						 const unsigned short *depthFrame,
-						 const float          *uvMapFrame);
-
 		SkinClassifier *GetSkinClassifier();
 		void NextSkinClassifier();
 		void PrevSkinClassifier();
@@ -138,6 +138,7 @@ namespace rhapsodies {
 
 		unsigned char  m_pColorBuffer[320*240*3];
 		unsigned short m_pDepthBuffer[320*240];
+		float          m_pDepthBufferFloat[320*240];
 
 		unsigned char m_pSkinMap[320*240];
 

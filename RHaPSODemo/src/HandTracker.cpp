@@ -258,14 +258,14 @@ namespace rhapsodies {
 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
 					 320*8, 240*8, 0,
-					 GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+					 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
 		glGenBuffers(1, &m_idCameraTexturePBO);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
 		glBufferData(GL_PIXEL_UNPACK_BUFFER,
-					 320*240*2, 0, GL_DYNAMIC_DRAW);
+					 320*240*4, 0, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 		// prepare FBO rendering
@@ -274,9 +274,9 @@ namespace rhapsodies {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
 					 320*8, 240*8, 0,
-					 GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+					 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
 		glGenFramebuffers(1, &m_idDepthTextureFBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idDepthTextureFBO);
@@ -336,6 +336,28 @@ namespace rhapsodies {
 		vstr::out() << "PSO Generations: " << m_oConfig.iPSOGenerations
 					<< std::endl;
 
+	}
+
+	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
+								  const unsigned short *depthFrame,
+								  const float          *uvMapFrame) {
+
+		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
+
+		VistaType::microtime tStart = oTimer.GetMicroTime();
+		ProcessCameraFrames(colorFrame, depthFrame, uvMapFrame);
+		VistaType::microtime tProcessFrames =
+			oTimer.GetMicroTime() - tStart;
+		tStart = oTimer.GetMicroTime();		   
+		PerformPSOTracking();
+		VistaType::microtime tPSO =
+			oTimer.GetMicroTime() - tStart;
+		vstr::out() << "Overall time: " << tProcessFrames + tPSO << std::endl;
+		vstr::out() << "ProcessCameraFrames: " << tProcessFrames << std::endl;
+		vstr::out() << "PerformPSOTracking: " << tPSO
+					<< std::endl << std::endl;
+		
+		return true;
 	}
 
 	void HandTracker::ProcessCameraFrames(
@@ -402,14 +424,14 @@ namespace rhapsodies {
 
  		m_pCameraTexturePBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
  										  GL_WRITE_ONLY);		
-		memcpy(m_pCameraTexturePBO, m_pDepthBuffer, 320*240*2);
+		memcpy(m_pCameraTexturePBO, m_pDepthBufferFloat, 320*240*4);
 		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 
 		for(int row = 0 ; row < 8 ; row++) {
 			for(int col = 0 ; col < 8 ; col++) {
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 
 								320*col, 240*row, 320, 240,
-								GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+								GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 			}
 		}
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
@@ -488,28 +510,6 @@ namespace rhapsodies {
 		// update actual model fit		
 	}
 	
-	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
-								  const unsigned short *depthFrame,
-								  const float          *uvMapFrame) {
-
-		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
-
-		VistaType::microtime tStart = oTimer.GetMicroTime();
-		ProcessCameraFrames(colorFrame, depthFrame, uvMapFrame);
-		VistaType::microtime tProcessFrames =
-			oTimer.GetMicroTime() - tStart;
-		tStart = oTimer.GetMicroTime();		   
-		PerformPSOTracking();
-		VistaType::microtime tPSO =
-			oTimer.GetMicroTime() - tStart;
-		vstr::out() << "Overall time: " << tProcessFrames + tPSO << std::endl;
-		vstr::out() << "ProcessCameraFrames: " << tProcessFrames << std::endl;
-		vstr::out() << "PerformPSOTracking: " << tPSO
-					<< std::endl << std::endl;
-		
-		return true;
-	}
-
 	void HandTracker::FilterSkinAreas() {
 
 		VistaBasicProfiler *pProf = VistaBasicProfiler::GetSingleton();
@@ -569,7 +569,7 @@ namespace rhapsodies {
 				m_pDepthRGBBuffer[3*pixel+1] = 0;
 				m_pDepthRGBBuffer[3*pixel+2] = 0;
 				
-				m_pDepthBuffer[pixel] = 0xffff;
+				m_pDepthBufferFloat[pixel] = 1.0f; // comment out for fun
 
 				m_pUVMapRGBBuffer[3*pixel+0] = 0;
 				m_pUVMapRGBBuffer[3*pixel+1] = 0;
@@ -581,25 +581,19 @@ namespace rhapsodies {
 				// 1100 -> ffff
 				// @todo get rid of hard coding
 				
-				unsigned int val = m_pDepthBuffer[pixel];
+				unsigned int zWorldMM = m_pDepthBuffer[pixel];
+				float zScreen = 1.0f;
 
 				// valid values [100,1100]
-				if( val < 100 || val > 1100 ) {
-					val = 0xffff;
-				}
-				else {
-					// val -= 100;
-					// val = val * 0xffff / 1000;
+				if( zWorldMM >= 100 && zWorldMM <= 1100 ) {
 					float near = 0.1f;
 					float far  = 1.1f;
 
-					float zS =
-						((near + far - 2.0f*near*far/(float(val)/1000.0f)) /
+					zScreen =
+						((near + far - 2.0f*near*far/(float(zWorldMM)/1000.0f)) /
 						 (far - near) + 1.0f) / 2.0f;
-
-					val = zS * 0xffff;
 				}
-				m_pDepthBuffer[pixel] = (unsigned short)(val);
+				m_pDepthBufferFloat[pixel] = zScreen;
 			}
 		}
 		pProf->StopSection();
