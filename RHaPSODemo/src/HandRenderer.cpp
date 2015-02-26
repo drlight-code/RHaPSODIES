@@ -25,8 +25,10 @@ namespace rhapsodies {
 		m_szSphereData(0),
 		m_szCylinderData(0) {
 
-		m_vSphereTransforms.reserve(22*64*2);
-		m_vCylinderTransforms.reserve(15*64*2);
+		// m_vSphereTransforms.reserve(22*64*2);
+		// m_vCylinderTransforms.reserve(15*64*2);
+		m_vSphereTransforms.reserve(22*16*2);
+		m_vCylinderTransforms.reserve(15*16*2);
 
 		std::vector<VistaIndexedVertex> vIndices;
 		std::vector<VistaVector3D> vCoords;
@@ -99,11 +101,11 @@ namespace rhapsodies {
 		glGenBuffers(1, &m_idUBOCylinderTransforms);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, m_idUBOSphereTransforms);
-		glBufferData(GL_UNIFORM_BUFFER, 64*2*22*sizeof(VistaTransformMatrix),
+		glBufferData(GL_UNIFORM_BUFFER, 16*2*22*sizeof(VistaTransformMatrix),
 					 NULL, GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, m_idUBOCylinderTransforms);
-		glBufferData(GL_UNIFORM_BUFFER, 64*2*15*sizeof(VistaTransformMatrix),
+		glBufferData(GL_UNIFORM_BUFFER, 16*2*15*sizeof(VistaTransformMatrix),
 					 NULL, GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -354,32 +356,21 @@ namespace rhapsodies {
 
 	}
 
-	void HandRenderer::PerformDraw() {
+	void HandRenderer::PerformDraw(int iViewPortCount,
+								   float *pViewPortData) {
 		glUseProgram(m_idProgram);
 		glBindVertexArray(m_idVertexArrayObject);
 
-		// generate viewport array
-		std::vector<float> vViewportData;
-		vViewportData.reserve(64*4);
-		vViewportData.clear();
-		
-		for(int row = 0 ; row < 8 ; ++row) {
-			for(int col = 0 ; col < 8 ; ++col) {
-				vViewportData.push_back(col*320);
-				vViewportData.push_back(row*240);
-				vViewportData.push_back(320);
-				vViewportData.push_back(240);
-			}
-		}
-//		glViewportArrayv(0, 64, &vViewportData[0]);
-//		glViewport(0, 0, 320, 240);
-		glViewportIndexedf(0, 0, 0, 320, 240);
-		glViewportIndexedf(1, 320, 240, 320, 240);
-		glViewportIndexedf(2, 640, 480, 320, 240);
+		size_t iSpheresPerViewport   = 22*2;
+		size_t iCylindersPerViewport = 15*2;
 
-		int maxvp = 0;
-		glGetIntegerv(GL_MAX_VIEWPORTS, &maxvp);
-		std::cout << maxvp << std::endl;
+		if(iViewPortCount > 0)			
+			glViewportArrayv(0, iViewPortCount, pViewPortData);
+		else {
+			iSpheresPerViewport   = ~0; // so instance id division
+										// always yields 0 in shader
+			iCylindersPerViewport = ~0;
+		}			
 
 		// bind and fill sphere transform UBO
 		size_t sizeUBO = sizeof(VistaTransformMatrix)*m_vSphereTransforms.size();
@@ -393,7 +384,7 @@ namespace rhapsodies {
 		glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_idUBOSphereTransforms);
 
 		// set uniform for viewport indexing
-		glUniform1i(m_locInstancesPerViewportUniform, 22*2);
+		glUniform1i(m_locInstancesPerViewportUniform, iSpheresPerViewport);
 		
 		// draw all shperes
 		glDrawArraysInstanced(GL_TRIANGLES, 0, m_szSphereData,
@@ -411,7 +402,7 @@ namespace rhapsodies {
 		glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_idUBOCylinderTransforms);
 
 		// set uniform for viewport indexing
-		glUniform1i(m_locInstancesPerViewportUniform, 15*2);
+		glUniform1i(m_locInstancesPerViewportUniform, iCylindersPerViewport);
 
 		// draw all cylinders
 		glDrawArraysInstanced(GL_TRIANGLES, m_szSphereData, m_szCylinderData,

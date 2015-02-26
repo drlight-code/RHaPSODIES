@@ -490,16 +490,29 @@ namespace rhapsodies {
 			glClear(GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_DEPTH_TEST);
 
+			std::vector<float> vViewportData;
+			vViewportData.reserve(16*4);
+
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
 					RandomizeModels();
 					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
 					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
+
+					vViewportData.push_back(col*320);
+					vViewportData.push_back(row*240);
+					vViewportData.push_back(320);
+					vViewportData.push_back(240);
+
+					// we need to draw after 16 drawn pairs of hands (viewports)
+					if(row%2 == 1 && col == 7) {
+						m_pHandRenderer->PerformDraw(16, &vViewportData[0]);
+						vViewportData.clear();
+					}
 				}
 			}
 
-			m_pHandRenderer->PerformDraw();
-			glFinish();
+			glFlush();
 
 			// reduction with compute shader
 			

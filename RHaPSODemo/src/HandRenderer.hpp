@@ -19,7 +19,8 @@ namespace rhapsodies {
 		void DrawHand(HandModel *pModel,
 					  HandModelRep *pModelRep);
 
-		void PerformDraw();
+		void PerformDraw(int iViewPortCount,
+						 float *pViewPortData);
 		
 	private:
 		enum BufferObjectId {

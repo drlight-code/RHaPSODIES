@@ -1,10 +1,11 @@
-#version 330 compatibility
+#version 430 compatibility
 
 uniform mat4 gl_ModelViewProjectionMatrix;
 
 out int instance_id;
 
-const int ARRAY_SIZE = 2816; // 64*2*22
+//const int ARRAY_SIZE = 2816; // 64*2*22
+const int ARRAY_SIZE = 704; // 16*2*22
 
 // The name of the block is used for finding the index location only
 layout (std140) uniform TransformBlock {
