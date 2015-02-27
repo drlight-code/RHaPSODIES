@@ -324,7 +324,7 @@ namespace rhapsodies {
 //		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
 		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
-		// prepare compute shader
+// 		// prepare compute shader
 		glUseProgram(m_idReductionProgram);
 		glUniform1i(glGetUniformLocation(m_idReductionProgram, "texResult"), 0);
 		
@@ -534,7 +534,7 @@ namespace rhapsodies {
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-//					RandomizeModels();
+					RandomizeModels();
 					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
 					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
 
@@ -544,18 +544,18 @@ namespace rhapsodies {
 					vViewportData.push_back(240);
 
 					// we need to draw after 16 drawn pairs of hands (viewports)
-					if(row%2 == 1 && col == 7) {
-						m_pHandRenderer->PerformDraw(16, &vViewportData[0]);
-						vViewportData.clear();
-					}
+					//if(row%2 == 1 && col == 7) {
+					 	m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
+					 	vViewportData.clear();
+						//}
 				}
 			}
 
-//			glFlush(); // or glFinish()? memory barrier? execution barrier?
+			glFinish(); // memory barrier? execution barrier?
 
 			// reduction with compute shader
-			glUseProgram(m_idReductionProgram);
-			glDispatchCompute(8, 8, 1);
+			// glUseProgram(m_idReductionProgram);
+			// glDispatchCompute(8, 8, 1);
 			
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

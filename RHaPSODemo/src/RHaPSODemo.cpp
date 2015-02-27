@@ -329,7 +329,7 @@ namespace rhapsodies {
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos_indexedtransform");
 		vec_shaders.push_back("frag_solid_green");		
-		vec_shaders.push_back("indexed_viewport");		
+//		vec_shaders.push_back("indexed_viewport");		
 		m_pShaderReg->RegisterProgram("indexedtransform", vec_shaders);
 
 		vec_shaders.clear();

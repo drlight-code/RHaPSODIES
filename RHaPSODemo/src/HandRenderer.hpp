@@ -19,7 +19,7 @@ namespace rhapsodies {
 		void DrawHand(HandModel *pModel,
 					  HandModelRep *pModelRep);
 
-		void PerformDraw(int iViewPortCount,
+		void PerformDraw(unsigned int iViewPortCount,
 						 float *pViewPortData);
 		
 	private:
@@ -45,13 +45,9 @@ namespace rhapsodies {
 		size_t m_szCylinderData;
 
 		std::vector<float> m_vVertexData;
-		// std::array<VistaTransformMatrix, 64*2*22> m_aSphereTransforms;
-		// std::array<VistaTransformMatrix, 64*2*15> m_aCylinderTransforms;
 		std::vector<VistaTransformMatrix> m_vSphereTransforms;
 		std::vector<VistaTransformMatrix> m_vCylinderTransforms;
 
-//		GLuint m_idVertexArrayObjects[BUFFER_OBJECT_LAST];
-//		GLuint m_idBufferObjects[BUFFER_OBJECT_LAST];
 		GLuint m_idVertexArrayObject;
 		GLuint m_idVertexBufferObject;
 

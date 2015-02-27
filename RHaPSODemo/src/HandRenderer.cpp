@@ -25,8 +25,6 @@ namespace rhapsodies {
 		m_szSphereData(0),
 		m_szCylinderData(0) {
 
-		// m_vSphereTransforms.reserve(22*64*2);
-		// m_vCylinderTransforms.reserve(15*64*2);
 		m_vSphereTransforms.reserve(22*16*2);
 		m_vCylinderTransforms.reserve(15*16*2);
 
@@ -114,17 +112,11 @@ namespace rhapsodies {
 	}
 	
 	void HandRenderer::DrawSphere(VistaTransformMatrix matModel) {
-		// glUniformMatrix4fv(m_locUniform, 1, false, matModel.GetData());
-		// glDrawArrays(GL_TRIANGLES, 0, m_vSphereVertexData.size()/3);
 		m_vSphereTransforms.emplace_back(matModel);
-//		m_vSphereTransforms.push_back(matModel);
 	}
 
 	void HandRenderer::DrawCylinder(VistaTransformMatrix matModel) {
-		// glUniformMatrix4fv(m_locUniform, 1, false, matModel.GetData());
-		// glDrawArrays(GL_TRIANGLES, 0, m_vCylinderVertexData.size()/3);
 		m_vCylinderTransforms.emplace_back(matModel);
-//		m_vCylinderTransforms.push_back(matModel);
 	}
 
 	void HandRenderer::DrawFinger(VistaTransformMatrix matOrigin,
@@ -310,11 +302,6 @@ namespace rhapsodies {
 
 		DrawCylinder(matModel);
 
-		// @todo: if drawing turns out to be a significant bottleneck,
-		// we need to adopt the approach of pre-calculating all the
-		// primitive transforms, upload them as UBO's and doing
-		// instances drawing on the GPU side
-		
 		// draw the fingers
 		for(int finger = 0 ; finger < 4 ; finger++) {
 			matTransform.SetToTranslationMatrix(
@@ -356,7 +343,7 @@ namespace rhapsodies {
 
 	}
 
-	void HandRenderer::PerformDraw(int iViewPortCount,
+	void HandRenderer::PerformDraw(unsigned int iViewPortCount,
 								   float *pViewPortData) {
 		glUseProgram(m_idProgram);
 		glBindVertexArray(m_idVertexArrayObject);
@@ -364,8 +351,17 @@ namespace rhapsodies {
 		size_t iSpheresPerViewport   = 22*2;
 		size_t iCylindersPerViewport = 15*2;
 
-		if(iViewPortCount > 0)			
-			glViewportArrayv(0, iViewPortCount, pViewPortData);
+		if(iViewPortCount > 0) {
+			// glViewportArrayv(0, iViewPortCount, pViewPortData);
+			// for(size_t vp = 0 ; vp < iViewPortCount ; ++vp) {
+			// 	glViewportIndexedfv(vp, pViewPortData+(4*vp));
+			// }
+			glViewport(
+				pViewPortData[0], 
+				pViewPortData[1], 
+				pViewPortData[2], 
+				pViewPortData[3]);
+		}
 		else {
 			iSpheresPerViewport   = ~0; // so instance id division
 										// always yields 0 in shader
