@@ -320,13 +320,28 @@ namespace rhapsodies {
 		
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 320*8, 240*8, 0, GL_RED, GL_FLOAT, data);
 		delete data;
-		
-//		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
-// 		// prepare compute shader
+		// prepare compute shader		
+		glValidateProgram(m_idReductionProgram);
+
+		GLint status;
+		glGetProgramiv(m_idReductionProgram, GL_VALIDATE_STATUS, &status);
+		if(status == GL_FALSE) {
+			std::cout << "WHUD?! reduction program not valid mon!" << std::endl;
+
+			GLint infoLogLength;
+			glGetProgramiv(m_idReductionProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+			GLchar *strInfoLog = new GLchar[infoLogLength + 1];
+			glGetProgramInfoLog(m_idReductionProgram, infoLogLength, NULL, strInfoLog);
+			std::cerr << "Redcution shader not valid: " << strInfoLog << std::endl;
+			delete[] strInfoLog;
+		}
+		
 		glUseProgram(m_idReductionProgram);
+		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
 		glUniform1i(glGetUniformLocation(m_idReductionProgram, "texResult"), 0);
+		glUseProgram(0);
 		
 		return true;
 	}
@@ -393,6 +408,7 @@ namespace rhapsodies {
 		PerformPSOTracking();
 		VistaType::microtime tPSO =
 			oTimer.GetMicroTime() - tStart;
+		vstr::out() << "Tracking FPS:        " << 1.0f/(tProcessFrames+tPSO) << std::endl;
 		vstr::out() << "Overall time:        " << tProcessFrames + tPSO << std::endl;
 		vstr::out() << "ProcessCameraFrames: " << tProcessFrames << std::endl;
 		vstr::out() << "PerformPSOTracking:  " << tPSO
@@ -554,8 +570,8 @@ namespace rhapsodies {
 			glFinish(); // memory barrier? execution barrier?
 
 			// reduction with compute shader
-			// glUseProgram(m_idReductionProgram);
-			// glDispatchCompute(8, 8, 1);
+			glUseProgram(m_idReductionProgram);
+			glDispatchCompute(8, 8, 1);
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

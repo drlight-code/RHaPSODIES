@@ -1,11 +1,10 @@
 #version 430
 
-uniform image2D texResult;
-
 layout (local_size_x = 16, local_size_y = 16) in;
+
+layout (r32f) uniform image2D texResult;
 
 void main() {
 	ivec2 storePos = ivec2(gl_GlobalInvocationID.xy);
-
-	imageStore(texResult, storePos, vec4(0.0, 1.0, 1.0, 0.0));
+	imageStore(texResult, storePos, vec4(1.0, 1.0, 1.0, 0.0));
 }
