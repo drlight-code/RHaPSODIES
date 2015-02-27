@@ -38,7 +38,9 @@ namespace rhapsodies {
 		std::vector<VistaColor> vColors;
 
 		VistaGeometryFactory::CreateEllipsoidData(
-			&vIndices, &vCoords, &vTexCoords, &vNormals, &vColors);
+			&vIndices, &vCoords, &vTexCoords, &vNormals, &vColors,
+			0.5f, 0.5f, 0.5f,
+			6, 6);
 
 		// generate vertex list from indices
 		std::vector<VistaIndexedVertex>::iterator it;
@@ -54,7 +56,10 @@ namespace rhapsodies {
 		vColors.clear();
 		VistaGeometryFactory::CreateConeData(
 			&vIndices, &vCoordsFloat, &vTexCoordsFloat,
-			&vNormalsFloat, &vColors);
+			&vNormalsFloat, &vColors,
+			0.5f, 0.5f, 1.0f,
+			6, 1, 1
+			);
 
 		// generate vertex list from indices
 		for( it = vIndices.begin() ; it != vIndices.end() ; ++it ) {

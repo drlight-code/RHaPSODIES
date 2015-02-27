@@ -545,8 +545,8 @@ namespace rhapsodies {
 
 					// we need to draw after 16 drawn pairs of hands (viewports)
 					//if(row%2 == 1 && col == 7) {
-					 	m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
-					 	vViewportData.clear();
+					m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
+					vViewportData.clear();
 						//}
 				}
 			}
@@ -556,7 +556,6 @@ namespace rhapsodies {
 			// reduction with compute shader
 			// glUseProgram(m_idReductionProgram);
 			// glDispatchCompute(8, 8, 1);
-			
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
