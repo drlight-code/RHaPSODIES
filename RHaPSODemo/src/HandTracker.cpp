@@ -250,11 +250,11 @@ namespace rhapsodies {
 	bool HandTracker::InitHandModels() {
 		m_pHandModelLeft  = new HandModel;
 		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
-		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, 0, -0.5));
+		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, -0.1, -0.5));
 
 		m_pHandModelRight = new HandModel;
 		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
-		m_pHandModelRight->SetPosition(VistaVector3D(0.1, 0, -0.5));
+		m_pHandModelRight->SetPosition(VistaVector3D(0.1, -0.1, -0.5));
 
 		m_pHandModelRep = new HandModelRep;
 
@@ -340,7 +340,7 @@ namespace rhapsodies {
 		
 		glUseProgram(m_idReductionProgram);
 		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-		glUniform1i(glGetUniformLocation(m_idReductionProgram, "texResult"), 0);
+		glUniform1i(glGetUniformLocation(m_idReductionProgram, "imgResult"), 0);
 		glUseProgram(0);
 		
 		return true;
@@ -550,7 +550,7 @@ namespace rhapsodies {
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-					RandomizeModels();
+//					RandomizeModels();
 					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
 					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
 
@@ -570,8 +570,20 @@ namespace rhapsodies {
 			glFinish(); // memory barrier? execution barrier?
 
 			// reduction with compute shader
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, m_idDepthTexture);
+			
 			glUseProgram(m_idReductionProgram);
-			glDispatchCompute(8, 8, 1);
+			glDispatchCompute(320*8/16, 240*8/16, 1);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
