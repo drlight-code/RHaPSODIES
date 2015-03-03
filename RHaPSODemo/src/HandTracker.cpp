@@ -136,6 +136,7 @@ namespace rhapsodies {
 
 	const std::string sPSOGenerationsName = "PSO_GENERATIONS";
 
+	const std::string sPrintTimesName = "PRINT_TIMES";
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
@@ -269,9 +270,9 @@ namespace rhapsodies {
 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32,
 					 320*8, 240*8, 0,
-					 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+					 GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
 
 		glGenBuffers(1, &m_idCameraTexturePBO);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
@@ -285,9 +286,9 @@ namespace rhapsodies {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32,
 					 320*8, 240*8, 0,
-					 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+					 GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
 
 		glGenFramebuffers(1, &m_idDepthTextureFBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idDepthTextureFBO);
@@ -327,8 +328,6 @@ namespace rhapsodies {
 		GLint status;
 		glGetProgramiv(m_idReductionProgram, GL_VALIDATE_STATUS, &status);
 		if(status == GL_FALSE) {
-			std::cout << "WHUD?! reduction program not valid mon!" << std::endl;
-
 			GLint infoLogLength;
 			glGetProgramiv(m_idReductionProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
 
@@ -342,7 +341,29 @@ namespace rhapsodies {
 		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
 		glUniform1i(glGetUniformLocation(m_idReductionProgram, "imgResult"), 0);
 		glUseProgram(0);
-		
+
+
+		// print compute shader limits for this driver/gpu
+		GLint values[3];
+
+		glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, values);
+		vstr::out() << "MAX_COMPUTE_SHARED_MEMORY_SIZE:     " << values[0] << std::endl;
+
+		glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, values);
+		vstr::out() << "MAX_COMPUTE_WORK_GROUP_INVOCATIONS: " << values[0] << std::endl;
+
+		for(size_t index = 0 ; index < 3 ; ++index)
+			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, index, values+index);
+		vstr::out() << "GL_MAX_COMPUTE_WORK_GROUP_COUNT:    "
+					<< "[" << values[0] << ", " << values[1] << ", " << values[2]
+					<< "]" << std::endl;
+
+		for(size_t index = 0 ; index < 3 ; ++index)
+			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, index, values+index);
+		vstr::out() << "GL_MAX_COMPUTE_WORK_GROUP_SIZE:     "
+					<< "[" << values[0] << ", " << values[1] << ", " << values[2]
+					<< "]" << std::endl;
+	
 		return true;
 	}
 
@@ -371,6 +392,9 @@ namespace rhapsodies {
 
 		m_oConfig.iPSOGenerations = oTrackerConfig.GetValueOrDefault(
 			sPSOGenerationsName, 45);
+
+		m_oConfig.bPrintTimes = oTrackerConfig.GetValueOrDefault(
+			sPrintTimesName, false);
 
 		const VistaPropertyList &oCameraConfig =
 			oConfig.GetSubListConstRef(RHaPSODemo::sCameraSectionName);
@@ -408,11 +432,14 @@ namespace rhapsodies {
 		PerformPSOTracking();
 		VistaType::microtime tPSO =
 			oTimer.GetMicroTime() - tStart;
-		vstr::out() << "Tracking FPS:        " << 1.0f/(tProcessFrames+tPSO) << std::endl;
-		vstr::out() << "Overall time:        " << tProcessFrames + tPSO << std::endl;
-		vstr::out() << "ProcessCameraFrames: " << tProcessFrames << std::endl;
-		vstr::out() << "PerformPSOTracking:  " << tPSO
-					<< std::endl << std::endl;
+
+		if(m_oConfig.bPrintTimes) {
+			vstr::out() << "Tracking FPS:        " << 1.0f/(tProcessFrames+tPSO) << std::endl;
+			vstr::out() << "Overall time:        " << tProcessFrames + tPSO << std::endl;
+			vstr::out() << "ProcessCameraFrames: " << tProcessFrames << std::endl;
+			vstr::out() << "PerformPSOTracking:  " << tPSO
+						<< std::endl << std::endl;
+		}
 		
 		return true;
 	}
@@ -481,14 +508,15 @@ namespace rhapsodies {
 
  		m_pCameraTexturePBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
  										  GL_WRITE_ONLY);		
-		memcpy(m_pCameraTexturePBO, m_pDepthBufferFloat, 320*240*4);
+		memcpy(m_pCameraTexturePBO, m_pDepthBufferInt, 320*240*4);
 		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 
 		for(int row = 0 ; row < 8 ; row++) {
 			for(int col = 0 ; col < 8 ; col++) {
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 
 								320*col, 240*row, 320, 240,
-								GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+								GL_DEPTH_COMPONENT,
+								GL_UNSIGNED_INT, NULL);
 			}
 		}
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
@@ -550,7 +578,7 @@ namespace rhapsodies {
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-//					RandomizeModels();
+					RandomizeModels();
 					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
 					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
 
@@ -650,7 +678,8 @@ namespace rhapsodies {
 				m_pDepthRGBBuffer[3*pixel+1] = 0;
 				m_pDepthRGBBuffer[3*pixel+2] = 0;
 				
-				m_pDepthBufferFloat[pixel] = 1.0f; // comment out for fun
+//				m_pDepthBufferFloat[pixel] = 1.0f; // comment out for fun
+				m_pDepthBufferInt[pixel] = 0xffffffff; // comment out for fun
 
 				m_pUVMapRGBBuffer[3*pixel+0] = 0;
 				m_pUVMapRGBBuffer[3*pixel+1] = 0;
@@ -659,7 +688,7 @@ namespace rhapsodies {
 			else {
 				// transform depth value range, in millimeters:
 				// 100  -> 0
-				// 1100 -> ffff
+				// 1100 -> ffffffff
 				// @todo get rid of hard coding
 				
 				unsigned int zWorldMM = m_pDepthBuffer[pixel];
@@ -674,7 +703,8 @@ namespace rhapsodies {
 						((near + far - 2.0f*near*far/(float(zWorldMM)/1000.0f)) /
 						 (far - near) + 1.0f) / 2.0f;
 				}
-				m_pDepthBufferFloat[pixel] = zScreen;
+//				m_pDepthBufferFloat[pixel] = zScreen;
+				m_pDepthBufferInt[pixel] = zScreen * 0xffffffff;
 			}
 		}
 		pProf->StopSection();

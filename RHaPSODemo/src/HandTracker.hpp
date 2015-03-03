@@ -104,6 +104,8 @@ namespace rhapsodies {
 			unsigned int iDilationSize; // dilation blob size
 
 			unsigned int iPSOGenerations; // max pso generation count
+
+			bool bPrintTimes;
 		};
 
 		void FilterSkinAreas();
@@ -142,7 +144,8 @@ namespace rhapsodies {
 
 		unsigned char  m_pColorBuffer[320*240*3];
 		unsigned short m_pDepthBuffer[320*240];
-		float          m_pDepthBufferFloat[320*240];
+		unsigned int   m_pDepthBufferInt[320*240];
+//		float m_pDepthBufferFloat[320*240];
 
 		unsigned char m_pSkinMap[320*240];
 
