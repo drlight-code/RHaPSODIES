@@ -45,8 +45,10 @@ namespace rhapsodies {
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
 	TexturedQuadGLDraw::TexturedQuadGLDraw(GLuint texId, bool bYFlip,
-										   ShaderRegistry *pShaderReg) :
+										   ShaderRegistry *pShaderReg,
+										   std::string sShader) :
 		m_pShaderReg(pShaderReg),
+		m_sShader(sShader),
 		m_texId(texId)
 	{
 		glGenVertexArrays(1, &m_vaId);
@@ -82,6 +84,9 @@ namespace rhapsodies {
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
+
+		m_uniSamplerLocation = glGetUniformLocation(
+			pShaderReg->GetProgram(m_sShader), "texSampler");
 	}
 
 	TexturedQuadGLDraw::~TexturedQuadGLDraw() {
@@ -95,8 +100,11 @@ namespace rhapsodies {
 
 		glBindVertexArray(m_vaId);
 
+		glUseProgram(m_pShaderReg->GetProgram(m_sShader));
+		glUniform1i(m_uniSamplerLocation, 0);
+
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_texId);
-		glUseProgram(m_pShaderReg->GetProgram("textured"));
 
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbVertId);
 		glEnableVertexAttribArray(0);

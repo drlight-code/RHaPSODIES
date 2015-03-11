@@ -2,16 +2,17 @@
 
 layout (local_size_x = 16, local_size_y = 16) in;
 
-layout (binding = 0) uniform sampler2D texCamera;
-layout (binding = 1) uniform sampler2D texRendered;
-layout (r32f) uniform image2D imgResult;
+layout (binding = 0) uniform isampler2D texCamera;
+layout (binding = 1) uniform isampler2D texRendered;
+layout (r32ui) uniform uimage2D imgResult;
 
 void main() {
 	ivec2 posGlobal = ivec2(gl_GlobalInvocationID.xy);
-	vec2 posScreen = vec2(posGlobal) / vec2(320*8, 240*8);
+	vec2  posScreen = vec2(posGlobal) / vec2(320*8, 240*8);
 
-	vec4 renderedSample = texture2D(texRendered, posScreen);
-	vec4 cameraSample    = texture2D(texCamera, posScreen);
+	ivec4 renderedSample = texture(texRendered, posScreen);
+	ivec4 cameraSample   = texture(texCamera,   posScreen);
 	
-	imageStore(imgResult, posGlobal, cameraSample-renderedSample);
+	imageStore(imgResult, posGlobal, abs(cameraSample-renderedSample)<<7);
+//	imageStore(imgResult, posGlobal, uvec4(0xffffffff,0,0,0));
 }

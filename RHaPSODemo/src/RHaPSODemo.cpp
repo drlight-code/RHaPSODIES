@@ -294,6 +294,9 @@ namespace rhapsodies {
 			"frag_textured", GL_FRAGMENT_SHADER,
 			"resources/shaders/textured.frag");
 		m_pShaderReg->RegisterShader(
+			"frag_textured_uint", GL_FRAGMENT_SHADER,
+			"resources/shaders/textured_uint.frag");
+		m_pShaderReg->RegisterShader(
 			"frag_depthtexture", GL_FRAGMENT_SHADER,
 			"resources/shaders/depthtexture.frag");
 		m_pShaderReg->RegisterShader(
@@ -316,6 +319,11 @@ namespace rhapsodies {
 		vec_shaders.push_back("frag_textured");		
 		m_pShaderReg->RegisterProgram("textured", vec_shaders);
 
+		vec_shaders.clear();
+		vec_shaders.push_back("vert_vpos_uv");		
+		vec_shaders.push_back("frag_textured_uint");		
+		m_pShaderReg->RegisterProgram("textured_uint", vec_shaders);
+	
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos");
 		vec_shaders.push_back("frag_solid_green");		
@@ -413,7 +421,7 @@ namespace rhapsodies {
 		
 		// ImageDraw: rendered depth map
 		TexturedQuadGLDraw *pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetDepthTextureId(), false, m_pShaderReg);
+			m_pHandTracker->GetRenderedTextureId(), false, m_pShaderReg);
 //		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_PSO_RENDERED, pPBODraw); 
 
 		m_pDepthRenderedDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
@@ -429,11 +437,10 @@ namespace rhapsodies {
 
 		// ImageDraw: result texture
 		pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetResultTextureId(), false, m_pShaderReg);
+			m_pHandTracker->GetResultTextureId(), false, m_pShaderReg, "textured_uint");
 
 		m_pResultTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
 		m_pResultTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(2, -1,0));
-
 
 
 		// // ImageDraw for histogram

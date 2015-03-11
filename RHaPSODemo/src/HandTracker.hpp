@@ -64,7 +64,7 @@ namespace rhapsodies {
 
 		void SetHandRenderer(HandRenderer *pRenderer);
 
-		GLuint GetDepthTextureId();
+		GLuint GetRenderedTextureId();
 		GLuint GetCameraTextureId();
 		GLuint GetResultTextureId();
 		
@@ -145,7 +145,6 @@ namespace rhapsodies {
 		unsigned char  m_pColorBuffer[320*240*3];
 		unsigned short m_pDepthBuffer[320*240];
 		unsigned int   m_pDepthBufferInt[320*240];
-//		float m_pDepthBufferFloat[320*240];
 
 		unsigned char m_pSkinMap[320*240];
 
@@ -153,15 +152,18 @@ namespace rhapsodies {
 		unsigned char m_pDepthRGBBuffer[320*240*3];
 		unsigned char m_pUVMapRGBBuffer[320*240*3];
 
-		GLuint m_idDepthTexture;
-		GLuint m_idDepthTextureFBO;
+		GLuint m_idRenderedTexture;
+		GLuint m_idRenderedTextureFBO;
 
 		GLuint m_idCameraTexture;		
 		GLuint m_idCameraTexturePBO;
 		void *m_pCameraTexturePBO;
 
 		GLuint m_idReductionProgram;
+
 		GLuint m_idResultTexture;
+		GLuint m_idResultTextureUnion;
+		GLuint m_idResultTextureIntersection;
 	};
 }
 

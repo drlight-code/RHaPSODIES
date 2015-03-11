@@ -191,8 +191,8 @@ namespace rhapsodies {
 		m_pHandRenderer = pRenderer;
 	}
 
-	GLuint HandTracker::GetDepthTextureId() {
-		return m_idDepthTexture;
+	GLuint HandTracker::GetRenderedTextureId() {
+		return m_idRenderedTexture;
 	}
 
 	GLuint HandTracker::GetCameraTextureId() {
@@ -270,7 +270,7 @@ namespace rhapsodies {
 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
 					 320*8, 240*8, 0,
 					 GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
 
@@ -281,47 +281,64 @@ namespace rhapsodies {
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 		// prepare FBO rendering
-		glGenTextures(1, &m_idDepthTexture);
-		glBindTexture(GL_TEXTURE_2D, m_idDepthTexture);
+		glGenTextures(1, &m_idRenderedTexture);
+		glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
 					 320*8, 240*8, 0,
 					 GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
 
-		glGenFramebuffers(1, &m_idDepthTextureFBO);
-		glBindFramebuffer(GL_FRAMEBUFFER, m_idDepthTextureFBO);
+		glGenFramebuffers(1, &m_idRenderedTextureFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_idRenderedTextureFBO);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-							   GL_TEXTURE_2D, m_idDepthTexture, 0);
+							   GL_TEXTURE_2D, m_idRenderedTexture, 0);
 
-		CheckFrameBufferStatus(m_idDepthTextureFBO);
+		CheckFrameBufferStatus(m_idRenderedTextureFBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		return true;
 	}
 
 	bool HandTracker::InitReduction() {
-		// prepare result texture
+		// prepare result textures
 		glGenTextures(1, &m_idResultTexture);
+		// glGenTextures(1, &m_idResultTextureUnion);
+		// glGenTextures(1, &m_idResultTextureIntersection);
+		
 
+		unsigned int *data = new unsigned int[320*240*8*8];
+		for(int i = 0; i < 320*240*8*8; ++i) {
+			if(i < 320*240*8*8/2)
+				data[i] = 0x7fffffffu;
+			else
+				data[i] = 0xffffffffu;
+		}		
+		
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		size_t texSize = 320*240*8*8;
-		float *data;
-		data = new float[texSize];
+//		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, 320*8, 240*8, 0, GL_RED, GL_UNSIGNED_INT, data);
+//		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 320*8, 240*8, 0, GL_RED, GL_FLOAT, data);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 320*8, 240*8);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
 
-		for(size_t index = 0 ; index < texSize ; index++) {
-			data[index] = float(index)/texSize;
-		}
+		delete [] data;
+
+		// glBindTexture(GL_TEXTURE_2D, m_idResultTextureUnion);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		// glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 320*8, 240*8, 0, GL_RED, GL_FLOAT, NULL);
+
+		// glBindTexture(GL_TEXTURE_2D, m_idResultTextureIntersection);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		// glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 320*8, 240*8, 0, GL_RED, GL_FLOAT, NULL);
 		
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 320*8, 240*8, 0, GL_RED, GL_FLOAT, data);
-		delete data;
-
 		// prepare compute shader		
 		glValidateProgram(m_idReductionProgram);
 
@@ -338,10 +355,9 @@ namespace rhapsodies {
 		}
 		
 		glUseProgram(m_idReductionProgram);
-		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
 		glUniform1i(glGetUniformLocation(m_idReductionProgram, "imgResult"), 0);
 		glUseProgram(0);
-
 
 		// print compute shader limits for this driver/gpu
 		GLint values[3];
@@ -564,7 +580,7 @@ namespace rhapsodies {
 		// VistaTransformMatrix mRotY(qRotY);
 		// glMultMatrixf(mRotY.GetData());
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_idDepthTextureFBO);	
+		glBindFramebuffer(GL_FRAMEBUFFER, m_idRenderedTextureFBO);	
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// PSO for model hypotheses
 		
@@ -578,7 +594,8 @@ namespace rhapsodies {
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-					RandomizeModels();
+//					RandomizeModels();
+					
 					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
 					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
 
@@ -602,7 +619,7 @@ namespace rhapsodies {
 			glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
 
 			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, m_idDepthTexture);
+			glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
 			
 			glUseProgram(m_idReductionProgram);
 			glDispatchCompute(320*8/16, 240*8/16, 1);
@@ -678,7 +695,6 @@ namespace rhapsodies {
 				m_pDepthRGBBuffer[3*pixel+1] = 0;
 				m_pDepthRGBBuffer[3*pixel+2] = 0;
 				
-//				m_pDepthBufferFloat[pixel] = 1.0f; // comment out for fun
 				m_pDepthBufferInt[pixel] = 0xffffffff; // comment out for fun
 
 				m_pUVMapRGBBuffer[3*pixel+0] = 0;
@@ -687,8 +703,8 @@ namespace rhapsodies {
 			}
 			else {
 				// transform depth value range, in millimeters:
-				// 100  -> 0
-				// 1100 -> ffffffff
+				// 100mm  -> 0
+				// 1100mm -> ffffffff
 				// @todo get rid of hard coding
 				
 				unsigned int zWorldMM = m_pDepthBuffer[pixel];
@@ -703,7 +719,6 @@ namespace rhapsodies {
 						((near + far - 2.0f*near*far/(float(zWorldMM)/1000.0f)) /
 						 (far - near) + 1.0f) / 2.0f;
 				}
-//				m_pDepthBufferFloat[pixel] = zScreen;
 				m_pDepthBufferInt[pixel] = zScreen * 0xffffffff;
 			}
 		}
