@@ -144,7 +144,7 @@ namespace rhapsodies {
 
 		unsigned char  m_pColorBuffer[320*240*3];
 		unsigned short m_pDepthBuffer[320*240];
-		unsigned int   m_pDepthBufferInt[320*240];
+		unsigned int   m_pDepthBufferUInt[320*240];
 
 		unsigned char m_pSkinMap[320*240];
 

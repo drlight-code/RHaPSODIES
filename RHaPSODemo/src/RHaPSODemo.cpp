@@ -429,7 +429,7 @@ namespace rhapsodies {
 
 		// ImageDraw: camera depth map
 		pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetCameraTextureId(), true, m_pShaderReg);
+			m_pHandTracker->GetCameraTextureId(), false, m_pShaderReg);
 //		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_PSO_CAMERA, pPBODraw); 
 
 		m_pDepthCameraDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
@@ -455,8 +455,6 @@ namespace rhapsodies {
 
 		//m_pDepthHistogramHandler->Enable(false);
 
-
-		
 		return true;
 	}
 

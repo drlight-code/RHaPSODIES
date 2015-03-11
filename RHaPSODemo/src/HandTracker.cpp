@@ -524,7 +524,7 @@ namespace rhapsodies {
 
  		m_pCameraTexturePBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
  										  GL_WRITE_ONLY);		
-		memcpy(m_pCameraTexturePBO, m_pDepthBufferInt, 320*240*4);
+		memcpy(m_pCameraTexturePBO, m_pDepthBufferUInt, 320*240*4);
 		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 
 		for(int row = 0 ; row < 8 ; row++) {
@@ -689,17 +689,18 @@ namespace rhapsodies {
 		}
 
 		pProf->StartSection("Depth/UV filtering");
+		unsigned int uiDepthValue = 0xffffffffu;
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
 			if( image_processed.data[pixel] == 0 ) {
 				m_pDepthRGBBuffer[3*pixel+0] = 0;
 				m_pDepthRGBBuffer[3*pixel+1] = 0;
 				m_pDepthRGBBuffer[3*pixel+2] = 0;
 				
-				m_pDepthBufferInt[pixel] = 0xffffffff; // comment out for fun
-
 				m_pUVMapRGBBuffer[3*pixel+0] = 0;
 				m_pUVMapRGBBuffer[3*pixel+1] = 0;
 				m_pUVMapRGBBuffer[3*pixel+2] = 0;
+
+				uiDepthValue = 0xffffffffu;
 			}
 			else {
 				// transform depth value range, in millimeters:
@@ -719,8 +720,13 @@ namespace rhapsodies {
 						((near + far - 2.0f*near*far/(float(zWorldMM)/1000.0f)) /
 						 (far - near) + 1.0f) / 2.0f;
 				}
-				m_pDepthBufferInt[pixel] = zScreen * 0xffffffff;
+				uiDepthValue = zScreen * 0xffffffffu;
 			}
+			int targetRow = 240 - 1 - (pixel/320);
+			int targetCol = pixel % 320;
+
+			m_pDepthBufferUInt[320*targetRow + targetCol] = uiDepthValue;
+
 		}
 		pProf->StopSection();
 	}
