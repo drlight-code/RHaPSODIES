@@ -153,7 +153,8 @@ namespace rhapsodies {
 		m_pHandModelRight(NULL),
 		m_pHandRenderer(new HandRenderer(pReg)) {
 
-		m_idReductionProgram = pReg->GetProgram("reduction");
+		m_idDifferenceScoreProgram = pReg->GetProgram("difference_score");
+		m_idReductionProgram       = pReg->GetProgram("reduction");
 	}
 
 	HandTracker::~HandTracker() {
@@ -251,11 +252,11 @@ namespace rhapsodies {
 	bool HandTracker::InitHandModels() {
 		m_pHandModelLeft  = new HandModel;
 		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
-		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, -0.1, -0.5));
+		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
 
 		m_pHandModelRight = new HandModel;
 		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
-		m_pHandModelRight->SetPosition(VistaVector3D(0.1, -0.1, -0.5));
+		m_pHandModelRight->SetPosition(VistaVector3D(0.1, -0.1, 0.5));
 
 		m_pHandModelRep = new HandModelRep;
 
@@ -340,23 +341,23 @@ namespace rhapsodies {
 		// glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 320*8, 240*8, 0, GL_RED, GL_FLOAT, NULL);
 		
 		// prepare compute shader		
-		glValidateProgram(m_idReductionProgram);
+		glValidateProgram(m_idDifferenceScoreProgram);
 
 		GLint status;
-		glGetProgramiv(m_idReductionProgram, GL_VALIDATE_STATUS, &status);
+		glGetProgramiv(m_idDifferenceScoreProgram, GL_VALIDATE_STATUS, &status);
 		if(status == GL_FALSE) {
 			GLint infoLogLength;
-			glGetProgramiv(m_idReductionProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
+			glGetProgramiv(m_idDifferenceScoreProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 			GLchar *strInfoLog = new GLchar[infoLogLength + 1];
-			glGetProgramInfoLog(m_idReductionProgram, infoLogLength, NULL, strInfoLog);
+			glGetProgramInfoLog(m_idDifferenceScoreProgram, infoLogLength, NULL, strInfoLog);
 			std::cerr << "Redcution shader not valid: " << strInfoLog << std::endl;
 			delete[] strInfoLog;
 		}
 		
-		glUseProgram(m_idReductionProgram);
+		glUseProgram(m_idDifferenceScoreProgram);
 		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glUniform1i(glGetUniformLocation(m_idReductionProgram, "imgResult"), 0);
+		glUniform1i(glGetUniformLocation(m_idDifferenceScoreProgram, "imgResult"), 0);
 		glUseProgram(0);
 
 		// print compute shader limits for this driver/gpu
@@ -393,7 +394,7 @@ namespace rhapsodies {
 			throw std::runtime_error(
 				std::string() + "Config section ["
 				+ RHaPSODemo::sTrackerSectionName
-				+ "] not found!");			   
+				+ "] not found!");			
 		}
 
 		const VistaPropertyList oTrackerConfig =
@@ -572,13 +573,13 @@ namespace rhapsodies {
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
-		// VistaQuaternion qRotY =
-		// 	VistaQuaternion(
-		// 		VistaAxisAndAngle(
-		// 			VistaVector3D(0, 1, 0), Vista::Pi));
+		VistaQuaternion qRotY =
+			VistaQuaternion(
+				VistaAxisAndAngle(
+					VistaVector3D(0, 1, 0), Vista::Pi));
 
-		// VistaTransformMatrix mRotY(qRotY);
-		// glMultMatrixf(mRotY.GetData());
+		VistaTransformMatrix mRotY(qRotY);
+		glMultMatrixf(mRotY.GetData());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idRenderedTextureFBO);	
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
@@ -594,7 +595,7 @@ namespace rhapsodies {
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-//					RandomizeModels();
+					RandomizeModels();
 					
 					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
 					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
@@ -621,7 +622,7 @@ namespace rhapsodies {
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
 			
-			glUseProgram(m_idReductionProgram);
+			glUseProgram(m_idDifferenceScoreProgram);
 			glDispatchCompute(320*8/16, 240*8/16, 1);
 
 			glActiveTexture(GL_TEXTURE1);

@@ -160,6 +160,7 @@ namespace rhapsodies {
 		void *m_pCameraTexturePBO;
 
 		GLuint m_idReductionProgram;
+		GLuint m_idDifferenceScoreProgram;
 
 		GLuint m_idResultTexture;
 		GLuint m_idResultTextureUnion;

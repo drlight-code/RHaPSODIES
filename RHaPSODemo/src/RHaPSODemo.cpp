@@ -314,6 +314,10 @@ namespace rhapsodies {
 			"reduction", GL_COMPUTE_SHADER,
 			"resources/shaders/reduction.comp");
 
+		m_pShaderReg->RegisterShader(
+			"difference_score", GL_COMPUTE_SHADER,
+			"resources/shaders/difference_score.comp");
+
 		std::vector<std::string> vec_shaders;
 		vec_shaders.push_back("vert_vpos_uv");		
 		vec_shaders.push_back("frag_textured");		
@@ -341,6 +345,10 @@ namespace rhapsodies {
 		m_pShaderReg->RegisterProgram("indexedtransform", vec_shaders);
 
 		vec_shaders.clear();
+		vec_shaders.push_back("difference_score");
+		m_pShaderReg->RegisterProgram("difference_score", vec_shaders);
+
+		vec_shaders.clear();
 		vec_shaders.push_back("reduction");
 		m_pShaderReg->RegisterProgram("reduction", vec_shaders);
 
@@ -365,7 +373,7 @@ namespace rhapsodies {
 			m_pShaderReg);
 		
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
-		m_pHandModelTransform->SetTranslation(0,-0.10,2.7);
+		m_pHandModelTransform->SetTranslation(0,-0.10,2);
 		m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,
 												m_pHandRenderDraw);
 
