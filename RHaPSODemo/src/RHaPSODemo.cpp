@@ -445,7 +445,8 @@ namespace rhapsodies {
 
 		// ImageDraw: result texture
 		pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetResultTextureId(), false, m_pShaderReg, "textured_uint");
+			m_pHandTracker->GetResultDifferenceTextureId(),
+			false, m_pShaderReg, "textured_uint");
 
 		m_pResultTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
 		m_pResultTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(2, -1,0));

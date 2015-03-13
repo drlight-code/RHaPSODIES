@@ -200,8 +200,16 @@ namespace rhapsodies {
 		return m_idCameraTexture;
 	}
 
-	GLuint HandTracker::GetResultTextureId() {
-		return m_idResultTexture;
+	GLuint HandTracker::GetResultDifferenceTextureId() {
+		return m_idResultDifferenceTexture;
+	}
+
+	GLuint HandTracker::GetResultUnionTextureId() {
+		return m_idResultUnionTexture;
+	}
+
+	GLuint HandTracker::GetResultIntersectionTextureId() {
+		return m_idResultIntersectionTexture;
 	}
 
 	bool HandTracker::Initialize() {
@@ -305,9 +313,9 @@ namespace rhapsodies {
 
 	bool HandTracker::InitReduction() {
 		// prepare result textures
-		glGenTextures(1, &m_idResultTexture);
-		// glGenTextures(1, &m_idResultTextureUnion);
-		// glGenTextures(1, &m_idResultTextureIntersection);
+		glGenTextures(1, &m_idResultDifferenceTexture);
+		glGenTextures(1, &m_idResultUnionTexture);
+		glGenTextures(1, &m_idResultIntersectionTexture);
 		
 
 		unsigned int *data = new unsigned int[320*240*8*8];
@@ -319,26 +327,30 @@ namespace rhapsodies {
 		}		
 		
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
+		glBindTexture(GL_TEXTURE_2D, m_idResultDifferenceTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-//		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, 320*8, 240*8, 0, GL_RED, GL_UNSIGNED_INT, data);
-//		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 320*8, 240*8, 0, GL_RED, GL_FLOAT, data);
 		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 320*8, 240*8);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
-
 		delete [] data;
 
-		// glBindTexture(GL_TEXTURE_2D, m_idResultTextureUnion);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		// glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 320*8, 240*8, 0, GL_RED, GL_FLOAT, NULL);
+		glBindTexture(GL_TEXTURE_2D, m_idResultUnionTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		// glBindTexture(GL_TEXTURE_2D, m_idResultTextureIntersection);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		// glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 320*8, 240*8, 0, GL_RED, GL_FLOAT, NULL);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R8UI, 320*8, 240*8);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8,
+						GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
+
+		glBindTexture(GL_TEXTURE_2D, m_idResultIntersectionTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R8UI, 320*8, 240*8);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8,
+						GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
+
 		
 		// prepare compute shader		
 		glValidateProgram(m_idDifferenceScoreProgram);
@@ -356,8 +368,18 @@ namespace rhapsodies {
 		}
 		
 		glUseProgram(m_idDifferenceScoreProgram);
-		glBindImageTexture(0, m_idResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glUniform1i(glGetUniformLocation(m_idDifferenceScoreProgram, "imgResult"), 0);
+		glBindImageTexture(0, m_idResultDifferenceTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		glUniform1i(glGetUniformLocation(m_idDifferenceScoreProgram, "imgResultDifference"),
+					0);
+		// glBindImageTexture(0, m_idResultUnionTexture,
+		// 				   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+		// glUniform1i(glGetUniformLocation(m_idDifferenceScoreProgram, "imgResultUnion"),
+		// 			1);
+		// glBindImageTexture(0, m_idResultIntersectionTexture,
+		// 				   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+		// glUniform1i(glGetUniformLocation(m_idDifferenceScoreProgram, "imgResultIntersection"),
+		// 			2);
 		glUseProgram(0);
 
 		// print compute shader limits for this driver/gpu
@@ -595,7 +617,7 @@ namespace rhapsodies {
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-					RandomizeModels();
+//					RandomizeModels();
 					
 					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
 					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
@@ -614,6 +636,15 @@ namespace rhapsodies {
 			}
 
 			glFinish(); // memory barrier? execution barrier?
+
+			// first we write the per-pixel computations into three distinct textures
+			// 1. clamped depth differences between observed and rendered depth
+			// 2. union of observed and rendered skin maps
+			// 3. intersection of observed and rendered skin maps
+
+			// we then build the per-viewport sum by parallel
+			// reduction and evaluate the final per-hypothesis score
+			// on the cpu by lookup in the reduced result textures
 
 			// reduction with compute shader
 			glActiveTexture(GL_TEXTURE0);
