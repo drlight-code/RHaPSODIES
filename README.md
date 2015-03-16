@@ -17,8 +17,15 @@ Let's see how for we can get...
 
 ## License
 
-The work is licensed under the GNU General Public License. See
-LICENSE.
+The work is licensed under the GNU General Public License Version
+3, see LICENSE.
+
+*PLEASE NOTE:* As of now, the SkinClassifierRedMatter* classes use
+code which is licensed under CPOL (Code Project Open License,
+http://www.codeproject.com/info/cpol10.aspx) which is *not* compatible
+with the GPL. Before this project can be deployed in application or
+library form, we need to factor out the RedMatter code in it's own
+library which will then be dynamically linked!
 
 
 ## Contact
