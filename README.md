@@ -1,12 +1,10 @@
-RHaPSODIES
-==========
+# RHaPSODIES
 
-Real-Time Hand-Pose Particle Swarm Optimization for
-Dual-Handed Interaction with Electronic Systems
+Real-Time Hand-Pose Particle Swarm Optimization for Dual-Handed
+Interaction with Electronic Systems
 
 
-About
------
+## About
 
 This project implements [1]. The aim is to create:
 
@@ -17,22 +15,19 @@ This project implements [1]. The aim is to create:
 Let's see how for we can get...
 
 
-License
--------
+## License
 
 The work is licensed under the GNU General Public License. See
 LICENSE.
 
 
-Contact
--------
+## Contact
 
 patric.schmitz@rwth-aachen.de
 support@vr.rwth-aachen.de
 
 
-References
-----------
+## References
 
 [1] Tracking the Articulated Motion of Two Strongly Interacting Hands,
 I. Oikonomidis, N. Kyriazis, A.A. Argyros, IEEE CVPR 2012
