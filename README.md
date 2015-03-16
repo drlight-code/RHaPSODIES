@@ -1,7 +1,8 @@
 # RHaPSODIES
 
 Real-Time Hand-Pose Particle Swarm Optimization for Dual-Handed
-Interaction with Electronic Systems
+Interaction with Electronic Systems. A dual-hand tracker using RGB-D
+cameras.
 
 
 ## About
@@ -20,7 +21,7 @@ Let's see how for we can get...
 The work is licensed under the GNU General Public License Version
 3, see LICENSE.
 
-*PLEASE NOTE:* As of now, the SkinClassifierRedMatter* classes use
+**PLEASE NOTE:** As of now, the SkinClassifierRedMatter* classes use
 code which is licensed under CPOL (Code Project Open License,
 http://www.codeproject.com/info/cpol10.aspx) which is *not* compatible
 with the GPL. Before this project can be deployed in application or
@@ -31,7 +32,6 @@ library which will then be dynamically linked!
 ## Contact
 
 patric.schmitz@rwth-aachen.de
-support@vr.rwth-aachen.de
 
 
 ## References
