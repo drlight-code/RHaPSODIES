@@ -370,16 +370,10 @@ namespace rhapsodies {
 		glUseProgram(m_idDifferenceScoreProgram);
 		glBindImageTexture(0, m_idResultDifferenceTexture,
 						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glUniform1i(glGetUniformLocation(m_idDifferenceScoreProgram, "imgResultDifference"),
-					0);
-		// glBindImageTexture(0, m_idResultUnionTexture,
-		// 				   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
-		// glUniform1i(glGetUniformLocation(m_idDifferenceScoreProgram, "imgResultUnion"),
-		// 			1);
-		// glBindImageTexture(0, m_idResultIntersectionTexture,
-		// 				   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
-		// glUniform1i(glGetUniformLocation(m_idDifferenceScoreProgram, "imgResultIntersection"),
-		// 			2);
+		glBindImageTexture(1, m_idResultUnionTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+		glBindImageTexture(2, m_idResultIntersectionTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
 		glUseProgram(0);
 
 		// print compute shader limits for this driver/gpu
