@@ -200,15 +200,15 @@ namespace rhapsodies {
 		return m_idCameraTexture;
 	}
 
-	GLuint HandTracker::GetResultDifferenceTextureId() {
+	GLuint HandTracker::GetDifferenceTextureId() {
 		return m_idResultDifferenceTexture;
 	}
 
-	GLuint HandTracker::GetResultUnionTextureId() {
+	GLuint HandTracker::GetUnionTextureId() {
 		return m_idResultUnionTexture;
 	}
 
-	GLuint HandTracker::GetResultIntersectionTextureId() {
+	GLuint HandTracker::GetIntersectionTextureId() {
 		return m_idResultIntersectionTexture;
 	}
 
@@ -335,13 +335,21 @@ namespace rhapsodies {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
 		delete [] data;
 
+		unsigned char *data_uchar = new unsigned char[320*240*8*8];
+		for(int i = 0; i < 320*240*8*8; ++i) {
+			if(i < 320*240*8*8/2)
+				data_uchar[i] = 0x7f;
+			else
+				data_uchar[i] = 0xff;
+		}		
 		glBindTexture(GL_TEXTURE_2D, m_idResultUnionTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R8UI, 320*8, 240*8);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8,
-						GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
+						GL_RED_INTEGER, GL_UNSIGNED_BYTE, data_uchar);
+		delete [] data_uchar;
 
 		glBindTexture(GL_TEXTURE_2D, m_idResultIntersectionTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

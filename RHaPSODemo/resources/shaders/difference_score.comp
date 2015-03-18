@@ -2,8 +2,8 @@
 
 layout (local_size_x = 16, local_size_y = 16) in;
 
-layout (binding = 0) uniform isampler2D texCamera;
-layout (binding = 1) uniform isampler2D texRendered;
+layout (binding = 0) uniform usampler2D texCamera;
+layout (binding = 1) uniform usampler2D texRendered;
 
 layout (binding = 0, r32ui) uniform writeonly restrict uimage2D imgResultDifference;
 layout (binding = 1, r8ui)  uniform writeonly restrict uimage2D imgResultUnion;
@@ -13,9 +13,34 @@ void main() {
 	ivec2 posGlobal = ivec2(gl_GlobalInvocationID.xy);
 	vec2  posScreen = vec2(posGlobal) / vec2(320*8, 240*8);
 
-	ivec4 renderedSample = texture(texRendered, posScreen);
-	ivec4 cameraSample   = texture(texCamera,   posScreen);
-	
+	ivec4 renderedSample = ivec4(texture(texRendered, posScreen));
+	ivec4 cameraSample   = ivec4(texture(texCamera,   posScreen));
+
 	imageStore(imgResultDifference, posGlobal,
-			   abs(cameraSample-renderedSample)<<7);
+			   uvec4(abs(cameraSample - renderedSample)) << 7);
+	
+	// rendered|iCameraSample yield unsigned 24 bit value, where
+	// 0x00ffffff is zfar/invalid depth. we fill the first byte, then
+	// invert and | for union
+	// uint value = 
+	// 	~(uRenderedSample[0] | 0xff000000) |
+	// 	~(uCameraSample[0]   | 0xff000000);
+	uint value = uvec4(abs(cameraSample - renderedSample))[0];
+		
+		// ~(0x00fffff1 | 0xff000000) |
+		// ~(0x00ffffff | 0xff000000);
+
+	// @todo get rid of branching!~
+	uvec4 color_red = uvec4(1,0,0,1)*0xff;
+	uvec4 color_blk = uvec4(0,0,0,1)*0xff;
+	uvec4 color_out;
+	if(value)
+		color_out = color_red;
+	else
+		color_out = color_blk;
+	
+	imageStore(imgResultUnion, posGlobal, color_out);
+
+	// value = iRenderedSample | iCameraSample;
+	// imageStore(imgResultUnion, posGlobal, (value > 0)*0xff);
 }

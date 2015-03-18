@@ -163,7 +163,9 @@ namespace rhapsodies {
 		CondDelete(m_pDiagramDraw);
 		CondDelete(m_pDepthRenderedDraw);
 		CondDelete(m_pDepthCameraDraw);
-		CondDelete(m_pResultTextureDraw);
+		CondDelete(m_pDifferenceTextureDraw);
+		CondDelete(m_pUnionTextureDraw);
+		CondDelete(m_pIntersectionTextureDraw);
 
 		CondDelete(m_pHandRenderDraw);
 		CondDelete(m_pAxes);
@@ -297,6 +299,9 @@ namespace rhapsodies {
 			"frag_textured_uint", GL_FRAGMENT_SHADER,
 			"resources/shaders/textured_uint.frag");
 		m_pShaderReg->RegisterShader(
+			"frag_textured_uint8", GL_FRAGMENT_SHADER,
+			"resources/shaders/textured_uint8.frag");
+		m_pShaderReg->RegisterShader(
 			"frag_depthtexture", GL_FRAGMENT_SHADER,
 			"resources/shaders/depthtexture.frag");
 		m_pShaderReg->RegisterShader(
@@ -327,6 +332,11 @@ namespace rhapsodies {
 		vec_shaders.push_back("vert_vpos_uv");		
 		vec_shaders.push_back("frag_textured_uint");		
 		m_pShaderReg->RegisterProgram("textured_uint", vec_shaders);
+	
+		vec_shaders.clear();
+		vec_shaders.push_back("vert_vpos_uv");		
+		vec_shaders.push_back("frag_textured_uint8");		
+		m_pShaderReg->RegisterProgram("textured_uint8", vec_shaders);
 	
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos");
@@ -363,7 +373,7 @@ namespace rhapsodies {
 
 		// create global scene transform
 		m_pSceneTransform = pSG->NewTransformNode(pSG->GetRoot());
-		m_pSceneTransform->Translate(0, 0, -2.0);
+		m_pSceneTransform->Translate(0, 0, -3.0);
 
 		// hand model and view
 		m_pHandRenderDraw = new HandRenderDraw(
@@ -403,7 +413,7 @@ namespace rhapsodies {
 		m_pHandTracker->SetViewPBODraw(HandTracker::UVMAP, pPBODraw); 
 
 		m_pUVMapDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pUVMapDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,1,0));
+		m_pUVMapDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,2,0));
 		
 
 		// ImageDraw: segmented color image
@@ -418,7 +428,7 @@ namespace rhapsodies {
 		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_SEGMENTED, pPBODraw); 
 
 		m_pDepthSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pDepthSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,1,0));
+		m_pDepthSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,2,0));
 
 		// ImageDraw: segmented UV map
 		// pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
@@ -433,7 +443,7 @@ namespace rhapsodies {
 //		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_PSO_RENDERED, pPBODraw); 
 
 		m_pDepthRenderedDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
-		m_pDepthRenderedDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,-1,0));
+		m_pDepthRenderedDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,0,0));
 
 		// ImageDraw: camera depth map
 		pTexDraw = new TexturedQuadGLDraw(
@@ -441,16 +451,31 @@ namespace rhapsodies {
 //		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_PSO_CAMERA, pPBODraw); 
 
 		m_pDepthCameraDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
-		m_pDepthCameraDraw->GetTransformNode()->SetTranslation(VistaVector3D(0, -1,0));
+		m_pDepthCameraDraw->GetTransformNode()->SetTranslation(VistaVector3D(0, 0,0));
 
-		// ImageDraw: result texture
+		// ImageDraw: difference texture
 		pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetResultDifferenceTextureId(),
+			m_pHandTracker->GetDifferenceTextureId(),
 			false, m_pShaderReg, "textured_uint");
 
-		m_pResultTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
-		m_pResultTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(2, -1,0));
+		m_pDifferenceTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
+		m_pDifferenceTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(2, 0,0));
 
+		// ImageDraw: union texture
+		pTexDraw = new TexturedQuadGLDraw(
+			m_pHandTracker->GetUnionTextureId(),
+			false, m_pShaderReg, "textured_uint8");
+
+		m_pUnionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
+		m_pUnionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2, -2,0));
+
+		// ImageDraw: intersection texture
+		pTexDraw = new TexturedQuadGLDraw(
+			m_pHandTracker->GetIntersectionTextureId(),
+			false, m_pShaderReg, "textured_uint8");
+
+		m_pIntersectionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
+		m_pIntersectionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(0, -2,0));
 
 		// // ImageDraw for histogram
 		// m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
