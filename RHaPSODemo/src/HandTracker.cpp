@@ -346,18 +346,18 @@ namespace rhapsodies {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R8UI, 320*8, 240*8);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG8UI, 320*8, 240*8);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8,
-						GL_RED_INTEGER, GL_UNSIGNED_BYTE, data_uchar);
+						GL_RG_INTEGER, GL_UNSIGNED_BYTE, data_uchar);
 		delete [] data_uchar;
 
 		glBindTexture(GL_TEXTURE_2D, m_idResultIntersectionTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R8UI, 320*8, 240*8);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG8UI, 320*8, 240*8);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8,
-						GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
+						GL_RG_INTEGER, GL_UNSIGNED_BYTE, NULL);
 
 		
 		// prepare compute shader		

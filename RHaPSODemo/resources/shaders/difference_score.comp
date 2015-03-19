@@ -6,18 +6,20 @@ layout (binding = 0) uniform usampler2D texCamera;
 layout (binding = 1) uniform usampler2D texRendered;
 
 layout (binding = 0, r32ui) uniform writeonly restrict uimage2D imgResultDifference;
-layout (binding = 1, r8ui)  uniform writeonly restrict uimage2D imgResultUnion;
-layout (binding = 2, r8ui)  uniform writeonly restrict uimage2D imgResultIntersection;
+layout (binding = 1, rg8ui) uniform writeonly restrict uimage2D imgResultUnion;
+layout (binding = 2, rg8ui) uniform writeonly restrict uimage2D imgResultIntersection;
+
+uvec4 debug_color(uint val);
 
 void main() {
 	ivec2 posGlobal = ivec2(gl_GlobalInvocationID.xy);
 	vec2  posScreen = vec2(posGlobal) / vec2(320*8, 240*8);
 
-	ivec4 renderedSample = ivec4(texture(texRendered, posScreen));
-	ivec4 cameraSample   = ivec4(texture(texCamera,   posScreen));
+	uvec4 renderedSample = uvec4(texture(texRendered, posScreen) & 0x00ffffff);
+	uvec4 cameraSample   = uvec4(texture(texCamera,   posScreen) & 0x00ffffff);
 
 	imageStore(imgResultDifference, posGlobal,
-			   uvec4(abs(cameraSample - renderedSample)) << 7);
+			   uvec4(abs(ivec4(cameraSample)-ivec4(renderedSample)) << 7));
 	
 	// rendered|iCameraSample yield unsigned 24 bit value, where
 	// 0x00ffffff is zfar/invalid depth. we fill the first byte, then
@@ -31,16 +33,48 @@ void main() {
 		// ~(0x00ffffff | 0xff000000);
 
 	// @todo get rid of branching!~
-	uvec4 color_red = uvec4(1,0,0,1)*0xff;
-	uvec4 color_blk = uvec4(0,0,0,1)*0xff;
+	uvec4 color_red = uvec4(0xff,0,0,0);
+	uvec4 color_blk = uvec4(0,0,0,0);
 	uvec4 color_out;
 	if(value)
 		color_out = color_red;
 	else
 		color_out = color_blk;
+
+	color_out = debug_color(cameraSample[0]);
 	
 	imageStore(imgResultUnion, posGlobal, color_out);
 
 	// value = iRenderedSample | iCameraSample;
 	// imageStore(imgResultUnion, posGlobal, (value > 0)*0xff);
+}
+
+uvec4 debug_color(uint val) {
+	uvec4 color_out;
+	
+	if(gl_GlobalInvocationID[0] / 500 == 0) {
+		color_out = uvec4(0,
+						  (val & 0xff000000) >> 24,
+						  0,
+						  0);
+	}
+	if(gl_GlobalInvocationID[0] / 500 == 1) {
+		color_out = uvec4(0,
+						  (val & 0x00ff0000) >> 16,
+						  0,
+						  0);
+	}
+	if(gl_GlobalInvocationID[0] / 500 == 2) {
+		color_out = uvec4(0,
+						  (val & 0x0000ff00) >> 8,
+						  0,
+						  0);
+	}
+	if(gl_GlobalInvocationID[0] / 500 == 3) {
+		color_out = uvec4(0,
+						  (val & 0x000000ff) >> 0,
+						  0,
+						  0);
+	}
+	return color_out;
 }
