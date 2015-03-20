@@ -2,9 +2,10 @@
 
 layout (local_size_x = 16, local_size_y = 16) in;
 
-layout (binding = 0) uniform isampler2D texCamera;
-layout (binding = 1) uniform isampler2D texRendered;
-layout (r32ui) uniform uimage2D imgResult;
+// layout (binding = 0) uniform usampler2D texCamera;
+// layout (binding = 1) uniform usampler2D texRendered;
+
+// layout (r32ui) uniform uimage2D imgResult;
 
 void main() {
 	// ivec2 posGlobal = ivec2(gl_GlobalInvocationID.xy);

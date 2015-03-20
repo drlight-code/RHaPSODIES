@@ -317,7 +317,6 @@ namespace rhapsodies {
 		glGenTextures(1, &m_idResultUnionTexture);
 		glGenTextures(1, &m_idResultIntersectionTexture);
 		
-
 		unsigned int *data = new unsigned int[320*240*8*8];
 		for(int i = 0; i < 320*240*8*8; ++i) {
 			if(i < 320*240*8*8/2)
@@ -379,9 +378,9 @@ namespace rhapsodies {
 		glBindImageTexture(0, m_idResultDifferenceTexture,
 						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
 		glBindImageTexture(1, m_idResultUnionTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG8UI);
 		glBindImageTexture(2, m_idResultIntersectionTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG8UI);
 		glUseProgram(0);
 
 		// print compute shader limits for this driver/gpu
@@ -637,7 +636,7 @@ namespace rhapsodies {
 				}
 			}
 
-			glFinish(); // memory barrier? execution barrier?
+			//glFinish(); // memory barrier? execution barrier?
 
 			// first we write the per-pixel computations into three distinct textures
 			// 1. clamped depth differences between observed and rendered depth

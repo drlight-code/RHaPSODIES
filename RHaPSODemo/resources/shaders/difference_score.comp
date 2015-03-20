@@ -2,14 +2,14 @@
 
 layout (local_size_x = 16, local_size_y = 16) in;
 
-layout (binding = 0) uniform usampler2D texCamera;
-layout (binding = 1) uniform usampler2D texRendered;
+layout (binding = 0) uniform isampler2D texCameraDepth;
+layout (binding = 1) uniform isampler2D texRenderedDepth;
 
 layout (binding = 0, r32ui) uniform writeonly restrict uimage2D imgResultDifference;
 layout (binding = 1, rg8ui) uniform writeonly restrict uimage2D imgResultUnion;
 layout (binding = 2, rg8ui) uniform writeonly restrict uimage2D imgResultIntersection;
 
-uvec4 debug_color(uint val);
+uvec4 debug_color(int val);
 
 void main() {
 	ivec2 posGlobal = ivec2(gl_GlobalInvocationID.xy);
@@ -18,10 +18,10 @@ void main() {
 	// why do we have to mask the single bit here? it seems internal
 	// format is always signed, but the values should be positive
 	// still...	
-	uvec4 renderedSample = uvec4(texture(texRendered, posScreen)) & 0x007fffff;
-	uvec4 cameraSample   = uvec4(texture(texCamera,   posScreen)) & 0x007fffff;
+	ivec4 renderedSample = texture(texRenderedDepth, posScreen);
+	ivec4 cameraSample   = texture(texCameraDepth,   posScreen);
 
-	uvec4 diff_value = uvec4(abs(ivec4(cameraSample)-ivec4(renderedSample))) << 7;
+	uvec4 diff_value = uvec4(abs(cameraSample-renderedSample)) << 7;
 	imageStore(imgResultDifference, posGlobal, diff_value);
 	
 	// rendered|iCameraSample yield unsigned 24 bit value, where
@@ -41,15 +41,20 @@ void main() {
 	uvec4 color_out;
 
 	// union
-	uint value = (renderedSample | cameraSample)[0];
+	uint value = ((renderedSample | cameraSample) & 0x007fffff)[0];
 	if(value)
 		color_out = color_set;
 	else
 		color_out = color_unset;
+
+//	color_out = debug_color(renderedSample.x);
+
 	imageStore(imgResultUnion, posGlobal, color_out);
 
 	// intersection
-	bool intersect = (renderedSample[0]>0) && (cameraSample[0]>0);
+	bool intersect =
+		((renderedSample[0] & 0x007fffff) > 0) &&
+		((cameraSample[0]   & 0x007fffff) > 0);
 	if(intersect)
 		color_out = color_set;
 	else
@@ -57,10 +62,9 @@ void main() {
 
 	imageStore(imgResultIntersection, posGlobal, color_out);
 	
-//	color_out = debug_color(value);
 }
 
-uvec4 debug_color(uint val) {
+uvec4 debug_color(int val) {
 	uvec4 color_out;
 	
 	if(gl_GlobalInvocationID[0] / 500 == 0) {
