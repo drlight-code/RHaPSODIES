@@ -335,9 +335,9 @@ namespace rhapsodies {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
 		delete [] data;
 
-		unsigned char *data_uchar = new unsigned char[320*240*8*8];
-		for(int i = 0; i < 320*240*8*8; ++i) {
-			if(i < 320*240*8*8/2)
+		unsigned char *data_uchar = new unsigned char[320*240*8*8*2];
+		for(int i = 0; i < 320*240*8*8*2; ++i) {
+			if(i < 320*240*8*8)
 				data_uchar[i] = 0x7f;
 			else
 				data_uchar[i] = 0xff;
@@ -760,6 +760,7 @@ namespace rhapsodies {
 			int targetCol = pixel % 320;
 
 			m_pDepthBufferUInt[320*targetRow + targetCol] = uiDepthValue;
+
 
 		}
 		pProf->StopSection();

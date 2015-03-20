@@ -15,11 +15,14 @@ void main() {
 	ivec2 posGlobal = ivec2(gl_GlobalInvocationID.xy);
 	vec2  posScreen = vec2(posGlobal) / vec2(320*8, 240*8);
 
-	uvec4 renderedSample = uvec4(texture(texRendered, posScreen) & 0x00ffffff);
-	uvec4 cameraSample   = uvec4(texture(texCamera,   posScreen) & 0x00ffffff);
+	// why do we have to mask the single bit here? it seems internal
+	// format is always signed, but the values should be positive
+	// still...	
+	uvec4 renderedSample = uvec4(texture(texRendered, posScreen)) & 0x007fffff;
+	uvec4 cameraSample   = uvec4(texture(texCamera,   posScreen)) & 0x007fffff;
 
-	imageStore(imgResultDifference, posGlobal,
-			   uvec4(abs(ivec4(cameraSample)-ivec4(renderedSample)) << 7));
+	uvec4 diff_value = uvec4(abs(ivec4(cameraSample)-ivec4(renderedSample))) << 7;
+	imageStore(imgResultDifference, posGlobal, diff_value);
 	
 	// rendered|iCameraSample yield unsigned 24 bit value, where
 	// 0x00ffffff is zfar/invalid depth. we fill the first byte, then
@@ -27,26 +30,34 @@ void main() {
 	// uint value = 
 	// 	~(uRenderedSample[0] | 0xff000000) |
 	// 	~(uCameraSample[0]   | 0xff000000);
-	uint value = uvec4(abs(cameraSample - renderedSample))[0];
+
 		
 		// ~(0x00fffff1 | 0xff000000) |
 		// ~(0x00ffffff | 0xff000000);
 
-	// @todo get rid of branching!~
-	uvec4 color_red = uvec4(0xff,0,0,0);
-	uvec4 color_blk = uvec4(0,0,0,0);
+	// @todo get rid of branching?
+	uvec4 color_set = uvec4(0xff, 0xff, 0, 0xff);
+	uvec4 color_unset = uvec4(0,    0, 0, 0xff);
 	uvec4 color_out;
-	if(value)
-		color_out = color_red;
-	else
-		color_out = color_blk;
 
-	color_out = debug_color(cameraSample[0]);
-	
+	// union
+	uint value = (renderedSample | cameraSample)[0];
+	if(value)
+		color_out = color_set;
+	else
+		color_out = color_unset;
 	imageStore(imgResultUnion, posGlobal, color_out);
 
-	// value = iRenderedSample | iCameraSample;
-	// imageStore(imgResultUnion, posGlobal, (value > 0)*0xff);
+	// intersection
+	bool intersect = (renderedSample[0]>0) && (cameraSample[0]>0);
+	if(intersect)
+		color_out = color_set;
+	else
+		color_out = color_unset;
+
+	imageStore(imgResultIntersection, posGlobal, color_out);
+	
+//	color_out = debug_color(value);
 }
 
 uvec4 debug_color(uint val) {
