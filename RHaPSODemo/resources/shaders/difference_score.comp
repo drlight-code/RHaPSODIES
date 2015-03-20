@@ -42,7 +42,7 @@ void main() {
 
 	// union
 	uint value = ((renderedSample | cameraSample) & 0x007fffff)[0];
-	if(value)
+	if(value > 0)
 		color_out = color_set;
 	else
 		color_out = color_unset;
