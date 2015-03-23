@@ -653,9 +653,14 @@ namespace rhapsodies {
 
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
-			
+
+			// write difference score to result textures
 			glUseProgram(m_idDifferenceScoreProgram);
-			glDispatchCompute(320*8/16, 240*8/16, 1);
+			glDispatchCompute(8, 240*8/3, 1);
+
+			// reduce result textures to get union/intersection area
+			// glUseProgram(m_idDifferenceScoreProgram);
+			// glDispatchCompute(8, 240*8/3, 1);
 
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, 0);
