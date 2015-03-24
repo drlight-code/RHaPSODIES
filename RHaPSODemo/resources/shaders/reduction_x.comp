@@ -2,18 +2,78 @@
 
 layout (local_size_x = 320, local_size_y = 3) in;
 
-layout (binding = 0, r32ui) uniform restrict uimage2D imgResultDifference;
-layout (binding = 1, rg8ui) uniform restrict uimage2D imgResultUnion;
-layout (binding = 2, rg8ui) uniform restrict uimage2D imgResultIntersection;
+// input: rendered and camera depth maps
+layout (binding = 0) uniform isampler2D texCameraDepth;
+layout (binding = 1) uniform isampler2D texRenderedDepth;
 
-shared uint work_memory[320*3];
+// work memory per 320*3 shader block
+shared uint work_memory_d[320*3]; // difference
+shared uint work_memory_u[320*3]; // union
+shared uint work_memory_i[320*3]; // intersection
+
+// output: difference texture
+layout (binding = 0, r32ui) uniform restrict uimage2D imgResult;
+
+// maximum depth difference.  the range [znear, zfar] == [0.1, 1.1] is
+// mapped to signed 24 bitdepth values, i.e. 2^23 values. We want to
+// clamp to 4cm, so dM = 2^23 * 0.04 = 335544
+uint dM = 335544;
+
+uint lid = gl_LocalInvocationID.x + 320 * gl_LocalInvocationID.y;
 
 void main() {
 	ivec2 posGlobal = ivec2(gl_GlobalInvocationID.xy);
+	vec2  posScreen = vec2(posGlobal) / vec2(320*8, 240*8);
+
+	ivec4 renderedSample = texture(texRenderedDepth, posScreen);
+	ivec4 cameraSample   = texture(texCameraDepth,   posScreen);
 
 	// initialize work memory by texture lookup
-	work_memory[gl_LocalInvocationID.x + 320*gl_LocalInvocationID.y] =
-		imageLoad(imgResultDifference, posGlobal);
+	// clamped difference
+//	work_memory_d[lid] = max( abs(cameraSample-renderedSample)[0], dM );
+	work_memory_d[lid] = dM;
 
-	// actual horizontal reduction loop
+	// union
+	// work_memory_u[lid] =
+	// 	((renderedSample | cameraSample)[0] & 0x007fffff) > 0 ? 1 : 0;
+	work_memory_u[lid] = 1;		
+
+	// intersection
+	// work_memory_i[lid] =
+	// 	((renderedSample[0] & 0x007fffff) > 0) &&
+	// 	((cameraSample[0]   & 0x007fffff) > 0) ? 1 : 0;
+	work_memory_i[lid] = 1;
+
+	// make sure all written memory become visible to all shader
+	// instances
+	barrier();
+
+	// horizontal reduction loop
+	for(uint stride = 1 ; stride < gl_WorkGroupSize.x ; stride *= 2) {
+		if(gl_LocalInvocationID.x % (2*stride) == 0) {
+			work_memory_d[lid] += work_memory_d[lid + stride];
+			work_memory_u[lid] += work_memory_u[lid + stride];
+			work_memory_i[lid] += work_memory_i[lid + stride];
+		}
+		barrier(); // sync writes to shared memory
+	}
+
+	// store shared memory to result texture
+	if(gl_LocalInvocationID.x == 0) {
+		ivec2 posResult = ivec2(gl_WorkGroupID.x * 3,
+								gl_WorkGroupID.y);
+		
+		imageStore(imgResult, posResult + ivec2(0,0),
+				   uvec4(work_memory_d[320*gl_LocalInvocationID.y], 0, 0, 0));
+		imageStore(imgResult, posResult + ivec2(1,0),
+				   uvec4(work_memory_u[320*gl_LocalInvocationID.y], 0, 0, 0));
+		imageStore(imgResult, posResult + ivec2(2,0),
+				   uvec4(work_memory_i[320*gl_LocalInvocationID.y], 0, 0, 0));
+	}
+	// else if(gl_LocalInvocationID.x < 320 / 3 * 2) {
+	// 	imageStore(imgResult, posGlobal, uvec4(work_memory_u[0], 0, 0, 0));
+	// }
+	// else {
+	// 	imageStore(imgResult, posGlobal, uvec4(work_memory_i[0], 0, 0, 0));
+	// }
 }

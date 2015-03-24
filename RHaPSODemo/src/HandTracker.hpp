@@ -67,9 +67,7 @@ namespace rhapsodies {
 		GLuint GetRenderedTextureId();
 		GLuint GetCameraTextureId();
 
-		GLuint GetDifferenceTextureId();
-		GLuint GetUnionTextureId();
-		GLuint GetIntersectionTextureId();
+		GLuint GetResultTextureId();
 		
 		bool Initialize();
 		bool InitSkinClassifiers();
@@ -162,12 +160,8 @@ namespace rhapsodies {
 		GLuint m_idCameraTexturePBO;
 		void *m_pCameraTexturePBO;
 
-		GLuint m_idReductionProgram;
-		GLuint m_idDifferenceScoreProgram;
-
-		GLuint m_idResultDifferenceTexture;
-		GLuint m_idResultUnionTexture;
-		GLuint m_idResultIntersectionTexture;
+		GLuint m_idReductionXProgram;
+		GLuint m_idResultTexture;
 	};
 }
 

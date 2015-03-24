@@ -15,26 +15,12 @@ void main() {
 	ivec2 posGlobal = ivec2(gl_GlobalInvocationID.xy);
 	vec2  posScreen = vec2(posGlobal) / vec2(320*8, 240*8);
 
-	// why do we have to mask the single bit here? it seems internal
-	// format is always signed, but the values should be positive
-	// still...	
 	ivec4 renderedSample = texture(texRenderedDepth, posScreen);
 	ivec4 cameraSample   = texture(texCameraDepth,   posScreen);
 
 	uvec4 diff_value = uvec4(abs(cameraSample-renderedSample)) << 7;
 	imageStore(imgResultDifference, posGlobal, diff_value);
 	
-	// rendered|iCameraSample yield unsigned 24 bit value, where
-	// 0x00ffffff is zfar/invalid depth. we fill the first byte, then
-	// invert and | for union
-	// uint value = 
-	// 	~(uRenderedSample[0] | 0xff000000) |
-	// 	~(uCameraSample[0]   | 0xff000000);
-
-		
-		// ~(0x00fffff1 | 0xff000000) |
-		// ~(0x00ffffff | 0xff000000);
-
 	// @todo get rid of branching?
 	uvec4 color_set = uvec4(0xff, 0xff, 0, 0xff);
 	uvec4 color_unset = uvec4(0,    0, 0, 0xff);
@@ -47,8 +33,6 @@ void main() {
 	else
 		color_out = color_unset;
 
-//	color_out = debug_color(renderedSample.x);
-
 	imageStore(imgResultUnion, posGlobal, color_out);
 
 	// intersection
@@ -60,8 +44,9 @@ void main() {
 	else
 		color_out = color_unset;
 
+//	color_out = debug_color(renderedSample.x);
+
 	imageStore(imgResultIntersection, posGlobal, color_out);
-	
 }
 
 uvec4 debug_color(int val) {

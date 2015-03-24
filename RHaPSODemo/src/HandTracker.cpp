@@ -153,8 +153,9 @@ namespace rhapsodies {
 		m_pHandModelRight(NULL),
 		m_pHandRenderer(new HandRenderer(pReg)) {
 
-		m_idDifferenceScoreProgram = pReg->GetProgram("difference_score");
-		m_idReductionProgram       = pReg->GetProgram("reduction");
+//		m_idDifferenceScoreProgram = pReg->GetProgram("difference_score");
+//		m_idReductionProgram       = pReg->GetProgram("reduction");
+		m_idReductionXProgram      = pReg->GetProgram("reduction_x");
 	}
 
 	HandTracker::~HandTracker() {
@@ -200,16 +201,8 @@ namespace rhapsodies {
 		return m_idCameraTexture;
 	}
 
-	GLuint HandTracker::GetDifferenceTextureId() {
-		return m_idResultDifferenceTexture;
-	}
-
-	GLuint HandTracker::GetUnionTextureId() {
-		return m_idResultUnionTexture;
-	}
-
-	GLuint HandTracker::GetIntersectionTextureId() {
-		return m_idResultIntersectionTexture;
+	GLuint HandTracker::GetResultTextureId() {
+		return m_idResultTexture;
 	}
 
 	bool HandTracker::Initialize() {
@@ -312,75 +305,70 @@ namespace rhapsodies {
 	}
 
 	bool HandTracker::InitReduction() {
-		// prepare result textures
-		glGenTextures(1, &m_idResultDifferenceTexture);
-		glGenTextures(1, &m_idResultUnionTexture);
-		glGenTextures(1, &m_idResultIntersectionTexture);
-		
-		unsigned int *data = new unsigned int[320*240*8*8];
-		for(int i = 0; i < 320*240*8*8; ++i) {
-			if(i < 320*240*8*8/2)
-				data[i] = 0x7fffffffu;
-			else
-				data[i] = 0xffffffffu;
+		// prepare result texture
+		glGenTextures(1, &m_idResultTexture);
+
+		unsigned int *data = new unsigned int[3*8*8];
+		for(int i = 0; i < 3*8*8; ++i) {
+			data[i] = 0x0;
 		}		
 		
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_idResultDifferenceTexture);
+		glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 320*8, 240*8);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 3*8, 8);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 3*8, 8, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
 		delete [] data;
 
-		unsigned char *data_uchar = new unsigned char[320*240*8*8*2];
-		for(int i = 0; i < 320*240*8*8*2; ++i) {
-			if(i < 320*240*8*8)
-				data_uchar[i] = 0x7f;
-			else
-				data_uchar[i] = 0xff;
-		}		
-		glBindTexture(GL_TEXTURE_2D, m_idResultUnionTexture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		// unsigned char *data_uchar = new unsigned char[320*240*8*8*2];
+		// for(int i = 0; i < 320*240*8*8*2; ++i) {
+		// 	if(i < 320*240*8*8)
+		// 		data_uchar[i] = 0x7f;
+		// 	else
+		// 		data_uchar[i] = 0xff;
+		// }		
+		// glBindTexture(GL_TEXTURE_2D, m_idResultUnionTexture);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG8UI, 320*8, 240*8);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8,
-						GL_RG_INTEGER, GL_UNSIGNED_BYTE, data_uchar);
+		// glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG8UI, 320*8, 240*8);
+		// glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8,
+		// 				GL_RG_INTEGER, GL_UNSIGNED_BYTE, data_uchar);
 
-		glBindTexture(GL_TEXTURE_2D, m_idResultIntersectionTexture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		// glBindTexture(GL_TEXTURE_2D, m_idResultIntersectionTexture);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG8UI, 320*8, 240*8);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8,
-						GL_RG_INTEGER, GL_UNSIGNED_BYTE, data_uchar);
-		delete [] data_uchar;
+		// glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG8UI, 320*8, 240*8);
+		// glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8,
+		// 				GL_RG_INTEGER, GL_UNSIGNED_BYTE, data_uchar);
+		// delete [] data_uchar;
 
 		
 		// prepare compute shader		
-		glValidateProgram(m_idDifferenceScoreProgram);
+		glValidateProgram(m_idReductionXProgram);
 
 		GLint status;
-		glGetProgramiv(m_idDifferenceScoreProgram, GL_VALIDATE_STATUS, &status);
+		glGetProgramiv(m_idReductionXProgram, GL_VALIDATE_STATUS, &status);
 		if(status == GL_FALSE) {
 			GLint infoLogLength;
-			glGetProgramiv(m_idDifferenceScoreProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
+			glGetProgramiv(m_idReductionXProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 			GLchar *strInfoLog = new GLchar[infoLogLength + 1];
-			glGetProgramInfoLog(m_idDifferenceScoreProgram, infoLogLength, NULL, strInfoLog);
+			glGetProgramInfoLog(m_idReductionXProgram, infoLogLength, NULL, strInfoLog);
 			std::cerr << "Redcution shader not valid: " << strInfoLog << std::endl;
 			delete[] strInfoLog;
 		}
 		
-		glUseProgram(m_idDifferenceScoreProgram);
-		glBindImageTexture(0, m_idResultDifferenceTexture,
+		glUseProgram(m_idReductionXProgram);
+		glBindImageTexture(0, m_idResultTexture,
 						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glBindImageTexture(1, m_idResultUnionTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG8UI);
-		glBindImageTexture(2, m_idResultIntersectionTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG8UI);
+		// glBindImageTexture(1, m_idResultUnionTexture,
+		// 				   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG8UI);
+		// glBindImageTexture(2, m_idResultIntersectionTexture,
+		// 				   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG8UI);
 		glUseProgram(0);
 
 		// print compute shader limits for this driver/gpu
@@ -655,17 +643,24 @@ namespace rhapsodies {
 			glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
 
 			// write difference score to result textures
-			glUseProgram(m_idDifferenceScoreProgram);
+			glUseProgram(m_idReductionXProgram);
 			glDispatchCompute(8, 240*8/3, 1);
 
-			// reduce result textures to get union/intersection area
-			// glUseProgram(m_idDifferenceScoreProgram);
-			// glDispatchCompute(8, 240*8/3, 1);
+			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, 0);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, 0);
+
+			// read and print result values (testing)
+			// glActiveTexture(GL_TEXTURE0);
+			// glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
+
+			// reduce result textures to get union/intersection area
+			// glUseProgram(m_idDifferenceScoreProgram);
+			// glDispatchCompute(8, 240*8/3, 1);
+
 
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
