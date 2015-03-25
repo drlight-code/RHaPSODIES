@@ -6,20 +6,35 @@ layout (local_size_x = 320, local_size_y = 3) in;
 layout (binding = 0) uniform isampler2D texCameraDepth;
 layout (binding = 1) uniform isampler2D texRenderedDepth;
 
-// work memory per 320*3 shader block
+// work memory per 3*320 shader block
 shared uint work_memory_d[320*3]; // difference
 shared uint work_memory_u[320*3]; // union
 shared uint work_memory_i[320*3]; // intersection
 
-// output: difference texture
+// output: per viewport per row reduction of diff/union/intersect in
+// 3 pixels per row per viewport. layout
+//
+// d u i | ... | d u i      // 8 times
+// .
+// .                        // 240 * 8 times
+// .
+// d u i | ... | d u i
 layout (binding = 0, r32ui) uniform restrict uimage2D imgResult;
 
 // maximum depth difference.  the range [znear, zfar] == [0.1, 1.1] is
-// mapped to signed 24 bitdepth values, i.e. 2^23 values. We want to
-// clamp to 4cm, so dM = 2^23 * 0.04 = 335544
-uint dM = 335544;
+// mapped to signed 16 bit depth values, i.e. 2^15 values. We want to
+// clamp to 4cm, so dM = 2^15 * 0.04 ~= 1311. this means a 4cm spatial
+// interval is still subdivided into 1311 values, so using 16 bit
+// depth values for the clearly bounded interval seems sufficient and
+// we still don't risk an overflow if all pixels contain the maximum
+// depth difference: 320*240*1311 = 100684800 will fit nicely in a 32
+// bit unsigned integer, as opposed to doing the same calculation for
+// 24 bit depth values.
+uint dM = 1311;
 
-uint lid = gl_LocalInvocationID.x + 320 * gl_LocalInvocationID.y;
+// local thread id
+uint lid = gl_LocalInvocationID.x +
+	gl_WorkGroupSize.x * gl_LocalInvocationID.y;
 
 void main() {
 	ivec2 posGlobal = ivec2(gl_GlobalInvocationID.xy);
@@ -30,27 +45,28 @@ void main() {
 
 	// initialize work memory by texture lookup
 	// clamped difference
-//	work_memory_d[lid] = max( abs(cameraSample-renderedSample)[0], dM );
-	work_memory_d[lid] = dM;
-
+//	work_memory_d[lid] = min( abs(cameraSample-renderedSample)[0], dM );
+	work_memory_d[lid] = 0xDA74; // 0xffffffff / 320 / 240
+//	work_memory_d[lid] = 1;
+	
 	// union
 	// work_memory_u[lid] =
 	// 	((renderedSample | cameraSample)[0] & 0x007fffff) > 0 ? 1 : 0;
-	work_memory_u[lid] = 1;		
+	work_memory_u[lid] = 0xDA74/2;
 
 	// intersection
 	// work_memory_i[lid] =
 	// 	((renderedSample[0] & 0x007fffff) > 0) &&
 	// 	((cameraSample[0]   & 0x007fffff) > 0) ? 1 : 0;
-	work_memory_i[lid] = 1;
+	work_memory_i[lid] = 0xDA74/4;
 
-	// make sure all written memory become visible to all shader
-	// instances
+	// make sure memory become visible to all instances
 	barrier();
 
 	// horizontal reduction loop
 	for(uint stride = 1 ; stride < gl_WorkGroupSize.x ; stride *= 2) {
-		if(gl_LocalInvocationID.x % (2*stride) == 0) {
+		if(gl_LocalInvocationID.x % (2*stride) == 0 &&
+		   gl_LocalInvocationID.x + stride < gl_WorkGroupSize.x) {
 			work_memory_d[lid] += work_memory_d[lid + stride];
 			work_memory_u[lid] += work_memory_u[lid + stride];
 			work_memory_i[lid] += work_memory_i[lid + stride];
@@ -61,7 +77,7 @@ void main() {
 	// store shared memory to result texture
 	if(gl_LocalInvocationID.x == 0) {
 		ivec2 posResult = ivec2(gl_WorkGroupID.x * 3,
-								gl_WorkGroupID.y);
+								gl_GlobalInvocationID.y);
 		
 		imageStore(imgResult, posResult + ivec2(0,0),
 				   uvec4(work_memory_d[320*gl_LocalInvocationID.y], 0, 0, 0));
@@ -70,10 +86,4 @@ void main() {
 		imageStore(imgResult, posResult + ivec2(2,0),
 				   uvec4(work_memory_i[320*gl_LocalInvocationID.y], 0, 0, 0));
 	}
-	// else if(gl_LocalInvocationID.x < 320 / 3 * 2) {
-	// 	imageStore(imgResult, posGlobal, uvec4(work_memory_u[0], 0, 0, 0));
-	// }
-	// else {
-	// 	imageStore(imgResult, posGlobal, uvec4(work_memory_i[0], 0, 0, 0));
-	// }
 }

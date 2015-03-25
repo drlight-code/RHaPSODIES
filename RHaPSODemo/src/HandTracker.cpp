@@ -156,6 +156,7 @@ namespace rhapsodies {
 //		m_idDifferenceScoreProgram = pReg->GetProgram("difference_score");
 //		m_idReductionProgram       = pReg->GetProgram("reduction");
 		m_idReductionXProgram      = pReg->GetProgram("reduction_x");
+		m_idReductionYProgram      = pReg->GetProgram("reduction_y");
 	}
 
 	HandTracker::~HandTracker() {
@@ -272,7 +273,7 @@ namespace rhapsodies {
 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16,
 					 320*8, 240*8, 0,
 					 GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
 
@@ -288,7 +289,7 @@ namespace rhapsodies {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16,
 					 320*8, 240*8, 0,
 					 GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
 
@@ -308,8 +309,8 @@ namespace rhapsodies {
 		// prepare result texture
 		glGenTextures(1, &m_idResultTexture);
 
-		unsigned int *data = new unsigned int[3*8*8];
-		for(int i = 0; i < 3*8*8; ++i) {
+		unsigned int *data = new unsigned int[3*240*8*8];
+		for(int i = 0; i < 3*240*8*8; ++i) {
 			data[i] = 0x0;
 		}		
 		
@@ -318,60 +319,20 @@ namespace rhapsodies {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 3*8, 8);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 3*8, 8, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 3*8, 8*240);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 3*8, 8*240, GL_RED_INTEGER,
+						GL_UNSIGNED_INT, data);
 		delete [] data;
 
-		// unsigned char *data_uchar = new unsigned char[320*240*8*8*2];
-		// for(int i = 0; i < 320*240*8*8*2; ++i) {
-		// 	if(i < 320*240*8*8)
-		// 		data_uchar[i] = 0x7f;
-		// 	else
-		// 		data_uchar[i] = 0xff;
-		// }		
-		// glBindTexture(GL_TEXTURE_2D, m_idResultUnionTexture);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-		// glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG8UI, 320*8, 240*8);
-		// glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8,
-		// 				GL_RG_INTEGER, GL_UNSIGNED_BYTE, data_uchar);
-
-		// glBindTexture(GL_TEXTURE_2D, m_idResultIntersectionTexture);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-		// glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG8UI, 320*8, 240*8);
-		// glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8,
-		// 				GL_RG_INTEGER, GL_UNSIGNED_BYTE, data_uchar);
-		// delete [] data_uchar;
-
+		ValidateComputeShader(m_idReductionXProgram);
+		ValidateComputeShader(m_idReductionYProgram);
 		
-		// prepare compute shader		
-		glValidateProgram(m_idReductionXProgram);
-
-		GLint status;
-		glGetProgramiv(m_idReductionXProgram, GL_VALIDATE_STATUS, &status);
-		if(status == GL_FALSE) {
-			GLint infoLogLength;
-			glGetProgramiv(m_idReductionXProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
-
-			GLchar *strInfoLog = new GLchar[infoLogLength + 1];
-			glGetProgramInfoLog(m_idReductionXProgram, infoLogLength, NULL, strInfoLog);
-			std::cerr << "Redcution shader not valid: " << strInfoLog << std::endl;
-			delete[] strInfoLog;
-		}
+		PrintComputeShaderLimits();
 		
-		glUseProgram(m_idReductionXProgram);
-		glBindImageTexture(0, m_idResultTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		// glBindImageTexture(1, m_idResultUnionTexture,
-		// 				   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG8UI);
-		// glBindImageTexture(2, m_idResultIntersectionTexture,
-		// 				   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG8UI);
-		glUseProgram(0);
+		return true;
+	}
 
-		// print compute shader limits for this driver/gpu
+	void HandTracker::PrintComputeShaderLimits() {
 		GLint values[3];
 
 		glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, values);
@@ -391,7 +352,24 @@ namespace rhapsodies {
 		vstr::out() << "GL_MAX_COMPUTE_WORK_GROUP_SIZE:     "
 					<< "[" << values[0] << ", " << values[1] << ", " << values[2]
 					<< "]" << std::endl;
-	
+	}
+
+	bool HandTracker::ValidateComputeShader(GLuint idProgram) {
+		glValidateProgram(idProgram);
+
+		GLint status;
+		glGetProgramiv(idProgram, GL_VALIDATE_STATUS, &status);
+		if(status == GL_FALSE) {
+			GLint infoLogLength;
+			glGetProgramiv(idProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+			GLchar *strInfoLog = new GLchar[infoLogLength + 1];
+			glGetProgramInfoLog(idProgram, infoLogLength, NULL, strInfoLog);
+			std::cerr << "Redcution shader not valid: " << strInfoLog << std::endl;
+			delete[] strInfoLog;
+
+			return false;
+		}
 		return true;
 	}
 
@@ -625,34 +603,43 @@ namespace rhapsodies {
 			}
 
 			//glFinish(); // memory barrier? execution barrier?
+			// texture load memory barrier!
 
-			// first we write the per-pixel computations into three distinct textures
-			// 1. clamped depth differences between observed and rendered depth
-			// 2. union of observed and rendered skin maps
-			// 3. intersection of observed and rendered skin maps
-
-			// we then build the per-viewport sum by parallel
-			// reduction and evaluate the final per-hypothesis score
-			// on the cpu by lookup in the reduced result textures
-
-			// reduction with compute shader
+			// bind input textures
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
-
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
 
-			// write difference score to result textures
+			// bind result image texture
+			glBindImageTexture(0, m_idResultTexture,
+							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+
+			// reduction in x direction
 			glUseProgram(m_idReductionXProgram);
 			glDispatchCompute(8, 240*8/3, 1);
 
+			// make sure all image stores are visible
 			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
+			// unbind input textures
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, 0);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, 0);
 
+			// reduction in y direction
+			glUseProgram(m_idReductionYProgram);
+			glDispatchCompute(8, 8, 1);
+
+			// make sure all image stores are visible
+			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+			// unbind result image texture
+			glBindImageTexture(0, m_idResultTexture,
+							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+			
+			
 			// read and print result values (testing)
 			// glActiveTexture(GL_TEXTURE0);
 			// glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
