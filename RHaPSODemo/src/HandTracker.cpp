@@ -129,7 +129,46 @@ namespace {
 		return true;
 	}
 
-	
+	bool ValidateComputeShader(GLuint idProgram) {
+		glValidateProgram(idProgram);
+
+		GLint status;
+		glGetProgramiv(idProgram, GL_VALIDATE_STATUS, &status);
+		if(status == GL_FALSE) {
+			GLint infoLogLength;
+			glGetProgramiv(idProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+			GLchar *strInfoLog = new GLchar[infoLogLength + 1];
+			glGetProgramInfoLog(idProgram, infoLogLength, NULL, strInfoLog);
+			std::cerr << "Redcution shader not valid: " << strInfoLog << std::endl;
+			delete[] strInfoLog;
+
+			return false;
+		}
+		return true;
+	}
+
+	void PrintComputeShaderLimits() {
+		GLint values[3];
+
+		glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, values);
+		vstr::out() << "MAX_COMPUTE_SHARED_MEMORY_SIZE:     " << values[0] << std::endl;
+
+		glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, values);
+		vstr::out() << "MAX_COMPUTE_WORK_GROUP_INVOCATIONS: " << values[0] << std::endl;
+
+		for(size_t index = 0 ; index < 3 ; ++index)
+			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, index, values+index);
+		vstr::out() << "GL_MAX_COMPUTE_WORK_GROUP_COUNT:    "
+					<< "[" << values[0] << ", " << values[1] << ", " << values[2]
+					<< "]" << std::endl;
+
+		for(size_t index = 0 ; index < 3 ; ++index)
+			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, index, values+index);
+		vstr::out() << "GL_MAX_COMPUTE_WORK_GROUP_SIZE:     "
+					<< "[" << values[0] << ", " << values[1] << ", " << values[2]
+					<< "]" << std::endl;
+	}
 }
 
 namespace rhapsodies {
@@ -336,47 +375,6 @@ namespace rhapsodies {
 		
 		PrintComputeShaderLimits();
 		
-		return true;
-	}
-
-	void HandTracker::PrintComputeShaderLimits() {
-		GLint values[3];
-
-		glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, values);
-		vstr::out() << "MAX_COMPUTE_SHARED_MEMORY_SIZE:     " << values[0] << std::endl;
-
-		glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, values);
-		vstr::out() << "MAX_COMPUTE_WORK_GROUP_INVOCATIONS: " << values[0] << std::endl;
-
-		for(size_t index = 0 ; index < 3 ; ++index)
-			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, index, values+index);
-		vstr::out() << "GL_MAX_COMPUTE_WORK_GROUP_COUNT:    "
-					<< "[" << values[0] << ", " << values[1] << ", " << values[2]
-					<< "]" << std::endl;
-
-		for(size_t index = 0 ; index < 3 ; ++index)
-			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, index, values+index);
-		vstr::out() << "GL_MAX_COMPUTE_WORK_GROUP_SIZE:     "
-					<< "[" << values[0] << ", " << values[1] << ", " << values[2]
-					<< "]" << std::endl;
-	}
-
-	bool HandTracker::ValidateComputeShader(GLuint idProgram) {
-		glValidateProgram(idProgram);
-
-		GLint status;
-		glGetProgramiv(idProgram, GL_VALIDATE_STATUS, &status);
-		if(status == GL_FALSE) {
-			GLint infoLogLength;
-			glGetProgramiv(idProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
-
-			GLchar *strInfoLog = new GLchar[infoLogLength + 1];
-			glGetProgramInfoLog(idProgram, infoLogLength, NULL, strInfoLog);
-			std::cerr << "Redcution shader not valid: " << strInfoLog << std::endl;
-			delete[] strInfoLog;
-
-			return false;
-		}
 		return true;
 	}
 

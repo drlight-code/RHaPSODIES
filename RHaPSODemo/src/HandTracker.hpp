@@ -124,9 +124,7 @@ namespace rhapsodies {
 						unsigned char *rgb);
 
 		void PrintConfig();
-		void PrintComputeShaderLimits();
 
-		bool ValidateComputeShader(GLuint idProgram);
 
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
 		MapPBO m_mapPBO;
