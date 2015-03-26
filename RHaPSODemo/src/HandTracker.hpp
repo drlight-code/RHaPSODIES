@@ -40,6 +40,8 @@ namespace rhapsodies {
 	class HandModel;
 	class HandModelRep;
 	class HandRenderer;
+
+	class IDebugView;
 	
 	class HandTracker {
 	public:
@@ -58,6 +60,8 @@ namespace rhapsodies {
 		void SetViewPBODraw(ViewType type,
 							ImagePBOOpenGLDraw *pPBODraw);
 
+		void SetDebugView(IDebugView *pDebugView);
+		
 		HandModel *GetHandModelLeft();
 		HandModel *GetHandModelRight();
 		HandModelRep *GetHandModelRep();
@@ -166,6 +170,8 @@ namespace rhapsodies {
 		GLuint m_idReductionXProgram;
 		GLuint m_idReductionYProgram;
 		GLuint m_idResultTexture;
+
+		IDebugView *m_pDebugView;
 	};
 }
 

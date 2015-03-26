@@ -13,6 +13,7 @@ set( DirFiles
   	HandRenderer.cpp
   	HandTracker.cpp
   	HandTrackingNode.cpp
+  	TextOverlayDebugView.cpp
 #	DepthHistogramHandler.cpp
 #	HistogramUpdater.cpp
 	_SourceFiles.cmake

@@ -38,6 +38,7 @@
 #include <VistaKernel/DisplayManager/VistaDisplayManager.h>
 #include <VistaKernel/DisplayManager/VistaDisplaySystem.h>
 #include <VistaKernel/DisplayManager/VistaVirtualPlatform.h>
+#include <VistaKernel/DisplayManager/VistaSimpleTextOverlay.h>
 #include <VistaKernel/InteractionManager/VistaInteractionManager.h>
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
@@ -63,6 +64,8 @@
 #include <GLDraw/ImageDraw.hpp>
 #include <GLDraw/ImagePBOOpenGLDraw.hpp>
 #include <GLDraw/HandRenderDraw.hpp>
+
+#include <TextOverlayDebugView.hpp>
 
 #include <DepthHistogramHandler.hpp>
 #include <HistogramUpdater.hpp>
@@ -145,6 +148,8 @@ namespace rhapsodies {
 		m_pUVMapSegDraw(NULL),
 		m_pDepthRenderedDraw(NULL),
 		m_pDepthCameraDraw(NULL),
+		m_pTextOverlay(NULL),
+		m_pDebugView(NULL),
 		m_pDepthHistogramHandler(NULL) {
 
 		m_pSystem = new VistaSystem;
@@ -154,6 +159,9 @@ namespace rhapsodies {
 	RHaPSODemo::~RHaPSODemo() {
 		CondDelete(m_pDepthHistogramHandler);
 
+		CondDelete(m_pDebugView);
+		CondDelete(m_pTextOverlay);
+		
 		CondDelete(m_pColorDraw);
 		CondDelete(m_pColorSegDraw);
 		CondDelete(m_pDepthDraw);
@@ -497,6 +505,12 @@ namespace rhapsodies {
 
 		//m_pDepthHistogramHandler->Enable(false);
 
+		m_pTextOverlay = new VistaSimpleTextOverlay(m_pSystem->GetDisplayManager());
+		m_pDebugView = new TextOverlayDebugView(
+			m_pSystem->GetDisplayManager(), m_pTextOverlay);
+		
+		m_pHandTracker->SetDebugView(m_pDebugView);
+		
 		return true;
 	}
 

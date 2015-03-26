@@ -37,6 +37,8 @@
 #include <VistaTools/VistaIniFileParser.h>
 #include <VistaTools/VistaRandomNumberGenerator.h>
 
+#include <VistaKernel/DisplayManager/VistaSimpleTextOverlay.h>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -56,6 +58,7 @@
 #include <HandModel.hpp>
 #include <HandModelRep.hpp>
 #include <HandRenderer.hpp>
+#include <DebugView.hpp>
 
 #include "HandTracker.hpp"
 
@@ -178,6 +181,10 @@ namespace rhapsodies {
 		m_mapPBO[type] = pPBODraw;
 	}
 
+	void HandTracker::SetDebugView(IDebugView *pDebugView) {
+		m_pDebugView = pDebugView;
+	}
+	
 	HandModel *HandTracker::GetHandModelLeft() {
 		return m_pHandModelLeft;
 	}
@@ -651,10 +658,17 @@ namespace rhapsodies {
 			unsigned int union_result        = result_data[1];
 			unsigned int intersection_result = result_data[2];
 
-			vstr::out() << "difference:   " << difference_result << std::endl;			
-			vstr::out() << "union:        " << union_result << std::endl;			
-			vstr::out() << "intersection: " << intersection_result
-						<< std::endl << std::endl;
+			m_pDebugView->Update(IDebugView::DIFFERENCE,
+								 std::string("Difference:   ") + std::to_string(difference_result));
+			m_pDebugView->Update(IDebugView::UNION,
+								 std::string("Union:        ") + std::to_string(union_result));
+			m_pDebugView->Update(IDebugView::INTERSECTION,
+								 std::string("Intersection: ") + std::to_string(intersection_result));
+			
+			// vstr::out() << "difference:   " << difference_result << std::endl;			
+			// vstr::out() << "union:        " << union_result << std::endl;			
+			// vstr::out() << "intersection: " << intersection_result
+			// 			<< std::endl << std::endl;
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

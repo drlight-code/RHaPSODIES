@@ -33,6 +33,7 @@ class VistaSystem;
 class VistaTransformNode;
 class VistaOpenGLNode;
 class VistaAxes;
+class VistaSimpleTextOverlay;
 
 class DepthHistogramHandler;
 
@@ -45,11 +46,15 @@ IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const float* val );
 
 
 namespace rhapsodies {
-	class ImageDraw;
 	class ShaderRegistry;
+
 	class HandRenderer;
 	class HandRenderDraw;
 	class HandTracker;
+
+	class IDebugView;
+
+	class ImageDraw;
 	class HistogramUpdater;
 
 	class RHaPSODemo : public VistaEventHandler {
@@ -82,6 +87,9 @@ namespace rhapsodies {
 		ImageDraw *m_pUnionTextureDraw;
 		ImageDraw *m_pIntersectionTextureDraw;
 
+		VistaSimpleTextOverlay *m_pTextOverlay;
+		IDebugView *m_pDebugView;
+		
 		DepthHistogramHandler *m_pDepthHistogramHandler;
 
 		bool InitTracker();
