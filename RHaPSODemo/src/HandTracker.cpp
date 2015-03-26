@@ -262,7 +262,7 @@ namespace rhapsodies {
 
 		m_pHandModelRep = new HandModelRep;
 
-		RandomizeModels();
+		//RandomizeModels();
 
 		return true;
 	}
@@ -641,14 +641,20 @@ namespace rhapsodies {
 			
 			
 			// read and print result values (testing)
-			// glActiveTexture(GL_TEXTURE0);
-			// glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
 
-			// reduce result textures to get union/intersection area
-			// glUseProgram(m_idDifferenceScoreProgram);
-			// glDispatchCompute(8, 240*8/3, 1);
+			unsigned int result_data[8*240*8*3];
+			glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
 
+			unsigned int difference_result   = result_data[0];
+			unsigned int union_result        = result_data[1];
+			unsigned int intersection_result = result_data[2];
 
+			vstr::out() << "difference:   " << difference_result << std::endl;			
+			vstr::out() << "union:        " << union_result << std::endl;			
+			vstr::out() << "intersection: " << intersection_result
+						<< std::endl << std::endl;
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
