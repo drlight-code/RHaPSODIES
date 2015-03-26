@@ -316,10 +316,6 @@ namespace rhapsodies {
 			"resources/shaders/indexed_viewport.geom");
 
 		m_pShaderReg->RegisterShader(
-			"reduction", GL_COMPUTE_SHADER,
-			"resources/shaders/reduction.comp");
-
-		m_pShaderReg->RegisterShader(
 			"reduction_x", GL_COMPUTE_SHADER,
 			"resources/shaders/reduction_x.comp");
 
@@ -365,10 +361,6 @@ namespace rhapsodies {
 		vec_shaders.clear();
 		vec_shaders.push_back("difference_score");
 		m_pShaderReg->RegisterProgram("difference_score", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("reduction");
-		m_pShaderReg->RegisterProgram("reduction", vec_shaders);
 
 		vec_shaders.clear();
 		vec_shaders.push_back("reduction_x");

@@ -38,5 +38,4 @@ void main() {
 	// for now all store the result value for better visibility!
 	imageStore(imgResult, posGlobal,
 			   uvec4(work_memory[gl_LocalInvocationID.x], 0, 0, 0));
-
 }
