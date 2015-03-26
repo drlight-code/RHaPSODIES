@@ -169,6 +169,14 @@ namespace {
 					<< "[" << values[0] << ", " << values[1] << ", " << values[2]
 					<< "]" << std::endl;
 	}
+
+	template<typename T> std::string ProfilerString(
+		std::string sPrefix, T value) {
+		std::ostringstream ostr;
+
+		ostr << std::setw(20) << sPrefix << value;
+		return ostr.str();
+	}
 }
 
 namespace rhapsodies {
@@ -610,6 +618,9 @@ namespace rhapsodies {
 			//glFinish(); // memory barrier? execution barrier?
 			// texture load memory barrier!
 
+			const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
+			VistaType::microtime tStart = oTimer.GetMicroTime();
+
 			// bind input textures
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
@@ -644,7 +655,11 @@ namespace rhapsodies {
 			glBindImageTexture(0, m_idResultTexture,
 							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
 			
-			
+
+			VistaType::microtime tReduction = oTimer.GetMicroTime() - tStart;
+			m_pDebugView->Update(IDebugView::REDUCTION_TIME,
+								 ProfilerString("Reduction time: ", tReduction));
+
 			// read and print result values (testing)
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
@@ -657,11 +672,11 @@ namespace rhapsodies {
 			unsigned int intersection_result = result_data[2];
 
 			m_pDebugView->Update(IDebugView::DIFFERENCE,
-								 std::string("Difference:   ") + std::to_string(difference_result));
+								 ProfilerString("Difference: ", difference_result));
 			m_pDebugView->Update(IDebugView::UNION,
-								 std::string("Union:        ") + std::to_string(union_result));
+								 ProfilerString("Union: ", union_result));
 			m_pDebugView->Update(IDebugView::INTERSECTION,
-								 std::string("Intersection: ") + std::to_string(intersection_result));
+								 ProfilerString("Intersection: ", intersection_result));
 			
 			// vstr::out() << "difference:   " << difference_result << std::endl;			
 			// vstr::out() << "union:        " << union_result << std::endl;			
