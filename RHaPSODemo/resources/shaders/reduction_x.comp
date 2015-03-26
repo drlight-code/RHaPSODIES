@@ -44,21 +44,26 @@ void main() {
 	ivec4 cameraSample   = texture(texCameraDepth,   posScreen);
 
 	// initialize work memory by texture lookup
-	// clamped difference
-//	work_memory_d[lid] = min( abs(cameraSample-renderedSample)[0], dM );
-	work_memory_d[lid] = 0xDA74; // 0xffffffff / 320 / 240
-//	work_memory_d[lid] = 1;
 	
 	// union
-	// work_memory_u[lid] =
-	// 	((renderedSample | cameraSample)[0] & 0x007fffff) > 0 ? 1 : 0;
-	work_memory_u[lid] = 0xDA74/2;
+	work_memory_u[lid] =
+		((renderedSample | cameraSample)[0] & 0x00007fff) > 0 ? 1 : 0;
+//	work_memory_u[lid] = 0xDA74/2;
 
 	// intersection
-	// work_memory_i[lid] =
-	// 	((renderedSample[0] & 0x007fffff) > 0) &&
-	// 	((cameraSample[0]   & 0x007fffff) > 0) ? 1 : 0;
-	work_memory_i[lid] = 0xDA74/4;
+	work_memory_i[lid] =
+		((renderedSample[0] & 0x00007fff) > 0) &&
+		((cameraSample[0]   & 0x00007fff) > 0) ? 1 : 0;
+//	work_memory_i[lid] = 0xDA74/4;
+
+	// clamped difference
+	if(work_memory_i[lid] == 1)
+		work_memory_d[lid] = min( abs(cameraSample-renderedSample)[0], dM );
+	else
+		work_memory_d[lid] = 0;
+		
+//	work_memory_d[lid] = 0xDA74; // 0xffffffff / 320 / 240
+//	work_memory_d[lid] = 1;
 
 	// make sure memory become visible to all instances
 	barrier();
