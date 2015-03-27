@@ -19,7 +19,7 @@ namespace rhapsodies {
 		};
 
 		virtual ~IDebugView() {};
-		virtual void Update(Slot slot, std::string sText) = 0;
+		virtual void Write(Slot slot, std::string sText) = 0;
 
     private:
 	};

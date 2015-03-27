@@ -25,7 +25,7 @@ namespace rhapsodies {
 
 	}
 
-	void TextOverlayDebugView::Update(Slot slot, std::string sText) {
+	void TextOverlayDebugView::Write(Slot slot, std::string sText) {
 		m_mapSlotEntity[slot]->SetText(sText);
 	}
 }

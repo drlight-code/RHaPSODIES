@@ -16,7 +16,7 @@ namespace rhapsodies {
 			VistaDisplayManager *pDispMgr,
 			VistaSimpleTextOverlay *pOverlay);
 		
-		void Update(Slot slot, std::string sText);
+		void Write(Slot slot, std::string sText);
 		
     private:
 		VistaSimpleTextOverlay *m_pOverlay;

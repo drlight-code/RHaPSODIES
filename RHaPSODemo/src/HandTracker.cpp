@@ -201,7 +201,8 @@ namespace rhapsodies {
 		m_pShaderReg(pReg),
 		m_pHandModelLeft(NULL),
 		m_pHandModelRight(NULL),
-		m_pHandRenderer(new HandRenderer(pReg)) {
+		m_pHandRenderer(new HandRenderer(pReg)),
+		m_pDebugView(NULL) {
 
 //		m_idDifferenceScoreProgram = pReg->GetProgram("difference_score");
 //		m_idReductionProgram       = pReg->GetProgram("reduction");
@@ -686,8 +687,8 @@ namespace rhapsodies {
 			
 
 		VistaType::microtime tReduction = oTimer.GetMicroTime() - tStart;
-		m_pDebugView->Update(IDebugView::REDUCTION_TIME,
-							 ProfilerString("Reduction time: ", tReduction));
+		m_pDebugView->Write(IDebugView::REDUCTION_TIME,
+							ProfilerString("Reduction time: ", tReduction));
 
 		// read and print result values (testing)
 		glActiveTexture(GL_TEXTURE0);
@@ -700,12 +701,12 @@ namespace rhapsodies {
 		unsigned int union_result        = result_data[1];
 		unsigned int intersection_result = result_data[2];
 
-		m_pDebugView->Update(IDebugView::DIFFERENCE,
-							 ProfilerString("Difference: ", difference_result));
-		m_pDebugView->Update(IDebugView::UNION,
-							 ProfilerString("Union: ", union_result));
-		m_pDebugView->Update(IDebugView::INTERSECTION,
-							 ProfilerString("Intersection: ", intersection_result));
+		m_pDebugView->Write(IDebugView::DIFFERENCE,
+							ProfilerString("Difference: ", difference_result));
+		m_pDebugView->Write(IDebugView::UNION,
+							ProfilerString("Union: ", union_result));
+		m_pDebugView->Write(IDebugView::INTERSECTION,
+							ProfilerString("Intersection: ", intersection_result));
 	}
 	
 	void HandTracker::FilterSkinAreas() {
