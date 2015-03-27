@@ -114,7 +114,11 @@ namespace rhapsodies {
 		};
 
 		void FilterSkinAreas();
+		void UploadCameraDepthMap();
+		void ReduceDepthMaps();
 
+		bool HasGLComputeCapabilities();
+		
 		void DepthToRGB(const unsigned short *depth,
 						unsigned char *rgb);
 

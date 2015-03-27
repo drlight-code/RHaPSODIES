@@ -270,9 +270,22 @@ namespace rhapsodies {
 		InitSkinClassifiers();
 		InitHandModels();
 		InitRendering();
-		InitReduction();
+
+		if(HasGLComputeCapabilities()) {
+			PrintComputeShaderLimits();
+			InitReduction();
+		}
+		else {
+			vstr::debug()
+				<< "ARB_shader_image_load_store or ARB_compute_shader not supported!"
+				<< std::endl << "Reduction stage will not be performed." << std::endl;
+		}
 		
 		return true;
+	}
+
+	bool HandTracker::HasGLComputeCapabilities() {
+		return GLEW_ARB_shader_image_load_store && GLEW_ARB_compute_shader;
 	}
 
 	bool HandTracker::InitSkinClassifiers() {
@@ -380,8 +393,6 @@ namespace rhapsodies {
 
 		ValidateComputeShader(m_idReductionXProgram);
 		ValidateComputeShader(m_idReductionYProgram);
-		
-		PrintComputeShaderLimits();
 		
 		return true;
 	}
@@ -520,26 +531,8 @@ namespace rhapsodies {
 	}
 
 	void HandTracker::PerformPSOTracking() {
-		
- 		// upload camera image to tiled texture
- 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
- 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
 
- 		m_pCameraTexturePBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
- 										  GL_WRITE_ONLY);		
-		memcpy(m_pCameraTexturePBO, m_pDepthBufferUInt, 320*240*4);
-		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
-
-		for(int row = 0 ; row < 8 ; row++) {
-			for(int col = 0 ; col < 8 ; col++) {
-				glTexSubImage2D(GL_TEXTURE_2D, 0, 
-								320*col, 240*row, 320, 240,
-								GL_DEPTH_COMPONENT,
-								GL_UNSIGNED_INT, NULL);
-			}
-		}
- 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
- 		glBindTexture(GL_TEXTURE_2D, 0);
+		UploadCameraDepthMap();
 
 		// set up camera projection from intrinsic parameters
 		// we don't do non-linear radial distortion corretion for now.
@@ -616,77 +609,103 @@ namespace rhapsodies {
 			}
 
 			//glFinish(); // memory barrier? execution barrier?
-			// texture load memory barrier!
+			// texture load memory barrier! frame/depthbuffer written?...
 
-			const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
-			VistaType::microtime tStart = oTimer.GetMicroTime();
+			ReduceDepthMaps();
 
-			// bind input textures
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
-
-			// bind result image texture
-			glBindImageTexture(0, m_idResultTexture,
-							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-
-			// reduction in x direction
-			glUseProgram(m_idReductionXProgram);
-			glDispatchCompute(8, 240*8/3, 1);
-
-			// make sure all image stores are visible
-			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-			// unbind input textures
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, 0);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			// reduction in y direction
-			glUseProgram(m_idReductionYProgram);
-			glDispatchCompute(8, 8, 1);
-
-			// make sure all image stores are visible
-			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-			// unbind result image texture
-			glBindImageTexture(0, m_idResultTexture,
-							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-			
-
-			VistaType::microtime tReduction = oTimer.GetMicroTime() - tStart;
-			m_pDebugView->Update(IDebugView::REDUCTION_TIME,
-								 ProfilerString("Reduction time: ", tReduction));
-
-			// read and print result values (testing)
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
-
-			unsigned int result_data[8*240*8*3];
-			glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
-
-			unsigned int difference_result   = result_data[0];
-			unsigned int union_result        = result_data[1];
-			unsigned int intersection_result = result_data[2];
-
-			m_pDebugView->Update(IDebugView::DIFFERENCE,
-								 ProfilerString("Difference: ", difference_result));
-			m_pDebugView->Update(IDebugView::UNION,
-								 ProfilerString("Union: ", union_result));
-			m_pDebugView->Update(IDebugView::INTERSECTION,
-								 ProfilerString("Intersection: ", intersection_result));
-			
-			// vstr::out() << "difference:   " << difference_result << std::endl;			
-			// vstr::out() << "union:        " << union_result << std::endl;			
-			// vstr::out() << "intersection: " << intersection_result
-			// 			<< std::endl << std::endl;
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
 		// update actual model fit		
+	}
+
+	void HandTracker::UploadCameraDepthMap() {
+ 		// upload camera image to tiled texture
+ 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
+ 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
+
+ 		m_pCameraTexturePBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
+ 										  GL_WRITE_ONLY);		
+		memcpy(m_pCameraTexturePBO, m_pDepthBufferUInt, 320*240*4);
+		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+
+		for(int row = 0 ; row < 8 ; row++) {
+			for(int col = 0 ; col < 8 ; col++) {
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 
+								320*col, 240*row, 320, 240,
+								GL_DEPTH_COMPONENT,
+								GL_UNSIGNED_INT, NULL);
+			}
+		}
+ 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+ 		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	void HandTracker::ReduceDepthMaps() {
+		if(!GLEW_ARB_shader_image_load_store || !GLEW_ARB_compute_shader) {
+			return;
+		}
+		
+		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
+		VistaType::microtime tStart = oTimer.GetMicroTime();
+
+		// bind input textures
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
+
+		// bind result image texture
+		glBindImageTexture(0, m_idResultTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+
+		// reduction in x direction
+		glUseProgram(m_idReductionXProgram);
+		glDispatchCompute(8, 240*8/3, 1);
+
+		// make sure all image stores are visible
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+		// unbind input textures
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		// reduction in y direction
+		glUseProgram(m_idReductionYProgram);
+		glDispatchCompute(8, 8, 1);
+
+		// make sure all image stores are visible
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+		// unbind result image texture
+		glBindImageTexture(0, m_idResultTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+			
+
+		VistaType::microtime tReduction = oTimer.GetMicroTime() - tStart;
+		m_pDebugView->Update(IDebugView::REDUCTION_TIME,
+							 ProfilerString("Reduction time: ", tReduction));
+
+		// read and print result values (testing)
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
+
+		unsigned int result_data[8*240*8*3];
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
+
+		unsigned int difference_result   = result_data[0];
+		unsigned int union_result        = result_data[1];
+		unsigned int intersection_result = result_data[2];
+
+		m_pDebugView->Update(IDebugView::DIFFERENCE,
+							 ProfilerString("Difference: ", difference_result));
+		m_pDebugView->Update(IDebugView::UNION,
+							 ProfilerString("Union: ", union_result));
+		m_pDebugView->Update(IDebugView::INTERSECTION,
+							 ProfilerString("Intersection: ", intersection_result));
 	}
 	
 	void HandTracker::FilterSkinAreas() {
