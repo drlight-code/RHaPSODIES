@@ -174,7 +174,7 @@ namespace {
 		std::string sPrefix, T value) {
 		std::ostringstream ostr;
 
-		ostr << std::setw(20) << sPrefix << value;
+		ostr << std::setw(30) << sPrefix << value;
 		return ostr.str();
 	}
 }
@@ -186,7 +186,6 @@ namespace rhapsodies {
 
 	const std::string sPSOGenerationsName = "PSO_GENERATIONS";
 
-	const std::string sPrintTimesName = "PRINT_TIMES";
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
@@ -424,9 +423,6 @@ namespace rhapsodies {
 		m_oConfig.iPSOGenerations = oTrackerConfig.GetValueOrDefault(
 			sPSOGenerationsName, 45);
 
-		m_oConfig.bPrintTimes = oTrackerConfig.GetValueOrDefault(
-			sPrintTimesName, false);
-
 		const VistaPropertyList &oCameraConfig =
 			oConfig.GetSubListConstRef(RHaPSODemo::sCameraSectionName);
 
@@ -464,14 +460,18 @@ namespace rhapsodies {
 		VistaType::microtime tPSO =
 			oTimer.GetMicroTime() - tStart;
 
-		if(m_oConfig.bPrintTimes) {
-			vstr::out() << "Tracking FPS:        " << 1.0f/(tProcessFrames+tPSO) << std::endl;
-			vstr::out() << "Overall time:        " << tProcessFrames + tPSO << std::endl;
-			vstr::out() << "ProcessCameraFrames: " << tProcessFrames << std::endl;
-			vstr::out() << "PerformPSOTracking:  " << tPSO
-						<< std::endl << std::endl;
-		}
-		
+		m_pDebugView->Write(IDebugView::LOOP_FPS,
+							ProfilerString("Tracking loop  fps: ",
+										   1.0f/(tProcessFrames+tPSO)));
+		m_pDebugView->Write(IDebugView::LOOP_TIME,
+							ProfilerString("Tracking loop time: ",
+										   tProcessFrames + tPSO));
+		m_pDebugView->Write(IDebugView::CAMERAFRAMES_TIME,
+							ProfilerString("Camera processing time: ",
+										   tProcessFrames));
+		m_pDebugView->Write(IDebugView::PSO_TIME,
+							ProfilerString("PSO loop time: ",
+										   tPSO));
 		return true;
 	}
 
