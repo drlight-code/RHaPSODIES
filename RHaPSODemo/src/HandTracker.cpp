@@ -60,6 +60,9 @@
 #include <HandRenderer.hpp>
 #include <DebugView.hpp>
 
+#include <PSO/ParticleSwarm.hpp>
+#include <PSO/Particle.hpp>
+
 #include "HandTracker.hpp"
 
 /*============================================================================*/
@@ -81,7 +84,6 @@ namespace {
 
 	// 	return ret;
 	// }
-
 	bool CheckFrameBufferStatus(GLuint idFBO) {
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if(status != GL_FRAMEBUFFER_COMPLETE) {
@@ -201,15 +203,16 @@ namespace rhapsodies {
 		m_pHandModelLeft(NULL),
 		m_pHandModelRight(NULL),
 		m_pHandRenderer(new HandRenderer(pReg)),
-		m_pDebugView(NULL) {
+		m_pDebugView(NULL),
+		m_pSwarm(NULL) {
 
-//		m_idDifferenceScoreProgram = pReg->GetProgram("difference_score");
-//		m_idReductionProgram       = pReg->GetProgram("reduction");
 		m_idReductionXProgram      = pReg->GetProgram("reduction_x");
 		m_idReductionYProgram      = pReg->GetProgram("reduction_y");
 	}
 
 	HandTracker::~HandTracker() {
+		delete m_pSwarm;
+		
 		for(ListSkinCl::iterator it = m_lClassifiers.begin() ;
 			it != m_lClassifiers.end() ; ++it) {
 			delete *it;
@@ -268,7 +271,7 @@ namespace rhapsodies {
 		PrintConfig();
 		
 		InitSkinClassifiers();
-		InitHandModels();
+
 		InitRendering();
 
 		if(HasGLComputeCapabilities()) {
@@ -280,58 +283,15 @@ namespace rhapsodies {
 				<< "ARB_shader_image_load_store or ARB_compute_shader not supported!"
 				<< std::endl << "Reduction stage will not be performed." << std::endl;
 		}
+
+		InitParticleSwarm();
+		InitHandModels();
 		
 		return true;
 	}
 
 	bool HandTracker::HasGLComputeCapabilities() {
 		return GLEW_ARB_shader_image_load_store && GLEW_ARB_compute_shader;
-	}
-
-	bool HandTracker::InitSkinClassifiers() {
-		SkinClassifierLogOpponentYIQ *pSkinLOYIQ =
-			new SkinClassifierLogOpponentYIQ;
-		m_lClassifiers.push_back(pSkinLOYIQ);
-
-		SkinClassifier *pSkinCl = new SkinClassifierRedMatter0;
-		m_lClassifiers.push_back(pSkinCl);
-
-		pSkinCl = new SkinClassifierRedMatter1;
-		m_lClassifiers.push_back(pSkinCl);
-
-		pSkinCl = new SkinClassifierRedMatter2;
-		m_lClassifiers.push_back(pSkinCl);
-
-		pSkinCl = new SkinClassifierRedMatter3;
-		m_lClassifiers.push_back(pSkinCl);
-
-		pSkinCl = new SkinClassifierRedMatter4;
-		m_lClassifiers.push_back(pSkinCl);
-
-		pSkinCl = new SkinClassifierRedMatter5;
-		m_lClassifiers.push_back(pSkinCl);
-
-		m_itCurrentClassifier = m_lClassifiers.begin();
-		m_itCurrentClassifier++;
-		m_itCurrentClassifier++;
-
-		return true;
-	}
-
-	bool HandTracker::InitHandModels() {
-		m_pHandModelLeft  = new HandModel;
-		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
-		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
-
-		m_pHandModelRight = new HandModel;
-		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
-		m_pHandModelRight->SetPosition(VistaVector3D(0.1, -0.1, 0.5));
-
-		m_pHandModelRep = new HandModelRep;
-
-		//RandomizeModels();
-
-		return true;
 	}
 
 	bool HandTracker::InitRendering() {
@@ -394,6 +354,71 @@ namespace rhapsodies {
 		ValidateComputeShader(m_idReductionXProgram);
 		ValidateComputeShader(m_idReductionYProgram);
 		
+		return true;
+	}
+	
+
+	bool HandTracker::InitSkinClassifiers() {
+		SkinClassifierLogOpponentYIQ *pSkinLOYIQ =
+			new SkinClassifierLogOpponentYIQ;
+		m_lClassifiers.push_back(pSkinLOYIQ);
+
+		SkinClassifier *pSkinCl = new SkinClassifierRedMatter0;
+		m_lClassifiers.push_back(pSkinCl);
+
+		pSkinCl = new SkinClassifierRedMatter1;
+		m_lClassifiers.push_back(pSkinCl);
+
+		pSkinCl = new SkinClassifierRedMatter2;
+		m_lClassifiers.push_back(pSkinCl);
+
+		pSkinCl = new SkinClassifierRedMatter3;
+		m_lClassifiers.push_back(pSkinCl);
+
+		pSkinCl = new SkinClassifierRedMatter4;
+		m_lClassifiers.push_back(pSkinCl);
+
+		pSkinCl = new SkinClassifierRedMatter5;
+		m_lClassifiers.push_back(pSkinCl);
+
+		m_itCurrentClassifier = m_lClassifiers.begin();
+		m_itCurrentClassifier++;
+		m_itCurrentClassifier++;
+
+		return true;
+	}
+
+	bool HandTracker::InitHandModels() {
+		m_pHandModelLeft  = new HandModel;
+		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
+		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
+
+		m_pHandModelRight = new HandModel;
+		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
+		m_pHandModelRight->SetPosition(VistaVector3D(0.1, -0.1, 0.5));
+
+		m_pHandModelRep = new HandModelRep;
+
+		//RandomizeModels();
+
+		return true;
+	}
+
+	bool HandTracker::InitParticleSwarm() {
+
+		m_pSwarm = new ParticleSwarm(64);
+
+		for(auto &p: m_pSwarm->GetParticles()) {
+			p.GetModelLeft().SetType(HandModel::LEFT_HAND);
+			p.GetModelLeft().SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
+
+			p.GetModelRight().SetType(HandModel::RIGHT_HAND);
+			p.GetModelRight().SetPosition(VistaVector3D(0.1, -0.1, 0.5));
+			
+			p.GetModelLeft().Randomize();
+			p.GetModelRight().Randomize();
+		}
+
 		return true;
 	}
 
@@ -532,56 +557,11 @@ namespace rhapsodies {
 	}
 
 	void HandTracker::PerformPSOTracking() {
-
 		UploadCameraDepthMap();
-
-		// set up camera projection from intrinsic parameters
-		// we don't do non-linear radial distortion corretion for now.
-		float cx = m_oCameraIntrinsics.GetValue<float>("CX");
-		float cy = m_oCameraIntrinsics.GetValue<float>("CY");
-		float fx = m_oCameraIntrinsics.GetValue<float>("FX");
-		float fy = m_oCameraIntrinsics.GetValue<float>("FY");
-
-		// we measure in m, focal length given in mm
-		cx /= 1000.0f;
-		cy /= 1000.0f;
-		fx /= 1000.0f;
-		fy /= 1000.0f;		
-
-		// https://sightations.wordpress.com/2010/08/03/simulating-calibrated-cameras-in-opengl/
-		float znear = 0.1f;
-		float zfar  = 1.1f;
-		float x = znear + zfar;
-		float y = znear * zfar;
-
-		VistaTransformMatrix mProj(
-			fx, 0, -cx, 0,
-			0, fy, -cy, 0,
-			0,  0,   x, y,
-			0,  0,  -1, 0 );
-		
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		
-		glOrtho(0.0, 0.32, 0.0, 0.24, znear, zfar);
-		glMultMatrixf(mProj.GetData());
-
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
-		VistaQuaternion qRotY =
-			VistaQuaternion(
-				VistaAxisAndAngle(
-					VistaVector3D(0, 1, 0), Vista::Pi));
-
-		VistaTransformMatrix mRotY(qRotY);
-		glMultMatrixf(mRotY.GetData());
+		SetupProjection();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idRenderedTextureFBO);	
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
-			// PSO for model hypotheses
-		
-			
 			// FBO rendering of tiled zbuffers
 			glClear(GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_DEPTH_TEST);
@@ -591,10 +571,12 @@ namespace rhapsodies {
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-//					RandomizeModels();
-					
-					m_pHandRenderer->DrawHand(m_pHandModelLeft,  m_pHandModelRep);
-					m_pHandRenderer->DrawHand(m_pHandModelRight, m_pHandModelRep);
+					m_pHandRenderer->DrawHand(
+						&(m_pSwarm->GetParticles()[row*8+col].GetModelLeft()),
+						m_pHandModelRep);
+					m_pHandRenderer->DrawHand(
+						&(m_pSwarm->GetParticles()[row*8+col].GetModelRight()),
+						m_pHandModelRep);
 
 					vViewportData.push_back(col*320);
 					vViewportData.push_back(row*240);
@@ -643,6 +625,50 @@ namespace rhapsodies {
  		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	void HandTracker::SetupProjection() {
+		// set up camera projection from intrinsic parameters
+		// we don't do non-linear radial distortion corretion for now.
+		float cx = m_oCameraIntrinsics.GetValue<float>("CX");
+		float cy = m_oCameraIntrinsics.GetValue<float>("CY");
+		float fx = m_oCameraIntrinsics.GetValue<float>("FX");
+		float fy = m_oCameraIntrinsics.GetValue<float>("FY");
+
+		// we measure in m, focal length given in mm
+		cx /= 1000.0f;
+		cy /= 1000.0f;
+		fx /= 1000.0f;
+		fy /= 1000.0f;		
+
+		// https://sightations.wordpress.com/2010/08/03/simulating-calibrated-cameras-in-opengl/
+		float znear = 0.1f;
+		float zfar  = 1.1f;
+		float x = znear + zfar;
+		float y = znear * zfar;
+
+		VistaTransformMatrix mProj(
+			fx, 0, -cx, 0,
+			0, fy, -cy, 0,
+			0,  0,   x, y,
+			0,  0,  -1, 0 );
+		
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		
+		glOrtho(0.0, 0.32, 0.0, 0.24, znear, zfar);
+		glMultMatrixf(mProj.GetData());
+
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		VistaQuaternion qRotY =
+			VistaQuaternion(
+				VistaAxisAndAngle(
+					VistaVector3D(0, 1, 0), Vista::Pi));
+
+		VistaTransformMatrix mRotY(qRotY);
+		glMultMatrixf(mRotY.GetData());
+	}
+	
 	void HandTracker::ReduceDepthMaps() {
 		if(!GLEW_ARB_shader_image_load_store || !GLEW_ARB_compute_shader) {
 			return;

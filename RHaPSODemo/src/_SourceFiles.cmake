@@ -2,7 +2,7 @@
 
 set( RelativeDir "src" )
 set( RelativeSourceGroup "source" )
-set( SubDirs SkinClassifiers GLDraw )
+set( SubDirs SkinClassifiers GLDraw PSO )
 
 set( DirFiles
 	main.cpp

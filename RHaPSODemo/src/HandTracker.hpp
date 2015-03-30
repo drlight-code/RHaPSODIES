@@ -42,14 +42,16 @@ namespace rhapsodies {
 	class HandRenderer;
 
 	class IDebugView;
+
+	class ParticleSwarm;
 	
 	class HandTracker {
 	public:
 		enum ViewType {
 			COLOR,
 			COLOR_SEGMENTED,
-			DEPTH,           // native camera depth map
-			DEPTH_SEGMENTED, // segmented camera depth map
+			DEPTH,
+			DEPTH_SEGMENTED,
 			UVMAP,
 			UVMAP_SEGMENTED
 		};
@@ -74,11 +76,7 @@ namespace rhapsodies {
 		GLuint GetResultTextureId();
 		
 		bool Initialize();
-		bool InitSkinClassifiers();
-		bool InitHandModels();
-		bool InitRendering();
-		bool InitReduction();
-
+		
 		void ReadConfig();
 
 		bool FrameUpdate(const unsigned char  *colorFrame,
@@ -113,9 +111,11 @@ namespace rhapsodies {
 			bool bPrintTimes;
 		};
 
-		void FilterSkinAreas();
-		void UploadCameraDepthMap();
-		void ReduceDepthMaps();
+		bool InitSkinClassifiers();
+		bool InitHandModels();
+		bool InitParticleSwarm();
+		bool InitRendering();
+		bool InitReduction();
 
 		bool HasGLComputeCapabilities();
 		
@@ -127,8 +127,12 @@ namespace rhapsodies {
 						const unsigned char *color,
 						unsigned char *rgb);
 
-		void PrintConfig();
+		void FilterSkinAreas();
+		void UploadCameraDepthMap();
+		void SetupProjection();
+		void ReduceDepthMaps();
 
+		void PrintConfig();
 
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
 		MapPBO m_mapPBO;
@@ -162,6 +166,8 @@ namespace rhapsodies {
 		unsigned char m_pDepthRGBBuffer[320*240*3];
 		unsigned char m_pUVMapRGBBuffer[320*240*3];
 
+		IDebugView *m_pDebugView;
+
 		GLuint m_idRenderedTexture;
 		GLuint m_idRenderedTextureFBO;
 
@@ -173,7 +179,7 @@ namespace rhapsodies {
 		GLuint m_idReductionYProgram;
 		GLuint m_idResultTexture;
 
-		IDebugView *m_pDebugView;
+		ParticleSwarm *m_pSwarm;
 	};
 }
 
