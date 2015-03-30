@@ -176,7 +176,7 @@ namespace {
 		std::string sPrefix, T value) {
 		std::ostringstream ostr;
 
-		ostr << std::setw(30) << sPrefix << value;
+		ostr << std::setw(30) << sPrefix << std::fixed << value;
 		return ostr.str();
 	}
 }
