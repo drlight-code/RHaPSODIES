@@ -15,6 +15,7 @@ namespace rhapsodies {
 			DIFFERENCE,
 			UNION,
 			INTERSECTION,
+			PENALTY,
 			SLOT_LAST
 		};
 
