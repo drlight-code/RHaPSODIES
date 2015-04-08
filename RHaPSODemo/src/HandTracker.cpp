@@ -180,9 +180,15 @@ namespace {
 		return ostr.str();
 	}
 
-	inline float WorldToScreen(float zWorld, float zNear=0.1f, float zFar=1.1f) {
+	inline float WorldToScreenProjective(
+		float zWorld, float zNear=0.1f, float zFar=1.1f) {
 		return ((zNear + zFar - 2.0f*zNear*zFar/zWorld /
 				 (zFar - zNear) + 1.0f) / 2.0f);
+	}
+
+	inline float WorldToScreenLinear(
+		float zWorld, float zNear=0.1f, float zFar=1.1f) {
+		return (zWorld - zNear) / (zFar - zNear);
 	}
 }
 
@@ -319,7 +325,7 @@ namespace rhapsodies {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16,
 					 320*8, 240*8, 0,
-					 GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
+					 GL_DEPTH_COMPONENT, GL_INT, NULL);
 
 		glGenBuffers(1, &m_idCameraTexturePBO);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
@@ -865,7 +871,7 @@ namespace rhapsodies {
 		}
 
 		pProf->StartSection("Depth/UV filtering");
-		unsigned int uiDepthValue = 0xffffffffu;
+		unsigned int uiDepthValue = 0x7fffffffu;
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
 			// if( image_processed.data[pixel] == 0 ||
 			// 	m_pDepthBuffer[pixel] < 400 ||
@@ -879,7 +885,7 @@ namespace rhapsodies {
 				m_pUVMapRGBBuffer[3*pixel+1] = 0;
 				m_pUVMapRGBBuffer[3*pixel+2] = 0;
 
-				uiDepthValue = 0xffffffffu;
+				uiDepthValue = 0x7fffffffu;
 			}
 			else {
 				// transform depth value range, in millimeters:
@@ -892,7 +898,8 @@ namespace rhapsodies {
 
 				// valid values [100,1100]
 				if( zWorldMM >= 100 && zWorldMM <= 1100 ) {
-					zScreen = WorldToScreen(float(zWorldMM)/1000.0f);
+					zScreen = WorldToScreenProjective(float(zWorldMM)/1000.0f);
+//					zScreen = WorldToScreenLinear(float(zWorldMM)/1000.0f);					
 				}
 				uiDepthValue = zScreen * 0x7fffffffu;
 			}
