@@ -272,6 +272,14 @@ namespace rhapsodies {
 		return m_idDifferenceTexture;
 	}
 
+	GLuint HandTracker::GetUnionTextureId() {
+		return m_idUnionTexture;
+	}
+
+	GLuint HandTracker::GetIntersectionTextureId() {
+		return m_idIntersectionTexture;
+	}
+
 	bool HandTracker::Initialize() {
 		vstr::out() << "Initializing RHaPSODIES HandTracker" << std::endl;
 
@@ -342,6 +350,8 @@ namespace rhapsodies {
 	}
 
 	bool HandTracker::InitReduction() {
+		glActiveTexture(GL_TEXTURE0);
+
 		// prepare result texture
 		glGenTextures(1, &m_idResultTexture);
 
@@ -350,7 +360,6 @@ namespace rhapsodies {
 			data[i] = 0x0;
 		}		
 		
-		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -371,7 +380,6 @@ namespace rhapsodies {
 			data[i] = 0x0;
 		}		
 		
-		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_idDifferenceTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -380,6 +388,34 @@ namespace rhapsodies {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER,
 						GL_UNSIGNED_INT, data);
 		delete [] data;
+
+		// union inspection texture
+		glGenTextures(1, &m_idUnionTexture);
+
+		unsigned char *data_char = new unsigned char[320*240*8*8];
+		for(int i = 0; i < 320*240*8*8; ++i) {
+			data_char[i] = 0x0;
+		}
+		
+		glBindTexture(GL_TEXTURE_2D, m_idUnionTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R8UI, 320*8, 240*8);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER,
+						GL_UNSIGNED_BYTE, data_char);
+
+		// union inspection texture
+		glGenTextures(1, &m_idIntersectionTexture);
+
+		glBindTexture(GL_TEXTURE_2D, m_idIntersectionTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R8UI, 320*8, 240*8);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER,
+						GL_UNSIGNED_BYTE, data_char);
+		delete [] data_char;
 		
 		return true;
 	}
@@ -715,6 +751,10 @@ namespace rhapsodies {
 						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
 		glBindImageTexture(1, m_idDifferenceTexture,
 						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		glBindImageTexture(2, m_idUnionTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+		glBindImageTexture(3, m_idIntersectionTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
 
 		// reduction in x direction
 		glUseProgram(m_idReductionXProgram);
@@ -736,10 +776,11 @@ namespace rhapsodies {
 		// make sure all image stores are visible
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-		// unbind result image texture
-		glBindImageTexture(0, m_idResultTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-			
+		// unbind result image textures
+		glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+		glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
 
 		VistaType::microtime tReduction = oTimer.GetMicroTime() - tStart;
 		m_pDebugView->Write(IDebugView::REDUCTION_TIME,
@@ -826,9 +867,10 @@ namespace rhapsodies {
 		pProf->StartSection("Depth/UV filtering");
 		unsigned int uiDepthValue = 0xffffffffu;
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
-			if( image_processed.data[pixel] == 0 ||
-				m_pDepthBuffer[pixel] < 400 ||
-				m_pDepthBuffer[pixel] > 600) {
+			// if( image_processed.data[pixel] == 0 ||
+			// 	m_pDepthBuffer[pixel] < 400 ||
+			// 	m_pDepthBuffer[pixel] > 600) {
+			if( image_processed.data[pixel] == 0) {
 				m_pDepthRGBBuffer[3*pixel+0] = 0;
 				m_pDepthRGBBuffer[3*pixel+1] = 0;
 				m_pDepthRGBBuffer[3*pixel+2] = 0;

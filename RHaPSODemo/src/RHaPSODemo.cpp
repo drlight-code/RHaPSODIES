@@ -483,23 +483,23 @@ namespace rhapsodies {
 			false, m_pShaderReg, "textured_uint_diff");
 
 		m_pDifferenceTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
-		m_pDifferenceTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(2, 0,0));
+		m_pDifferenceTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2, -2,0));
 
 		// // ImageDraw: union texture
-		// pTexDraw = new TexturedQuadGLDraw(
-		// 	m_pHandTracker->GetUnionTextureId(),
-		// 	false, m_pShaderReg, "textured_uint8");
+		pTexDraw = new TexturedQuadGLDraw(
+			m_pHandTracker->GetUnionTextureId(),
+			false, m_pShaderReg, "textured_uint8");
 
-		// m_pUnionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
-		// m_pUnionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2, -2,0));
+		m_pUnionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
+		m_pUnionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(0, -2, 0));
 
 		// // ImageDraw: intersection texture
-		// pTexDraw = new TexturedQuadGLDraw(
-		// 	m_pHandTracker->GetIntersectionTextureId(),
-		// 	false, m_pShaderReg, "textured_uint8");
+		pTexDraw = new TexturedQuadGLDraw(
+			m_pHandTracker->GetIntersectionTextureId(),
+			false, m_pShaderReg, "textured_uint8");
 
-		// m_pIntersectionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
-		// m_pIntersectionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(0, -2,0));
+		m_pIntersectionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
+		m_pIntersectionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(2, -2,0));
 
 		// // ImageDraw for histogram
 		// m_pDiagramDraw = new ImageDraw(m_pSceneTransform,

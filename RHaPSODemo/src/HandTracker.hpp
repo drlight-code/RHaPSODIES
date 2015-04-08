@@ -75,6 +75,8 @@ namespace rhapsodies {
 
 		GLuint GetResultTextureId();
 		GLuint GetDifferenceTextureId();
+		GLuint GetUnionTextureId();
+		GLuint GetIntersectionTextureId();
 		
 		bool Initialize();
 		
@@ -178,8 +180,11 @@ namespace rhapsodies {
 
 		GLuint m_idReductionXProgram;
 		GLuint m_idReductionYProgram;
+
 		GLuint m_idResultTexture;
 		GLuint m_idDifferenceTexture;
+		GLuint m_idUnionTexture;
+		GLuint m_idIntersectionTexture;
 
 		ParticleSwarm *m_pSwarm;
 	};

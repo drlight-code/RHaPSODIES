@@ -21,6 +21,8 @@ shared uint work_memory_i[320*3]; // intersection
 // d u i | ... | d u i
 layout (binding = 0, r32ui) uniform restrict uimage2D imgResult;
 layout (binding = 1, r32ui) uniform restrict uimage2D imgDifference;
+layout (binding = 2, r8ui)  uniform restrict uimage2D imgUnion;
+layout (binding = 3, r8ui)  uniform restrict uimage2D imgIntersection;
 
 // maximum depth difference.  the range [znear, zfar] == [0.1, 1.1] is
 // mapped to signed 16 bit depth values, i.e. 2^15 values. We want to
@@ -44,23 +46,34 @@ void main() {
 	ivec4 renderedSample = texture(texRenderedDepth, posScreen);
 	ivec4 cameraSample   = texture(texCameraDepth,   posScreen);
 
-	imageStore(imgDifference, posGlobal,
-			   uvec4(min( abs(cameraSample-renderedSample)[0], dM)));
+//	uint clamped_difference = min( abs(cameraSample[0]-renderedSample[0]), dM);
+	uint clamped_difference =
+		abs((cameraSample[0] & 0xffff) -
+			(renderedSample[0] & 0xffff));
+
+	uint inter_val = 
+		((renderedSample[0] & 0x00007fff) > 0) &&
+		((cameraSample[0]   & 0x00007fff) > 0) ? 1 : 0;
+
+	uint union_val =
+		((renderedSample | cameraSample)[0] & 0x00007fff) > 0 ? 1 : 0;
+
+	// debug output image writes
+	imageStore(imgDifference,   posGlobal, uvec4(clamped_difference, 0, 0, 0));
+	imageStore(imgUnion,        posGlobal, uvec4(union_val, 0, 0, 0));
+	imageStore(imgIntersection, posGlobal, uvec4(inter_val, 0, 0, 0));
 	
 	// initialize work memory by texture lookup
 	
 	// union
-	work_memory_u[lid] =
-		((renderedSample | cameraSample)[0] & 0x00007fff) > 0 ? 1 : 0;
+	work_memory_u[lid] = union_val;
 
 	// intersection
-	work_memory_i[lid] =
-		((renderedSample[0] & 0x00007fff) > 0) &&
-		((cameraSample[0]   & 0x00007fff) > 0) ? 1 : 0;
+	work_memory_i[lid] = inter_val;
 
 	// clamped difference
 //	if(work_memory_u[lid] == 1)
-		work_memory_d[lid] = min( abs(cameraSample-renderedSample)[0], dM );
+	work_memory_d[lid] = clamped_difference;
 	// else		
 //	work_memory_d[lid] = 0xDA74; // 0xffffffff / 320 / 240
 
