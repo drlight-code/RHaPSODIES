@@ -179,6 +179,11 @@ namespace {
 		ostr << std::setw(30) << sPrefix << std::fixed << value;
 		return ostr.str();
 	}
+
+	inline float WorldToScreen(float zWorld, float zNear=0.1f, float zFar=1.1f) {
+		return ((zNear + zFar - 2.0f*zNear*zFar/zWorld /
+				 (zFar - zNear) + 1.0f) / 2.0f);
+	}
 }
 
 namespace rhapsodies {
@@ -353,7 +358,7 @@ namespace rhapsodies {
 
 		ValidateComputeShader(m_idReductionXProgram);
 		ValidateComputeShader(m_idReductionYProgram);
-		
+
 		return true;
 	}
 	
@@ -723,13 +728,14 @@ namespace rhapsodies {
 		unsigned int result_data[8*240*8*3];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
 
-		unsigned int difference_result   = result_data[0];
+		unsigned int difference_result   = result_data[0] / 0x7fff;
 		unsigned int union_result        = result_data[1];
 		unsigned int intersection_result = result_data[2];
 
-		float lambda = 0.05;
-		float score = lambda * difference_result / (union_result + 1e-6) +
-			(1 - 2*intersection_result / (intersection_result + union_result));
+		//float lambda = 0.05;
+		// float score = lambda * difference_result / (union_result + 1e-6) +
+		// 	(1 - 2*intersection_result / (intersection_result + union_result));
+		float score = (difference_result) / (union_result + 1e-6);
 
 		m_pDebugView->Write(IDebugView::DIFFERENCE,
 							ProfilerString("Difference: ", difference_result));
@@ -796,7 +802,9 @@ namespace rhapsodies {
 		pProf->StartSection("Depth/UV filtering");
 		unsigned int uiDepthValue = 0xffffffffu;
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
-			if( image_processed.data[pixel] == 0 ) {
+			if( image_processed.data[pixel] == 0 ||
+				m_pDepthBuffer[pixel] < 400 ||
+				m_pDepthBuffer[pixel] > 600) {
 				m_pDepthRGBBuffer[3*pixel+0] = 0;
 				m_pDepthRGBBuffer[3*pixel+1] = 0;
 				m_pDepthRGBBuffer[3*pixel+2] = 0;
@@ -818,12 +826,8 @@ namespace rhapsodies {
 
 				// valid values [100,1100]
 				if( zWorldMM >= 100 && zWorldMM <= 1100 ) {
-					float near = 0.1f;
-					float far  = 1.1f;
 
-					zScreen =
-						((near + far - 2.0f*near*far/(float(zWorldMM)/1000.0f)) /
-						 (far - near) + 1.0f) / 2.0f;
+					zScreen = WorldToScreen(float(zWorldMM)/1000.0f);
 				}
 				uiDepthValue = zScreen * 0xffffffffu;
 			}
@@ -831,8 +835,6 @@ namespace rhapsodies {
 			int targetCol = pixel % 320;
 
 			m_pDepthBufferUInt[320*targetRow + targetCol] = uiDepthValue;
-
-
 		}
 		pProf->StopSection();
 	}
