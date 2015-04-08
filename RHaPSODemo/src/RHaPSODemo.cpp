@@ -310,6 +310,9 @@ namespace rhapsodies {
 			"frag_textured_uint8", GL_FRAGMENT_SHADER,
 			"resources/shaders/textured_uint8.frag");
 		m_pShaderReg->RegisterShader(
+			"frag_textured_uint_diff", GL_FRAGMENT_SHADER,
+			"resources/shaders/textured_uint_diff.frag");
+		m_pShaderReg->RegisterShader(
 			"frag_depthtexture", GL_FRAGMENT_SHADER,
 			"resources/shaders/depthtexture.frag");
 		m_pShaderReg->RegisterShader(
@@ -349,7 +352,12 @@ namespace rhapsodies {
 		vec_shaders.push_back("vert_vpos_uv");		
 		vec_shaders.push_back("frag_textured_uint8");		
 		m_pShaderReg->RegisterProgram("textured_uint8", vec_shaders);
-	
+
+		vec_shaders.clear();
+		vec_shaders.push_back("vert_vpos_uv");		
+		vec_shaders.push_back("frag_textured_uint_diff");		
+		m_pShaderReg->RegisterProgram("textured_uint_diff", vec_shaders);
+
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos");
 		vec_shaders.push_back("frag_solid_green");		
@@ -471,8 +479,8 @@ namespace rhapsodies {
 
 		// ImageDraw: difference texture
 		pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetResultTextureId(),
-			false, m_pShaderReg, "textured_uint");
+			m_pHandTracker->GetDifferenceTextureId(),
+			false, m_pShaderReg, "textured_uint_diff");
 
 		m_pDifferenceTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
 		m_pDifferenceTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(2, 0,0));

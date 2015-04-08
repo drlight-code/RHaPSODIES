@@ -268,6 +268,10 @@ namespace rhapsodies {
 		return m_idResultTexture;
 	}
 
+	GLuint HandTracker::GetDifferenceTextureId() {
+		return m_idDifferenceTexture;
+	}
+
 	bool HandTracker::Initialize() {
 		vstr::out() << "Initializing RHaPSODIES HandTracker" << std::endl;
 
@@ -359,6 +363,24 @@ namespace rhapsodies {
 		ValidateComputeShader(m_idReductionXProgram);
 		ValidateComputeShader(m_idReductionYProgram);
 
+		// difference inspection texture
+		glGenTextures(1, &m_idDifferenceTexture);
+
+		data = new unsigned int[320*240*8*8];
+		for(int i = 0; i < 320*240*8*8; ++i) {
+			data[i] = 0x0;
+		}		
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_idDifferenceTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 320*8, 240*8);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER,
+						GL_UNSIGNED_INT, data);
+		delete [] data;
+		
 		return true;
 	}
 	
@@ -690,6 +712,8 @@ namespace rhapsodies {
 
 		// bind result image texture
 		glBindImageTexture(0, m_idResultTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		glBindImageTexture(1, m_idDifferenceTexture,
 						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
 
 		// reduction in x direction
