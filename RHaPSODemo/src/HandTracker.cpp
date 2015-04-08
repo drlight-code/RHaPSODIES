@@ -898,8 +898,8 @@ namespace rhapsodies {
 
 				// valid values [100,1100]
 				if( zWorldMM >= 100 && zWorldMM <= 1100 ) {
-					zScreen = WorldToScreenProjective(float(zWorldMM)/1000.0f);
-//					zScreen = WorldToScreenLinear(float(zWorldMM)/1000.0f);					
+//					zScreen = WorldToScreenProjective(float(zWorldMM)/1000.0f);
+					zScreen = WorldToScreenLinear(float(zWorldMM)/1000.0f);
 				}
 				uiDepthValue = zScreen * 0x7fffffffu;
 			}

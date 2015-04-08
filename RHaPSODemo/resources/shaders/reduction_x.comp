@@ -47,9 +47,9 @@ void main() {
 	ivec4 cameraSample   = texture(texCameraDepth,   posScreen);
 
 //	uint clamped_difference = min( abs(cameraSample[0]-renderedSample[0]), dM);
-	uint clamped_difference =
-		abs((cameraSample[0] & 0xffff) -
-			(renderedSample[0] & 0xffff));
+	uint clamped_difference = (cameraSample[0] & 0x007fffff);
+		// abs((cameraSample[0]   & 0x00007fff) -
+		// 	(renderedSample[0] & 0x00007fff));
 
 	uint inter_val = 
 		((renderedSample[0] & 0x00007fff) > 0) &&
