@@ -681,7 +681,7 @@ namespace rhapsodies {
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 
 								320*col, 240*row, 320, 240,
 								GL_DEPTH_COMPONENT,
-								GL_UNSIGNED_INT, NULL);
+								GL_INT, NULL);
 			}
 		}
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
@@ -892,10 +892,9 @@ namespace rhapsodies {
 
 				// valid values [100,1100]
 				if( zWorldMM >= 100 && zWorldMM <= 1100 ) {
-
 					zScreen = WorldToScreen(float(zWorldMM)/1000.0f);
 				}
-				uiDepthValue = zScreen * 0xffffffffu;
+				uiDepthValue = zScreen * 0x7fffffffu;
 			}
 			int targetRow = 240 - 1 - (pixel/320);
 			int targetCol = pixel % 320;
