@@ -463,7 +463,7 @@ namespace rhapsodies {
 		
 		// ImageDraw: rendered depth map
 		TexturedQuadGLDraw *pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetRenderedTextureId(), false, m_pShaderReg);
+			m_pHandTracker->GetRenderedTextureId(), false, false, m_pShaderReg);
 //		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_PSO_RENDERED, pPBODraw); 
 
 		m_pDepthRenderedDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
@@ -471,7 +471,7 @@ namespace rhapsodies {
 
 		// ImageDraw: camera depth map
 		pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetCameraTextureId(), false, m_pShaderReg);
+			m_pHandTracker->GetCameraTextureId(), false, false, m_pShaderReg);
 //		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_PSO_CAMERA, pPBODraw); 
 
 		m_pDepthCameraDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
@@ -480,7 +480,7 @@ namespace rhapsodies {
 		// ImageDraw: difference texture
 		pTexDraw = new TexturedQuadGLDraw(
 			m_pHandTracker->GetDifferenceTextureId(),
-			false, m_pShaderReg, "textured_uint_diff");
+			true, false, m_pShaderReg, "textured_uint_diff");
 
 		m_pDifferenceTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
 		m_pDifferenceTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2, -2,0));
@@ -488,7 +488,7 @@ namespace rhapsodies {
 		// // ImageDraw: union texture
 		pTexDraw = new TexturedQuadGLDraw(
 			m_pHandTracker->GetUnionTextureId(),
-			false, m_pShaderReg, "textured_uint8");
+			false, false, m_pShaderReg, "textured_uint8");
 
 		m_pUnionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
 		m_pUnionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(0, -2, 0));
@@ -496,7 +496,7 @@ namespace rhapsodies {
 		// // ImageDraw: intersection texture
 		pTexDraw = new TexturedQuadGLDraw(
 			m_pHandTracker->GetIntersectionTextureId(),
-			false, m_pShaderReg, "textured_uint8");
+			false, false, m_pShaderReg, "textured_uint8");
 
 		m_pIntersectionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
 		m_pIntersectionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(2, -2,0));

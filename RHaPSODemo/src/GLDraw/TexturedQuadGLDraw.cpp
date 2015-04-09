@@ -44,7 +44,7 @@ namespace rhapsodies {
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
-	TexturedQuadGLDraw::TexturedQuadGLDraw(GLuint texId, bool bYFlip,
+	TexturedQuadGLDraw::TexturedQuadGLDraw(GLuint texId, bool bXFlip, bool bYFlip,
 										   ShaderRegistry *pShaderReg,
 										   std::string sShader) :
 		m_pShaderReg(pShaderReg),
@@ -76,6 +76,13 @@ namespace rhapsodies {
 			afUV[3] = 1.0f;
 			afUV[5] = 0.0f;
 			afUV[7] = 0.0f;
+		}
+
+		if(bXFlip) {
+			afUV[0] = 1.0f;
+			afUV[2] = 0.0f;
+			afUV[4] = 1.0f;
+			afUV[6] = 0.0f;
 		}
 		
 		glGenBuffers(1, &m_vbUVId);

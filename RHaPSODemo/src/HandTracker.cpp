@@ -462,15 +462,11 @@ namespace rhapsodies {
 		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
 		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
 		m_pHandModelLeft->SetJointAngle(HandModel::T_CMC_A, 60);
-		m_pHandModelLeft->SetJointAngle(HandModel::T_MCP, 30);
-		m_pHandModelLeft->SetJointAngle(HandModel::T_IP, 30);
 
 		m_pHandModelRight = new HandModel;
 		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
 		m_pHandModelRight->SetPosition(VistaVector3D(0.1, -0.1, 0.5));
 		m_pHandModelRight->SetJointAngle(HandModel::T_CMC_A, 60);
-		m_pHandModelRight->SetJointAngle(HandModel::T_MCP, 30);
-		m_pHandModelRight->SetJointAngle(HandModel::T_IP, 30);
 
 		m_pHandModelRep = new HandModelRep;
 
@@ -485,11 +481,11 @@ namespace rhapsodies {
 
 		for(auto &p: m_pSwarm->GetParticles()) {
 			p.GetModelLeft().SetType(HandModel::LEFT_HAND);
-			p.GetModelLeft().SetPosition(VistaVector3D(-0.1, -0.10, 0.5));
+			p.GetModelLeft().SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
 			p.GetModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
 
 			p.GetModelRight().SetType(HandModel::RIGHT_HAND);
-			p.GetModelRight().SetPosition(VistaVector3D(0.1, -0.10, 0.5));
+			p.GetModelRight().SetPosition(VistaVector3D(0.1, -0.1, 0.5));
 			p.GetModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
 		}
 
@@ -804,14 +800,13 @@ namespace rhapsodies {
 		unsigned int result_data[8*240*8*3];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
 
-		unsigned int difference_result   = result_data[0] / 0x7fff;
+		unsigned int difference_result   = result_data[0] * 10 / 0x7fff; // *10 in cm?
 		unsigned int union_result        = result_data[1];
 		unsigned int intersection_result = result_data[2];
 
-		//float lambda = 0.05;
-		// float score = lambda * difference_result / (union_result + 1e-6) +
-		// 	(1 - 2*intersection_result / (intersection_result + union_result));
-		float score = (difference_result) / (union_result + 1e-6);
+		float lambda = 1;
+		float score = lambda * difference_result / (union_result + 1e-6) +
+			(1 - 2*intersection_result / (intersection_result + union_result));
 
 		m_pDebugView->Write(IDebugView::DIFFERENCE,
 							ProfilerString("Difference: ", difference_result));
