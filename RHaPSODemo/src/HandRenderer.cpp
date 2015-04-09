@@ -332,7 +332,7 @@ namespace rhapsodies {
 
 		// draw the thumb
 		matTransform.SetToTranslationMatrix(
-			VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/8.0f)*fLRFactor,
+			VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/4.0f)*fLRFactor,
 						  fPalmBottomRadius,
 						  0));
 			
@@ -346,8 +346,7 @@ namespace rhapsodies {
 			pModelRep->GetExtent(HandModelRep::T_PP),
 			pModel->GetJointAngle(HandModel::T_IP),
 			pModelRep->GetExtent(HandModelRep::T_DP),
-			true);	
-
+			true);
 	}
 
 	void HandRenderer::PerformDraw(unsigned int iViewPortCount,

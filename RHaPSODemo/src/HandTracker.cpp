@@ -461,10 +461,16 @@ namespace rhapsodies {
 		m_pHandModelLeft  = new HandModel;
 		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
 		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
+		m_pHandModelLeft->SetJointAngle(HandModel::T_CMC_A, 60);
+		m_pHandModelLeft->SetJointAngle(HandModel::T_MCP, 30);
+		m_pHandModelLeft->SetJointAngle(HandModel::T_IP, 30);
 
 		m_pHandModelRight = new HandModel;
 		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
 		m_pHandModelRight->SetPosition(VistaVector3D(0.1, -0.1, 0.5));
+		m_pHandModelRight->SetJointAngle(HandModel::T_CMC_A, 60);
+		m_pHandModelRight->SetJointAngle(HandModel::T_MCP, 30);
+		m_pHandModelRight->SetJointAngle(HandModel::T_IP, 30);
 
 		m_pHandModelRep = new HandModelRep;
 
@@ -480,11 +486,11 @@ namespace rhapsodies {
 		for(auto &p: m_pSwarm->GetParticles()) {
 			p.GetModelLeft().SetType(HandModel::LEFT_HAND);
 			p.GetModelLeft().SetPosition(VistaVector3D(-0.1, -0.10, 0.5));
+			p.GetModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
 
 			p.GetModelRight().SetType(HandModel::RIGHT_HAND);
-			p.GetModelRight().SetPosition(VistaVector3D(0.1, -0.10, 0.5));			
-			// p.GetModelLeft().Randomize();
-			// p.GetModelRight().Randomize();
+			p.GetModelRight().SetPosition(VistaVector3D(0.1, -0.10, 0.5));
+			p.GetModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
 		}
 
 		return true;

@@ -5,9 +5,9 @@ namespace rhapsodies {
 	HandModelRep::HandModelRep() :
 		m_vecExtents(19) {
 
-		m_vecExtents[T_MC] = 37;
-		m_vecExtents[T_PP] = 44;
-		m_vecExtents[T_DP] = 37;
+		m_vecExtents[T_MC] = 27;
+		m_vecExtents[T_PP] = 37;
+		m_vecExtents[T_DP] = 36;
 
 		m_vecExtents[I_MC] = 93;
 		m_vecExtents[I_PP] = 55;
