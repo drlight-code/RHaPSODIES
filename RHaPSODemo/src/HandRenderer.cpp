@@ -263,6 +263,8 @@ namespace rhapsodies {
 			 pModelRep->GetExtent(HandModelRep::R_MC) +
 			 pModelRep->GetExtent(HandModelRep::L_MC))/4.0f/1000.0f;
 
+		fPalmHeight -= fPalmBottomRadius * 2.0f;
+
 		float fLRFactor =
 			(pModel->GetType() == HandModel::LEFT_HAND) ?
 			-1.0f : 1.0f;
@@ -278,7 +280,7 @@ namespace rhapsodies {
 			pModel->GetOrientation(),
 			VistaVector3D(1,1,1));
 		
-		// // bottom palm cap
+		// bottom palm cap
 		matTransform.Compose(
 			VistaVector3D(0, fPalmBottomRadius, 0),
 			VistaQuaternion(),

@@ -479,11 +479,10 @@ namespace rhapsodies {
 
 		for(auto &p: m_pSwarm->GetParticles()) {
 			p.GetModelLeft().SetType(HandModel::LEFT_HAND);
-			p.GetModelLeft().SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
+			p.GetModelLeft().SetPosition(VistaVector3D(-0.1, -0.10, 0.5));
 
 			p.GetModelRight().SetType(HandModel::RIGHT_HAND);
-			p.GetModelRight().SetPosition(VistaVector3D(0.1, -0.1, 0.5));
-			
+			p.GetModelRight().SetPosition(VistaVector3D(0.1, -0.10, 0.5));			
 			// p.GetModelLeft().Randomize();
 			// p.GetModelRight().Randomize();
 		}
@@ -816,6 +815,22 @@ namespace rhapsodies {
 							ProfilerString("Intersection: ", intersection_result));
 		m_pDebugView->Write(IDebugView::PENALTY,
 							ProfilerString("Penalty: ", score));
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_idDifferenceTexture);
+
+		unsigned int *diff_data = new unsigned int[8*240*8*320];
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, diff_data);
+
+		float fDepthVal = float(diff_data[320*8*240/2 + 320/2])/float(0xffffffffu);
+		m_pDebugView->Write(IDebugView::MIDPIXEL_DEPTH_FIRST,
+							ProfilerString("MidPixel depth first: ", fDepthVal));
+
+		fDepthVal = float(diff_data[320*8*240/2 + 320 + 320/2])/float(0xffffffffu);
+		m_pDebugView->Write(IDebugView::MIDPIXEL_DEPTH_SECOND,
+							ProfilerString("MidPixel depth second: ", fDepthVal));
+		
+		delete [] diff_data;
 	}
 	
 	void HandTracker::FilterSkinAreas() {
@@ -901,7 +916,9 @@ namespace rhapsodies {
 //					zScreen = WorldToScreenProjective(float(zWorldMM)/1000.0f);
 					zScreen = WorldToScreenLinear(float(zWorldMM)/1000.0f);
 				}
-				uiDepthValue = zScreen * 0x7fffffffu;
+				// we correct for a more or less static 10cm depth offset here
+				// @todo get this right in accordance to cam specs!
+				uiDepthValue = (zScreen+0.1) * 0x7fffffffu;
 			}
 			int targetRow = 240 - 1 - (pixel/320);
 			int targetCol = pixel % 320;

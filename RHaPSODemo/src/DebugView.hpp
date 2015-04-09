@@ -16,6 +16,8 @@ namespace rhapsodies {
 			UNION,
 			INTERSECTION,
 			PENALTY,
+			MIDPIXEL_DEPTH_FIRST,
+			MIDPIXEL_DEPTH_SECOND,
 			SLOT_LAST
 		};
 

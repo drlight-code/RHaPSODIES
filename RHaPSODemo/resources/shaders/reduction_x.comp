@@ -45,6 +45,7 @@ uint lid = gl_LocalInvocationID.x +
 	gl_WorkGroupSize.x * gl_LocalInvocationID.y;
 
 float screen_to_world(float zScreen);
+float half_screen_to_world(float zScreen);
 uvec4 debug_color(uint val);
 
 void main() {
@@ -57,18 +58,28 @@ void main() {
 	// camera samples are already in world space.
 	// map rendered samples from screen to world space for depth
 	// clamping in mm.
-	renderedSample = screen_to_world(renderedSample);	
-
-	float clamped_difference = min( abs(cameraSample-renderedSample), dM);
+	renderedSample = half_screen_to_world(renderedSample);	
 
 	uint inter_val =
 		(renderedSample < 1.0f && cameraSample < 1.0f) ? 1 : 0;
 
 	uint union_val =
-		(renderedSample < 1.0f || cameraSample < 1.0f ) ? 1 : 0;
+		(renderedSample < 1.0f || cameraSample < 1.0f) ? 1 : 0;
+
+	float clamped_difference;
+	if(union_val)
+		clamped_difference = min( abs(cameraSample-renderedSample), dM);
+	else
+	 	clamped_difference = 0;
 
 	// debug output image writes
-	imageStore(imgDifference,   posGlobal, uvec4(clamped_difference/0.04f*0xffffffffu, 0, 0, 0));
+	if(gl_GlobalInvocationID[0] < 320*1)
+		imageStore(imgDifference,   posGlobal, uvec4(renderedSample*0xffffffffu, 0, 0, 0));
+	else if(gl_GlobalInvocationID[0] < 320*2)
+		imageStore(imgDifference,   posGlobal, uvec4(cameraSample*0xffffffffu, 0, 0, 0));
+	else
+		imageStore(imgDifference,   posGlobal, uvec4(clamped_difference/0.04f*0xffffffffu, 0, 0, 0));
+	
 	imageStore(imgUnion,        posGlobal, uvec4(union_val, 0, 0, 0));
 	imageStore(imgIntersection, posGlobal, uvec4(inter_val, 0, 0, 0));
 	
@@ -81,9 +92,8 @@ void main() {
 	work_memory_i[lid] = inter_val;
 
 	// clamped difference
-//	work_memory_d[lid] = clamped_difference * 0xffff;
+	work_memory_d[lid] = uint(clamped_difference * 0x7fffu);
 	
-
 	// make sure memory become visible to all instances
 	barrier();
 
@@ -114,6 +124,12 @@ void main() {
 
 float screen_to_world(float zScreen) {
 	float zWorld = 2*zNear*zFar / (zFar + zNear - zScreen*(zFar - zNear));
+	
+	return zWorld;
+}
+
+float half_screen_to_world(float zScreen) {
+	float zWorld = 2*zNear*zFar / (zFar + zNear - (zScreen*2.0f-1.0f) * (zFar - zNear));
 	
 	return zWorld;
 }
