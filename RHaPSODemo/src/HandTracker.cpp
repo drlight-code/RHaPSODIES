@@ -217,8 +217,14 @@ namespace rhapsodies {
 		m_pDebugView(NULL),
 		m_pSwarm(NULL) {
 
-		m_idReductionXProgram      = pReg->GetProgram("reduction_x");
-		m_idReductionYProgram      = pReg->GetProgram("reduction_y");
+		m_idReductionXProgram = pReg->GetProgram("reduction_x");
+		m_idReductionYProgram = pReg->GetProgram("reduction_y");
+
+		m_idColorFragProgram = pReg->GetProgram("indexedtransform");
+		m_locColorUniform = glGetUniformLocation(m_idColorFragProgram, "color_in");
+
+		glUseProgram(m_idColorFragProgram);
+		glUniform3f(m_locColorUniform, 1.0f, 0.0f, 0.0f);
 	}
 
 	HandTracker::~HandTracker() {
@@ -805,7 +811,7 @@ namespace rhapsodies {
 		unsigned int intersection_result = result_data[2];
 
 		float lambda = 1;
-		float score = lambda * difference_result / (union_result + 1e-6) +
+		float penalty = lambda * difference_result / (union_result + 1e-6) +
 			(1 - 2*intersection_result / (intersection_result + union_result));
 
 		m_pDebugView->Write(IDebugView::DIFFERENCE,
@@ -815,7 +821,13 @@ namespace rhapsodies {
 		m_pDebugView->Write(IDebugView::INTERSECTION,
 							ProfilerString("Intersection: ", intersection_result));
 		m_pDebugView->Write(IDebugView::PENALTY,
-							ProfilerString("Penalty: ", score));
+							ProfilerString("Penalty: ", penalty));
+
+		float color_red = (penalty - 1.2) / 0.3;
+		float color_green = 1.0f - color_red;
+		
+		glUseProgram(m_idColorFragProgram);
+		glUniform3f(m_locColorUniform, color_red, color_green, 0.0f);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_idDifferenceTexture);

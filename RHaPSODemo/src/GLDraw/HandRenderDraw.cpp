@@ -1,5 +1,10 @@
+#include <GL/glew.h>
+
+#include <VistaBase/VistaStreamUtils.h>
+
 #include <VistaMath/VistaBoundingBox.h>
 
+#include <ShaderRegistry.hpp>
 #include <HandRenderer.hpp>
 
 #include "HandRenderDraw.hpp"
@@ -13,7 +18,6 @@ namespace rhapsodies {
 		m_pModelRight(pModelRight),
 		m_pModelRep(pModelRep),
 		m_pRenderer(new HandRenderer(pReg)) {
-
 	}
 
 	HandRenderDraw::~HandRenderDraw() {

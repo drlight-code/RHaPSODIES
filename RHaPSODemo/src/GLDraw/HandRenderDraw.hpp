@@ -27,6 +27,9 @@ namespace rhapsodies {
 		HandModelRep *m_pModelRep;
 
 		HandRenderer *m_pRenderer;
+
+		GLint  m_locColorUniform;
+		GLuint m_idColorFragProgram;
 	};
 }
 

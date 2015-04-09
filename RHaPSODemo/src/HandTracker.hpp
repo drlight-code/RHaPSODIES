@@ -186,6 +186,9 @@ namespace rhapsodies {
 		GLuint m_idUnionTexture;
 		GLuint m_idIntersectionTexture;
 
+		GLint  m_locColorUniform;
+		GLuint m_idColorFragProgram;
+
 		ParticleSwarm *m_pSwarm;
 	};
 }

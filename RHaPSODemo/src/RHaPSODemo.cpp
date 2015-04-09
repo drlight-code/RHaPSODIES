@@ -321,6 +321,9 @@ namespace rhapsodies {
 		m_pShaderReg->RegisterShader(
 			"frag_solid_blue", GL_FRAGMENT_SHADER,
 			"resources/shaders/solid_blue.frag");
+		m_pShaderReg->RegisterShader(
+			"frag_solid_colored", GL_FRAGMENT_SHADER,
+			"resources/shaders/solid_colored.frag");
 
 		m_pShaderReg->RegisterShader(
 			"indexed_viewport", GL_GEOMETRY_SHADER,
@@ -369,8 +372,13 @@ namespace rhapsodies {
 		m_pShaderReg->RegisterProgram("vpos_blue", vec_shaders);
 
 		vec_shaders.clear();
+		vec_shaders.push_back("vert_vpos");
+		vec_shaders.push_back("frag_solid_colored");		
+		m_pShaderReg->RegisterProgram("vpos_colored", vec_shaders);
+
+		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos_indexedtransform");
-		vec_shaders.push_back("frag_solid_green");		
+		vec_shaders.push_back("frag_solid_colored");
 //		vec_shaders.push_back("indexed_viewport");		
 		m_pShaderReg->RegisterProgram("indexedtransform", vec_shaders);
 
@@ -407,7 +415,7 @@ namespace rhapsodies {
 			m_pShaderReg);
 		
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
-		m_pHandModelTransform->SetTranslation(0,-0.10,2);
+		m_pHandModelTransform->SetTranslation(-2,-2,0.1);
 		m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,
 												m_pHandRenderDraw);
 
