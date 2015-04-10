@@ -18,6 +18,7 @@ namespace rhapsodies {
 			PENALTY,
 			MIDPIXEL_DEPTH_FIRST,
 			MIDPIXEL_DEPTH_SECOND,
+			FRAME_RECORDING,
 			SLOT_LAST
 		};
 

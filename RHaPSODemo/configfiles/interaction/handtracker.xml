@@ -47,6 +47,9 @@
 	<node name="key_callback_randomize_model" type="KeyCallback">
      	<param name="key">r</param>
 	</node>
+	<node name="key_callback_dump_frames" type="KeyCallback">
+     	<param name="key">d</param>
+	</node>
 
 	<node name="typeconvert_next" type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_prev" type="TypeConvert[int,bool]"/>
@@ -54,6 +57,7 @@
 	<node name="typeconvert_show_image" type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_toggle_skinmap" type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_randomize_model" type="TypeConvert[int,bool]"/>
+	<node name="typeconvert_dump_frames" type="TypeConvert[int,bool]"/>
 
 	<node name="toggle_update" type="Toggle">
      	<param name="mode">on_any_update</param>
@@ -109,6 +113,9 @@
 
 	<edge fromnode="key_callback_randomize_model" tonode="typeconvert_randomize_model" fromport="value" toport="in"/>
 	<edge fromnode="typeconvert_randomize_model"  tonode="handtracker"                 fromport="out"   toport="randomize_model"/>
+
+	<edge fromnode="key_callback_dump_frames" tonode="typeconvert_dump_frames" fromport="value" toport="in"/>
+	<edge fromnode="typeconvert_dump_frames"  tonode="handtracker"             fromport="out"   toport="dump_frames"/>
 
 	
 	<!-- midi control -->

@@ -63,6 +63,8 @@
 #include <PSO/ParticleSwarm.hpp>
 #include <PSO/Particle.hpp>
 
+#include <CameraFrameRecorder.hpp>
+
 #include "HandTracker.hpp"
 
 /*============================================================================*/
@@ -176,7 +178,8 @@ namespace {
 		std::string sPrefix, T value) {
 		std::ostringstream ostr;
 
-		ostr << std::setw(30) << sPrefix << std::fixed << value;
+		ostr << std::setw(30) << sPrefix
+			 << std::boolalpha << std::fixed << value;
 		return ostr.str();
 	}
 
@@ -215,8 +218,10 @@ namespace rhapsodies {
 		m_pHandModelRight(NULL),
 		m_pHandRenderer(new HandRenderer(pReg)),
 		m_pDebugView(NULL),
-		m_pSwarm(NULL) {
-
+		m_pSwarm(NULL),
+		m_bFrameDump(false),
+		m_pRecorder(new CameraFrameRecorder) {
+		
 		m_idReductionXProgram = pReg->GetProgram("reduction_x");
 		m_idReductionYProgram = pReg->GetProgram("reduction_y");
 
@@ -235,6 +240,8 @@ namespace rhapsodies {
 			delete *it;
 		}
 
+		delete m_pRecorder;
+		
 		delete m_pHandRenderer;
 
 		delete m_pHandModelLeft;
@@ -581,6 +588,9 @@ namespace rhapsodies {
 		const unsigned short *depthFrame,
 		const float          *uvMapFrame) {
 
+		if(m_bFrameDump)
+			m_pRecorder->RecordFrames(colorFrame, depthFrame, uvMapFrame);
+		
 		memcpy(m_pColorBuffer, colorFrame, 320*240*3);
 		memcpy(m_pDepthBuffer, depthFrame, 320*240*2);
 
@@ -987,6 +997,20 @@ namespace rhapsodies {
 	void HandTracker::RandomizeModels() {
 		m_pHandModelRight->Randomize();
 		m_pHandModelLeft->Randomize();
+	}
+
+	void HandTracker::ToggleFrameDump() {
+		m_bFrameDump = !m_bFrameDump;
+
+		if(m_bFrameDump) {
+			m_pRecorder->StartRecording();
+		}
+		else {
+			m_pRecorder->StopRecording();
+		}
+		m_pDebugView->Write(IDebugView::FRAME_RECORDING,
+							ProfilerString("Frame Recording: ",
+										   m_bFrameDump));
 	}
 	
 	void HandTracker::DepthToRGB(const unsigned short *depth,

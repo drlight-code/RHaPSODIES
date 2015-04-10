@@ -44,6 +44,8 @@ namespace rhapsodies {
 	class IDebugView;
 
 	class ParticleSwarm;
+
+	class CameraFrameRecorder;
 	
 	class HandTracker {
 	public:
@@ -102,6 +104,8 @@ namespace rhapsodies {
 
 		void RandomizeModels();
 
+		void ToggleFrameDump();
+		
 	private:
 		struct Config {
 		public:
@@ -190,6 +194,9 @@ namespace rhapsodies {
 		GLuint m_idColorFragProgram;
 
 		ParticleSwarm *m_pSwarm;
+
+		bool m_bFrameDump;
+		CameraFrameRecorder *m_pRecorder;
 	};
 }
 
