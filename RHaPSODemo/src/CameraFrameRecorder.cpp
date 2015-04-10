@@ -1,4 +1,5 @@
 #include <string>
+#include <fstream>
 
 #include <VistaBase/VistaTimer.h>
 
@@ -16,7 +17,8 @@ namespace rhapsodies {
 			VistaTimer::GetStandardTimer().GetSystemTime());
 		sFile += ".dump";
 
-		m_oStream.open(sFile);
+		m_oStream.open(sFile,
+					   std::ios_base::out | std::ios_base::binary);
 
 		m_tStart = VistaTimer::GetStandardTimer().GetMicroTime();
 	}
