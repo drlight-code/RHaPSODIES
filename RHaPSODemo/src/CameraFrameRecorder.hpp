@@ -18,7 +18,8 @@ namespace rhapsodies {
 	  
     private:
 	  std::ofstream m_oStream;
-	  VistaType::microtime m_tStart;
+	  
+	  VistaType::systemtime m_tStart;
   };
 }
 

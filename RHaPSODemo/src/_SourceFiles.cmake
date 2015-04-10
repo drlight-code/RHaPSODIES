@@ -15,6 +15,7 @@ set( DirFiles
   	HandTrackingNode.cpp
   	TextOverlayDebugView.cpp
 	CameraFrameRecorder.cpp
+	CameraFramePlayer.cpp
 #	DepthHistogramHandler.cpp
 #	HistogramUpdater.cpp
 	_SourceFiles.cmake

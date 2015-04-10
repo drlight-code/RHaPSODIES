@@ -64,6 +64,7 @@
 #include <PSO/Particle.hpp>
 
 #include <CameraFrameRecorder.hpp>
+#include <CameraFramePlayer.hpp>
 
 #include "HandTracker.hpp"
 
@@ -202,6 +203,8 @@ namespace rhapsodies {
 
 	const std::string sPSOGenerationsName = "PSO_GENERATIONS";
 
+	const std::string sRecordingName = "RECORDING";
+
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
@@ -219,9 +222,16 @@ namespace rhapsodies {
 		m_pHandRenderer(new HandRenderer(pReg)),
 		m_pDebugView(NULL),
 		m_pSwarm(NULL),
-		m_bFrameDump(false),
-		m_pRecorder(new CameraFrameRecorder) {
-		
+		m_bFrameRecording(false),
+		m_pRecorder(new CameraFrameRecorder),
+		m_bFramePlayback(false),
+		m_pPlayer(new CameraFramePlayer) {
+
+		m_pColorBuffer     = new unsigned char[320*240*3];
+		m_pDepthBuffer     = new unsigned short[320*240];
+		m_pDepthBufferUInt = new unsigned int[320*240];
+		m_pUVMapBuffer     = new float[320*240*2];
+
 		m_idReductionXProgram = pReg->GetProgram("reduction_x");
 		m_idReductionYProgram = pReg->GetProgram("reduction_y");
 
@@ -240,6 +250,11 @@ namespace rhapsodies {
 			delete *it;
 		}
 
+		delete [] m_pColorBuffer;
+		delete [] m_pDepthBuffer;
+		delete [] m_pDepthBufferUInt;
+		delete [] m_pUVMapBuffer;
+		
 		delete m_pRecorder;
 		
 		delete m_pHandRenderer;
@@ -531,6 +546,10 @@ namespace rhapsodies {
 		m_oConfig.iPSOGenerations = oTrackerConfig.GetValueOrDefault(
 			sPSOGenerationsName, 45);
 
+		m_oConfig.sRecordingFile = oTrackerConfig.GetValueOrDefault(
+			sRecordingName, std::string(""));
+		m_pPlayer->SetInputFile(m_oConfig.sRecordingFile);
+		
 		const VistaPropertyList &oCameraConfig =
 			oConfig.GetSubListConstRef(RHaPSODemo::sCameraSectionName);
 
@@ -549,6 +568,9 @@ namespace rhapsodies {
 					<< std::endl;
 
 		vstr::out() << "PSO Generations: " << m_oConfig.iPSOGenerations
+					<< std::endl;
+
+		vstr::out() << "Recording file: " << m_oConfig.sRecordingFile
 					<< std::endl;
 
 	}
@@ -581,65 +603,6 @@ namespace rhapsodies {
 							ProfilerString("PSO loop time: ",
 										   tPSO));
 		return true;
-	}
-
-	void HandTracker::ProcessCameraFrames(
-		const unsigned char  *colorFrame,
-		const unsigned short *depthFrame,
-		const float          *uvMapFrame) {
-
-		if(m_bFrameDump)
-			m_pRecorder->RecordFrames(colorFrame, depthFrame, uvMapFrame);
-		
-		memcpy(m_pColorBuffer, colorFrame, 320*240*3);
-		memcpy(m_pDepthBuffer, depthFrame, 320*240*2);
-
-		ImagePBOOpenGLDraw *pPBODraw;
-		// pPBODraw = m_mapPBO[COLOR];
-		// if(pPBODraw) {
-		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
-		// }
-
-		// pPBODraw = m_mapPBO[DEPTH];
-		// if(pPBODraw) {
-		DepthToRGB(m_pDepthBuffer, m_pDepthRGBBuffer);
-		// 	pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
-		// }
-
-		pPBODraw = m_mapPBO[UVMAP];
-		if(pPBODraw) {
-			UVMapToRGB(uvMapFrame, depthFrame, colorFrame, m_pUVMapRGBBuffer);
-			pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
-		}
-
-		if(m_bShowImage) {
-			vstr::debug() << "showing opencv image" << std::endl;
-		
-			cv::Mat image = cv::Mat(240, 320, CV_8UC3, m_pColorBuffer);
-			cv::namedWindow( "window", CV_WINDOW_AUTOSIZE ); 
-			cv::imshow("window", image);
-
-			cv::waitKey(1);
-
-			m_bShowImage = false;
-		}
-		
-		FilterSkinAreas();
-		
-		// pPBODraw = m_mapPBO[COLOR_SEGMENTED];
-		// if(pPBODraw) {
-		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
-		// }
-
-		pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
-		if(pPBODraw) {
-			pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
-		}
-
-		// pPBODraw = m_mapPBO[UVMAP_SEGMENTED];
-		// if(pPBODraw) {
-		// 	pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
-		// }
 	}
 
 	void HandTracker::PerformPSOTracking() {
@@ -855,6 +818,79 @@ namespace rhapsodies {
 		
 		delete [] diff_data;
 	}
+
+	void HandTracker::ProcessCameraFrames(
+		const unsigned char  *colorFrame,
+		const unsigned short *depthFrame,
+		const float          *uvMapFrame) {
+
+		if(m_bFrameRecording)
+			m_pRecorder->RecordFrames(colorFrame, depthFrame, uvMapFrame);
+
+		if(m_bFramePlayback) {
+			bool frameread = m_pPlayer->PlaybackFrames(m_pColorBuffer,
+													   m_pDepthBuffer,
+													   m_pUVMapBuffer);
+			
+			if(!frameread)
+				return;
+		}
+		else {
+			memcpy(m_pColorBuffer, colorFrame, 320*240*3);
+			memcpy(m_pDepthBuffer, depthFrame, 320*240*2);
+			memcpy(m_pUVMapBuffer, uvMapFrame, 320*240*4*2);
+		}
+
+		ImagePBOOpenGLDraw *pPBODraw;
+		// pPBODraw = m_mapPBO[COLOR];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
+		// }
+
+		// pPBODraw = m_mapPBO[DEPTH];
+		// if(pPBODraw) {
+		DepthToRGB(m_pDepthBuffer, m_pDepthRGBBuffer);
+		// 	pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
+		// }
+
+		pPBODraw = m_mapPBO[UVMAP];
+		if(pPBODraw) {
+			// UVMapToRGB(m_pUVMapBuffer, m_pDepthBuffer, m_pColorBuffer,
+			// 		   m_pUVMapRGBBuffer);
+			UVMapToRGB(m_pUVMapBuffer, m_pDepthBuffer, m_pColorBuffer,
+					   m_pUVMapRGBBuffer);
+			pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
+		}
+
+		if(m_bShowImage) {
+			vstr::debug() << "showing opencv image" << std::endl;
+		
+			cv::Mat image = cv::Mat(240, 320, CV_8UC3, m_pColorBuffer);
+			cv::namedWindow( "window", CV_WINDOW_AUTOSIZE ); 
+			cv::imshow("window", image);
+
+			cv::waitKey(1);
+
+			m_bShowImage = false;
+		}
+		
+		FilterSkinAreas();
+		
+		// pPBODraw = m_mapPBO[COLOR_SEGMENTED];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
+		// }
+
+		pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
+		if(pPBODraw) {
+			pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
+		}
+
+		// pPBODraw = m_mapPBO[UVMAP_SEGMENTED];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
+		// }
+	}
 	
 	void HandTracker::FilterSkinAreas() {
 
@@ -999,10 +1035,10 @@ namespace rhapsodies {
 		m_pHandModelLeft->Randomize();
 	}
 
-	void HandTracker::ToggleFrameDump() {
-		m_bFrameDump = !m_bFrameDump;
+	void HandTracker::ToggleFrameRecording() {
+		m_bFrameRecording = !m_bFrameRecording;
 
-		if(m_bFrameDump) {
+		if(m_bFrameRecording) {
 			m_pRecorder->StartRecording();
 		}
 		else {
@@ -1010,7 +1046,23 @@ namespace rhapsodies {
 		}
 		m_pDebugView->Write(IDebugView::FRAME_RECORDING,
 							ProfilerString("Frame Recording: ",
-										   m_bFrameDump));
+										   m_bFrameRecording));
+	}
+
+	void HandTracker::ToggleFramePlayback() {
+		m_bFramePlayback = !m_bFramePlayback;
+
+		if(m_bFramePlayback) {
+			m_pPlayer->StartPlayback();
+		}
+		else {
+			m_pPlayer->StopPlayback();
+		}
+
+		m_pDebugView->Write(IDebugView::FRAME_PLAYBACK,
+							ProfilerString("Frame Playback: ",
+										   m_bFramePlayback));
+
 	}
 	
 	void HandTracker::DepthToRGB(const unsigned short *depth,

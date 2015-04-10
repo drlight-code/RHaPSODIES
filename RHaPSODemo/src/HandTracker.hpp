@@ -46,6 +46,7 @@ namespace rhapsodies {
 	class ParticleSwarm;
 
 	class CameraFrameRecorder;
+	class CameraFramePlayer;
 	
 	class HandTracker {
 	public:
@@ -104,7 +105,8 @@ namespace rhapsodies {
 
 		void RandomizeModels();
 
-		void ToggleFrameDump();
+		void ToggleFrameRecording();
+		void ToggleFramePlayback();
 		
 	private:
 		struct Config {
@@ -115,7 +117,7 @@ namespace rhapsodies {
 
 			unsigned int iPSOGenerations; // max pso generation count
 
-			bool bPrintTimes;
+			std::string sRecordingFile;
 		};
 
 		bool InitSkinClassifiers();
@@ -163,9 +165,10 @@ namespace rhapsodies {
 		
 		HandRenderer *m_pHandRenderer;
 
-		unsigned char  m_pColorBuffer[320*240*3];
-		unsigned short m_pDepthBuffer[320*240];
-		unsigned int   m_pDepthBufferUInt[320*240];
+		unsigned char  *m_pColorBuffer;
+		unsigned short *m_pDepthBuffer;
+		unsigned int   *m_pDepthBufferUInt;
+		float          *m_pUVMapBuffer;
 
 		unsigned char m_pSkinMap[320*240];
 
@@ -195,8 +198,10 @@ namespace rhapsodies {
 
 		ParticleSwarm *m_pSwarm;
 
-		bool m_bFrameDump;
+		bool m_bFrameRecording;
 		CameraFrameRecorder *m_pRecorder;
+		bool m_bFramePlayback;
+		CameraFramePlayer *m_pPlayer;
 	};
 }
 

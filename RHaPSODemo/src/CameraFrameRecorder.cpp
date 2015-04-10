@@ -17,10 +17,9 @@ namespace rhapsodies {
 			VistaTimer::GetStandardTimer().GetSystemTime());
 		sFile += ".dump";
 
-		m_oStream.open(sFile,
-					   std::ios_base::out | std::ios_base::binary);
+		m_oStream.open(sFile, std::ios_base::out | std::ios_base::binary);
 
-		m_tStart = VistaTimer::GetStandardTimer().GetMicroTime();
+		m_tStart = VistaTimer::GetStandardTimer().GetSystemTime();
 	}
 	
 	void CameraFrameRecorder::StopRecording() {
@@ -31,13 +30,13 @@ namespace rhapsodies {
 		  const unsigned char  *colorFrame,
 		  const unsigned short *depthFrame,
 		  const float          *uvMapFrame) {
-		VistaType::microtime tDiff =
-			m_tStart - VistaTimer::GetStandardTimer().GetMicroTime();
+		VistaType::systemtime tDelta =
+			VistaTimer::GetStandardTimer().GetSystemTime() - m_tStart;
 
-		m_oStream << tDiff;
+		m_oStream << tDelta;
 		m_oStream.write((const char*)(colorFrame), 3*320*240);
 		m_oStream.write((const char*)(depthFrame), 2*320*240);
-		m_oStream.write((const char*)(uvMapFrame), 4*320*240);
+		m_oStream.write((const char*)(uvMapFrame), 4*320*240*2);
 		m_oStream.flush();
 	}
 }
