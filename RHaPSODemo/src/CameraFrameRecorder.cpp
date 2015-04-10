@@ -36,5 +36,6 @@ namespace rhapsodies {
 		m_oStream.write((const char*)(colorFrame), 3*320*240);
 		m_oStream.write((const char*)(depthFrame), 2*320*240);
 		m_oStream.write((const char*)(uvMapFrame), 4*320*240);
+		m_oStream.flush();
 	}
 }
