@@ -204,6 +204,7 @@ namespace rhapsodies {
 	const std::string sPSOGenerationsName = "PSO_GENERATIONS";
 
 	const std::string sRecordingName = "RECORDING";
+	const std::string sLoopName      = "LOOP";
 
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
@@ -549,6 +550,10 @@ namespace rhapsodies {
 		m_oConfig.sRecordingFile = oTrackerConfig.GetValueOrDefault(
 			sRecordingName, std::string(""));
 		m_pPlayer->SetInputFile(m_oConfig.sRecordingFile);
+
+		m_oConfig.bLoop = oTrackerConfig.GetValueOrDefault(
+			sLoopName, false);
+		m_pPlayer->SetLoop(m_oConfig.bLoop);
 		
 		const VistaPropertyList &oCameraConfig =
 			oConfig.GetSubListConstRef(RHaPSODemo::sCameraSectionName);
@@ -571,6 +576,8 @@ namespace rhapsodies {
 					<< std::endl;
 
 		vstr::out() << "Recording file: " << m_oConfig.sRecordingFile
+					<< std::endl;
+		vstr::out() << "Loop: " << std::boolalpha << m_oConfig.bLoop
 					<< std::endl;
 
 	}

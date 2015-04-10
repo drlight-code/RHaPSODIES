@@ -118,6 +118,7 @@ namespace rhapsodies {
 			unsigned int iPSOGenerations; // max pso generation count
 
 			std::string sRecordingFile;
+			bool bLoop;
 		};
 
 		bool InitSkinClassifiers();

@@ -7,7 +7,7 @@ namespace rhapsodies {
 	  CameraFramePlayer();
 
 	  void SetInputFile(std::string sFile);
-	  void SetLooping(bool bLoop);
+	  void SetLoop(bool bLoop);
 
 	  void StartPlayback();
 	  void StopPlayback();
@@ -19,7 +19,8 @@ namespace rhapsodies {
 	  
   private:
 	  bool m_bLoop;
-	  
+
+	  std::string m_sInputFile;
 	  std::ifstream m_iStream;
 
 	  VistaType::systemtime m_tStart;

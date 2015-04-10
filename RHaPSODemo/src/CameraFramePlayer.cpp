@@ -7,19 +7,23 @@
 
 namespace rhapsodies {
 
-	CameraFramePlayer::CameraFramePlayer() {
+	CameraFramePlayer::CameraFramePlayer() :
+		m_bLoop(false) {
 
 	}
 
 	void CameraFramePlayer::SetInputFile(std::string sFile) {
-		m_iStream.open(sFile, std::ios_base::in | std::ios_base::binary);
+		m_sInputFile = sFile;
 	}
 
-	void CameraFramePlayer::SetLooping(bool bLoop) {
+	void CameraFramePlayer::SetLoop(bool bLoop) {
 		m_bLoop = bLoop;
 	}
 	
 	void CameraFramePlayer::StartPlayback() {
+		m_iStream.open(
+			m_sInputFile, std::ios_base::in | std::ios_base::binary);
+
 		m_tStart = VistaTimer::GetStandardTimer().GetSystemTime();
 
 		VistaType::systemtime tDelta;
@@ -28,7 +32,7 @@ namespace rhapsodies {
 	}
 
 	void CameraFramePlayer::StopPlayback() {
-		vstr::out() << "stpping playbck" << std::endl;
+		m_iStream.close();
 	}
 
 	bool CameraFramePlayer::PlaybackFrames(
@@ -44,6 +48,13 @@ namespace rhapsodies {
 			VistaType::systemtime tDelta;
 			m_iStream >> tDelta;
 			m_tNextFrame = m_tStart + tDelta;
+
+			if(m_iStream.eof()) {
+				StopPlayback();
+
+				if(m_bLoop)
+					StartPlayback();
+			}
 
 			return true;
 		}
