@@ -20,6 +20,7 @@ namespace rhapsodies {
 			MIDPIXEL_DEPTH_SECOND,
 			FRAME_RECORDING,
 			FRAME_PLAYBACK,
+			TRACKING,
 			SLOT_LAST
 		};
 

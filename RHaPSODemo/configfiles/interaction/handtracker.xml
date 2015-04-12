@@ -35,9 +35,6 @@
 	<node name="key_callback_prev" type="KeyCallback">
 		<param name="key">p</param>
 	</node>
-	<node name="key_callback_toggle_update" type="KeyCallback">
-     	<param name="key">t</param>
-	</node>
 	<node name="key_callback_show_image" type="KeyCallback">
      	<param name="key">i</param>
 	</node>
@@ -53,20 +50,18 @@
 	<node name="key_callback_playback_frames" type="KeyCallback">
      	<param name="key">l</param>
 	</node>
+	<node name="key_callback_toggle_tracking" type="KeyCallback">
+     	<param name="key">t</param>
+	</node>
 
 	<node name="typeconvert_next"            type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_prev"            type="TypeConvert[int,bool]"/>
-	<node name="typeconvert_toggle_update"   type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_show_image"      type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_toggle_skinmap"  type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_randomize_model" type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_record_frames"   type="TypeConvert[int,bool]"/>
 	<node name="typeconvert_playback_frames" type="TypeConvert[int,bool]"/>
-
-	<node name="toggle_update" type="Toggle">
-     	<param name="mode">on_any_update</param>
-     	<param name="initial_state">true</param>
-	</node>
+	<node name="typeconvert_toggle_tracking" type="TypeConvert[int,bool]"/>
 
 	<!-- midi control -->
 	<node name="midi_sensor" type="DriverSensor">
@@ -105,10 +100,6 @@
 	<edge fromnode="key_callback_prev" tonode="typeconvert_prev" fromport="value" toport="in"/>
 	<edge fromnode="typeconvert_prev"  tonode="handtracker"      fromport="out"   toport="prev_classifier"/>
 
-	<edge fromnode="key_callback_toggle_update" tonode="typeconvert_toggle_update" fromport="value" toport="in"/>
-	<edge fromnode="typeconvert_toggle_update" tonode="toggle_update" fromport="out"   toport="toggle"/>
-	<edge fromnode="toggle_update"     tonode="handtracker"   fromport="out"   toport="set_frame_update"/>
-
 	<edge fromnode="key_callback_show_image" tonode="typeconvert_show_image" fromport="value" toport="in"/>
 	<edge fromnode="typeconvert_show_image"  tonode="handtracker"            fromport="out"   toport="show_image"/>
 
@@ -124,7 +115,10 @@
 	<edge fromnode="key_callback_playback_frames" tonode="typeconvert_playback_frames" fromport="value" toport="in"/>
 	<edge fromnode="typeconvert_playback_frames"  tonode="handtracker"                 fromport="out"   toport="playback_frames"/>
 
-	<!-- midi control -->
+	<edge fromnode="key_callback_toggle_tracking" tonode="typeconvert_toggle_tracking" fromport="value" toport="in"/>
+	<edge fromnode="typeconvert_toggle_tracking"  tonode="handtracker" fromport="out"   toport="toggle_tracking"/>
+	
+<!-- midi control -->
 	<edge fromnode="midi_sensor"  tonode="project_midi" fromport="history" toport="history"/>
 
 	<edge fromnode="project_midi" tonode="typeconvert_midi_controller" fromport="CONTROLLER" toport="in"/>

@@ -48,6 +48,7 @@ namespace rhapsodies {
 		sPortHlp<bool> m_sPortRandomizeModel;
 		sPortHlp<bool> m_sPortRecordFrames;
 		sPortHlp<bool> m_sPortPlaybackFrames;
+		sPortHlp<bool> m_sPortToggleTracking;
 
 		sPortHlp<const unsigned char*>  m_sPortColorFrame;
 		sPortHlp<const unsigned short*> m_sPortDepthFrame;

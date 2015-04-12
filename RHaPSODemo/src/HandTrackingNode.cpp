@@ -18,6 +18,7 @@ namespace {
 	const std::string g_sPortRandomizeModelName = "randomize_model";
 	const std::string g_sPortRecordFramesName   = "record_frames";
 	const std::string g_sPortPlaybackFramesName = "playback_frames";
+	const std::string g_sPortToggleTrackingName = "toggle_tracking";
 }
 
 namespace rhapsodies {
@@ -38,6 +39,8 @@ namespace rhapsodies {
 		RegisterInPortPrototype( g_sPortRecordFramesName,
 								 new TVdfnPortTypeCompare<TVdfnPort<bool> > );
 		RegisterInPortPrototype( g_sPortPlaybackFramesName,
+								 new TVdfnPortTypeCompare<TVdfnPort<bool> > );
+		RegisterInPortPrototype( g_sPortToggleTrackingName,
 								 new TVdfnPortTypeCompare<TVdfnPort<bool> > );
 
 		RegisterInPortPrototype(
@@ -104,6 +107,10 @@ namespace rhapsodies {
 			VdfnUtil::GetInPortTyped<TVdfnPort<bool>*>(
 				g_sPortPlaybackFramesName, this );
 
+		m_sPortToggleTracking.m_pPort =
+			VdfnUtil::GetInPortTyped<TVdfnPort<bool>*>(
+				g_sPortToggleTrackingName, this );
+
 		return true;
 	}
 
@@ -111,8 +118,7 @@ namespace rhapsodies {
 		if(!GetIsValid())
 			return false;
 
-		if(m_sPortDepthFrame.HasNewData() &&
-			m_sPortFrameUpdate.m_pPort->GetValue() == true) {
+		if(m_sPortDepthFrame.HasNewData()) {
 			m_pTracker->FrameUpdate(
 				m_sPortColorFrame.m_pPort->GetValue(),
 				m_sPortDepthFrame.m_pPort->GetValue(),
@@ -146,7 +152,14 @@ namespace rhapsodies {
 		if(m_sPortPlaybackFrames.HasNewData()) {
 			m_pTracker->ToggleFramePlayback();
 		}
-
+		
+		if(m_sPortToggleTracking.HasNewData()) {
+			if(m_pTracker->IsTracking())
+				m_pTracker->StopTracking();
+			else
+				m_pTracker->StartTracking();
+		}
+		
 		return true;
 	}
 

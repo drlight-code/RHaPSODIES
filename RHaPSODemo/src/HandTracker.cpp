@@ -226,7 +226,8 @@ namespace rhapsodies {
 		m_bFrameRecording(false),
 		m_pRecorder(new CameraFrameRecorder),
 		m_bFramePlayback(false),
-		m_pPlayer(new CameraFramePlayer) {
+		m_pPlayer(new CameraFramePlayer),
+		m_bTrackingEnabled(false) {
 
 		m_pColorBuffer     = new unsigned char[320*240*3];
 		m_pDepthBuffer     = new unsigned short[320*240];
@@ -380,6 +381,16 @@ namespace rhapsodies {
 
 		CheckFrameBufferStatus(m_idRenderedTextureFBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glGenTextures(1, &m_idScoreFeedbackTexture);
+		
+		glBindTexture(GL_TEXTURE_2D, m_idScoreFeedbackTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 8, 8);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 8, 8, GL_RGB,
+						GL_FLOAT, this); // @todo remove this pointer, this is just for fun
 
 		return true;
 	}
@@ -652,11 +663,11 @@ namespace rhapsodies {
 
 			ReduceDepthMaps();
 
+			// update actual model fit
+			
+
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-		// update actual model fit		
 	}
 
 	void HandTracker::UploadCameraDepthMap() {
@@ -792,7 +803,7 @@ namespace rhapsodies {
 
 		float lambda = 1;
 		float penalty = lambda * difference_result / (union_result + 1e-6) +
-			(1 - 2*intersection_result / (intersection_result + union_result));
+			(1 - 2*intersection_result / (intersection_result + union_result + 1e-6));
 
 		m_pDebugView->Write(IDebugView::DIFFERENCE,
 							ProfilerString("Difference: ", difference_result));
@@ -1070,6 +1081,26 @@ namespace rhapsodies {
 							ProfilerString("Frame Playback: ",
 										   m_bFramePlayback));
 
+	}
+
+	void HandTracker::StartTracking() {
+		m_bTrackingEnabled = true;
+
+		m_pDebugView->Write(IDebugView::TRACKING,
+							ProfilerString("Tracking: ",
+										   m_bTrackingEnabled));
+	}
+	
+	void HandTracker::StopTracking() {
+		m_bTrackingEnabled = false;
+
+		m_pDebugView->Write(IDebugView::TRACKING,
+							ProfilerString("Tracking: ",
+										   m_bTrackingEnabled));
+	}
+
+	bool HandTracker::IsTracking() {
+		return m_bTrackingEnabled;
 	}
 	
 	void HandTracker::DepthToRGB(const unsigned short *depth,

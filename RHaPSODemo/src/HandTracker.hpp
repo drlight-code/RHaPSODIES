@@ -107,6 +107,10 @@ namespace rhapsodies {
 
 		void ToggleFrameRecording();
 		void ToggleFramePlayback();
+
+		void StartTracking();
+		void StopTracking();
+		bool IsTracking();
 		
 	private:
 		struct Config {
@@ -193,6 +197,7 @@ namespace rhapsodies {
 		GLuint m_idDifferenceTexture;
 		GLuint m_idUnionTexture;
 		GLuint m_idIntersectionTexture;
+		GLuint m_idScoreFeedbackTexture;
 
 		GLint  m_locColorUniform;
 		GLuint m_idColorFragProgram;
@@ -203,6 +208,8 @@ namespace rhapsodies {
 		CameraFrameRecorder *m_pRecorder;
 		bool m_bFramePlayback;
 		CameraFramePlayer *m_pPlayer;
+
+		bool m_bTrackingEnabled;
 	};
 }
 
