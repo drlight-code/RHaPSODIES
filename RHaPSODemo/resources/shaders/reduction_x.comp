@@ -67,7 +67,7 @@ void main() {
 		(renderedSample < 1.0f || cameraSample < 1.0f) ? 1 : 0;
 
 	float clamped_difference;
-	if(union_val)
+	if(union_val > 0)
 		clamped_difference = min( abs(cameraSample-renderedSample), dM);
 	else
 	 	clamped_difference = 0;
