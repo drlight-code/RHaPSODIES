@@ -17,8 +17,8 @@ namespace rhapsodies {
 					 float phi_individual,
 					 float phi_social);
 
-		HandModel& GetModelLeft();
-		HandModel& GetModelRight();
+		HandModel& GetHandModelLeft();
+		HandModel& GetHandModelRight();
 
 		float GetIBest();
 		

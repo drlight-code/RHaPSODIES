@@ -1,4 +1,4 @@
-/*============================================================================*/
+ /*============================================================================*/
 /*                  Copyright (c) 2014 RWTH Aachen University                 */
 /*============================================================================*/
 /*                                  License                                   */
@@ -519,16 +519,14 @@ namespace rhapsodies {
 
 		m_pSwarm = new ParticleSwarm(64);
 
-		for(auto &p: m_pSwarm->GetParticles()) {
-			p.GetModelLeft().SetType(HandModel::LEFT_HAND);
-			p.GetModelLeft().SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
-			p.GetModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
+		Particle oCenterParticle;
+		oCenterParticle.GetHandModelLeft().SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
+		oCenterParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
+		oCenterParticle.GetHandModelRight().SetPosition(VistaVector3D(0.1, -0.1, 0.5));
+		oCenterParticle.GetHandModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
 
-			p.GetModelRight().SetType(HandModel::RIGHT_HAND);
-			p.GetModelRight().SetPosition(VistaVector3D(0.1, -0.1, 0.5));
-			p.GetModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
-		}
-
+		m_pSwarm->InitializeAround(oCenterParticle);
+		
 		return true;
 	}
 
@@ -639,10 +637,10 @@ namespace rhapsodies {
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
 					m_pHandRenderer->DrawHand(
-						&(m_pSwarm->GetParticles()[row*8+col].GetModelLeft()),
+						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelLeft()),
 						m_pHandModelRep);
 					m_pHandRenderer->DrawHand(
-						&(m_pSwarm->GetParticles()[row*8+col].GetModelRight()),
+						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelRight()),
 						m_pHandModelRep);
 
 					vViewportData.push_back(col*320);

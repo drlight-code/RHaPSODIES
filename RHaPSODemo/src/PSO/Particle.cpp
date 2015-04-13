@@ -3,21 +3,20 @@
 namespace rhapsodies {
 
 	Particle::Particle() {
-		// m_pModelLeft  = new HandModel;
-		// m_pModelRight = new HandModel;
+		m_oModelLeft.SetType(HandModel::LEFT_HAND);
+		m_oModelRight.SetType(HandModel::RIGHT_HAND);
+
 	}
 
 	Particle::~Particle() {
-		// delete m_pModelLeft;
-		// delete m_pModelRight;
 	}
 
 
-	HandModel& Particle::GetModelLeft() {
+	HandModel& Particle::GetHandModelLeft() {
 		return m_oModelLeft;
 	}
 
-	HandModel& Particle::GetModelRight() {
+	HandModel& Particle::GetHandModelRight() {
 		return m_oModelRight;
 	}
 	
