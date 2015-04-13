@@ -19,9 +19,16 @@ namespace rhapsodies {
 	HandModel& Particle::GetHandModelRight() {
 		return m_oModelRight;
 	}
+
+	void Particle::UpdateIBest(float fPenalty) {
+		if(fPenalty <= m_fIBestPenalty) {
+			m_fIBestPenalty    = fPenalty;
+			m_oIBestModelLeft  = m_oModelLeft;
+			m_oIBestModelRight = m_oModelRight;
+		}
+	}
 	
-	
-	float Particle::GetIBest() {
-		return m_fIBest;
+	float Particle::GetIBestPenalty() {
+		return m_fIBestPenalty;
 	}		
 }

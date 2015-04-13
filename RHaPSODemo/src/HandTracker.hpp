@@ -80,10 +80,12 @@ namespace rhapsodies {
 		GLuint GetDifferenceTextureId();
 		GLuint GetUnionTextureId();
 		GLuint GetIntersectionTextureId();
+		GLuint GetScoreFeedbackTextureId();
 		
 		bool Initialize();
 		
 		void ReadConfig();
+		void PrintConfig();
 
 		bool FrameUpdate(const unsigned char  *colorFrame,
 						 const unsigned short *depthFrame,
@@ -95,6 +97,7 @@ namespace rhapsodies {
 			const float          *uvMapFrame);
 
 		void PerformPSOTracking();
+		void PerformStartPoseMatch();
 		
 		SkinClassifier *GetSkinClassifier();
 		void NextSkinClassifier();
@@ -123,6 +126,9 @@ namespace rhapsodies {
 
 			std::string sRecordingFile;
 			bool bLoop;
+
+			float fPenaltyMin;
+			float fPenaltyStart;
 		};
 
 		bool InitSkinClassifiers();
@@ -132,7 +138,8 @@ namespace rhapsodies {
 		bool InitReduction();
 
 		bool HasGLComputeCapabilities();
-		
+
+		float PenaltyNormalize(float fPenalty);
 		void DepthToRGB(const unsigned short *depth,
 						unsigned char *rgb);
 
@@ -144,9 +151,10 @@ namespace rhapsodies {
 		void FilterSkinAreas();
 		void UploadCameraDepthMap();
 		void SetupProjection();
+		
 		void ReduceDepthMaps();
-
-		void PrintConfig();
+		void UpdateScores();
+		void ResultOutput();
 
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
 		MapPBO m_mapPBO;

@@ -206,6 +206,9 @@ namespace rhapsodies {
 	const std::string sRecordingName = "RECORDING";
 	const std::string sLoopName      = "LOOP";
 
+	const std::string sPenaltyMinName   = "PENALTY_MIN";
+	const std::string sPenaltyStartName = "PENALTY_START";
+
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
@@ -314,6 +317,10 @@ namespace rhapsodies {
 
 	GLuint HandTracker::GetIntersectionTextureId() {
 		return m_idIntersectionTexture;
+	}
+
+	GLuint HandTracker::GetScoreFeedbackTextureId() {
+		return m_idScoreFeedbackTexture;
 	}
 
 	bool HandTracker::Initialize() {
@@ -510,8 +517,6 @@ namespace rhapsodies {
 
 		m_pHandModelRep = new HandModelRep;
 
-		//RandomizeModels();
-
 		return true;
 	}
 
@@ -570,6 +575,11 @@ namespace rhapsodies {
 		std::string sIntrinsicSection =
 			oCameraConfig.GetValue<std::string>("INTRINSICS");
 		m_oCameraIntrinsics = oConfig.GetSubListCopy(sIntrinsicSection);
+
+		m_oConfig.fPenaltyMin = oTrackerConfig.GetValueOrDefault(
+			sPenaltyMinName, 0.5f);
+		m_oConfig.fPenaltyStart = oTrackerConfig.GetValueOrDefault(
+			sPenaltyStartName, 0.6f);
 	}
 
 	void HandTracker::PrintConfig() {
@@ -596,43 +606,49 @@ namespace rhapsodies {
 								  const float          *uvMapFrame) {
 
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
-
-		VistaType::microtime tStart = oTimer.GetMicroTime();
+		VistaType::microtime tStart;
+		VistaType::microtime tProcessFrames;
+		VistaType::microtime tPSO;
+		
+		tStart = oTimer.GetMicroTime();
 		ProcessCameraFrames(colorFrame, depthFrame, uvMapFrame);
-		VistaType::microtime tProcessFrames =
-			oTimer.GetMicroTime() - tStart;
-		tStart = oTimer.GetMicroTime();		   
-		PerformPSOTracking();
-		VistaType::microtime tPSO =
-			oTimer.GetMicroTime() - tStart;
+		tProcessFrames = oTimer.GetMicroTime() - tStart;
 
-		m_pDebugView->Write(IDebugView::LOOP_FPS,
-							ProfilerString("Tracking loop  fps: ",
-										   1.0f/(tProcessFrames+tPSO)));
-		m_pDebugView->Write(IDebugView::LOOP_TIME,
-							ProfilerString("Tracking loop time: ",
-										   tProcessFrames + tPSO));
+		UploadCameraDepthMap();
+		SetupProjection();
+
+		if(m_bTrackingEnabled) {
+			tStart = oTimer.GetMicroTime();		   
+			PerformPSOTracking();
+			tPSO = oTimer.GetMicroTime() - tStart;
+			m_pDebugView->Write(IDebugView::PSO_TIME,
+								ProfilerString("PSO loop time: ",
+											   tPSO));
+			m_pDebugView->Write(IDebugView::LOOP_FPS,
+								ProfilerString("Tracking loop  fps: ",
+											   1.0f/(tProcessFrames+tPSO)));
+			m_pDebugView->Write(IDebugView::LOOP_TIME,
+								ProfilerString("Tracking loop time: ",
+											   tProcessFrames + tPSO));
+		}
+		else {
+			PerformStartPoseMatch();
+		}
+		
 		m_pDebugView->Write(IDebugView::CAMERAFRAMES_TIME,
 							ProfilerString("Camera processing time: ",
 										   tProcessFrames));
-		m_pDebugView->Write(IDebugView::PSO_TIME,
-							ProfilerString("PSO loop time: ",
-										   tPSO));
 		return true;
 	}
 
 	void HandTracker::PerformPSOTracking() {
-		UploadCameraDepthMap();
-		SetupProjection();
-
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idRenderedTextureFBO);	
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// FBO rendering of tiled zbuffers
 			glClear(GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_DEPTH_TEST);
 
-			std::vector<float> vViewportData;
-			vViewportData.reserve(16*4);
+			std::vector<float> vViewportData(16*4);
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
@@ -661,11 +677,50 @@ namespace rhapsodies {
 
 			ReduceDepthMaps();
 
-			// update actual model fit
-			
-
+			UpdateScores();
+			ResultOutput();
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	void HandTracker::PerformStartPoseMatch() {
+		std::vector<float> vViewportData(4);
+		
+		m_pHandRenderer->DrawHand(
+			&(m_pSwarm->GetParticles()[0].GetHandModelLeft()),
+			m_pHandModelRep);
+		m_pHandRenderer->DrawHand(
+			&(m_pSwarm->GetParticles()[0].GetHandModelRight()),
+			m_pHandModelRep);
+
+		vViewportData.push_back(0);
+		vViewportData.push_back(0);
+		vViewportData.push_back(320);
+		vViewportData.push_back(240);
+
+		m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
+
+		ReduceDepthMaps();
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
+
+		unsigned int result_data[8*240*8*3];
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
+
+		unsigned int difference_result   = result_data[0] * 10 / 0x7fff; // *10 in cm?
+		unsigned int union_result        = result_data[1];
+		unsigned int intersection_result = result_data[2];
+
+		float lambda = 1;
+		float fPenalty = lambda * difference_result / (union_result + 1e-6) +
+			(1 - 2*intersection_result / (intersection_result + union_result + 1e-6));
+
+		float fRed = PenaltyNormalize(fPenalty);
+		float fGreen = 1 - fRed;
+		
+		glUseProgram(m_idColorFragProgram);
+		glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
 	}
 
 	void HandTracker::UploadCameraDepthMap() {
@@ -787,36 +842,52 @@ namespace rhapsodies {
 		VistaType::microtime tReduction = oTimer.GetMicroTime() - tStart;
 		m_pDebugView->Write(IDebugView::REDUCTION_TIME,
 							ProfilerString("Reduction time: ", tReduction));
+	}
 
-		// read and print result values (testing)
+	void HandTracker::UpdateScores() {
+		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
 
 		unsigned int result_data[8*240*8*3];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
 
-		unsigned int difference_result   = result_data[0] * 10 / 0x7fff; // *10 in cm?
-		unsigned int union_result        = result_data[1];
-		unsigned int intersection_result = result_data[2];
+		for(int row = 0; row < 8; ++row) {
+			for(int col = 0; col < 8; ++col) {
+				size_t result_index = 3*8*240*row + 3*col;
+				
+				unsigned int difference_result   = result_data[result_index + 0] * 10 / 0x7fff; // *10 in cm?
+				unsigned int union_result        = result_data[result_index + 1];
+				unsigned int intersection_result = result_data[result_index + 2];
 
-		float lambda = 1;
-		float penalty = lambda * difference_result / (union_result + 1e-6) +
-			(1 - 2*intersection_result / (intersection_result + union_result + 1e-6));
+				float lambda = 1;
+				float fPenalty = lambda * difference_result / (union_result + 1e-6) +
+					(1 - 2*intersection_result / (intersection_result + union_result + 1e-6));
 
-		m_pDebugView->Write(IDebugView::DIFFERENCE,
-							ProfilerString("Difference: ", difference_result));
-		m_pDebugView->Write(IDebugView::UNION,
-							ProfilerString("Union: ", union_result));
-		m_pDebugView->Write(IDebugView::INTERSECTION,
-							ProfilerString("Intersection: ", intersection_result));
-		m_pDebugView->Write(IDebugView::PENALTY,
-							ProfilerString("Penalty: ", penalty));
+				vecParticles[8*row + col].UpdateIBest(fPenalty);
+			}
+		}
+	}
 
-		float color_red = (penalty - 0.5) / 0.9;
-		float color_green = 1.0f - color_red;
+	void HandTracker::ResultOutput() {
+
+		// m_pDebugView->Write(IDebugView::DIFFERENCE,
+		// 					ProfilerString("Difference: ", difference_result));
+		// m_pDebugView->Write(IDebugView::UNION,
+		// 					ProfilerString("Union: ", union_result));
+		// m_pDebugView->Write(IDebugView::INTERSECTION,
+		// 					ProfilerString("Intersection: ", intersection_result));
+		// m_pDebugView->Write(IDebugView::PENALTY,
+		// 					ProfilerString("Penalty: ", penalty));
+
+		// ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
+
+		// float fGreen = PenaltyToRed(vecParticles[0].GetIBestPenalty());
+		// float fRed = 1 - fGreen;
 		
-		glUseProgram(m_idColorFragProgram);
-		glUniform3f(m_locColorUniform, color_red, color_green, 0.0f);
+		// glUseProgram(m_idColorFragProgram);
+		// glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
 	}
 
 	void HandTracker::ProcessCameraFrames(
@@ -1083,6 +1154,13 @@ namespace rhapsodies {
 
 	bool HandTracker::IsTracking() {
 		return m_bTrackingEnabled;
+	}
+
+	float HandTracker::PenaltyNormalize(float fPenalty) {
+		fPenalty -= m_oConfig.fPenaltyMin;
+		fPenalty /= (1.4f - m_oConfig.fPenaltyMin);
+
+		return fPenalty;
 	}
 	
 	void HandTracker::DepthToRGB(const unsigned short *depth,

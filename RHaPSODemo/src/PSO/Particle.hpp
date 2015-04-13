@@ -17,17 +17,21 @@ namespace rhapsodies {
 					 float phi_individual,
 					 float phi_social);
 
-		HandModel& GetHandModelLeft();
-		HandModel& GetHandModelRight();
+		HandModel &GetHandModelLeft();
+		HandModel &GetHandModelRight();
 
-		float GetIBest();
-		
+		void UpdateIBest(float fPenalty);
+		float GetIBestPenalty();
+		HandModel &GetIBestModelLeft();
+		HandModel &GetIBestModelRight();
 		
     private:
 		HandModel m_oModelLeft;
 		HandModel m_oModelRight;
 		
-		float m_fIBest;
+		float     m_fIBestPenalty;
+		HandModel m_oIBestModelLeft;
+		HandModel m_oIBestModelRight;
 	};
 }
 

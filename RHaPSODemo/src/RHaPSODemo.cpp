@@ -494,20 +494,20 @@ namespace rhapsodies {
 		m_pDifferenceTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2, -2,0));
 
 		// // ImageDraw: union texture
-		pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetUnionTextureId(),
-			false, false, m_pShaderReg, "textured_uint8");
+		// pTexDraw = new TexturedQuadGLDraw(
+		// 	m_pHandTracker->GetUnionTextureId(),
+		// 	false, false, m_pShaderReg, "textured_uint8");
 
-		m_pUnionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
-		m_pUnionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(0, -2, 0));
+		// m_pUnionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
+		// m_pUnionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(0, -2, 0));
 
 		// // ImageDraw: intersection texture
-		pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetIntersectionTextureId(),
-			false, false, m_pShaderReg, "textured_uint8");
+		// pTexDraw = new TexturedQuadGLDraw(
+		// 	m_pHandTracker->GetIntersectionTextureId(),
+		// 	false, false, m_pShaderReg, "textured_uint8");
 
-		m_pIntersectionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
-		m_pIntersectionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(2, -2,0));
+		// m_pIntersectionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
+		// m_pIntersectionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(2, -2,0));
 
 		// // ImageDraw for histogram
 		// m_pDiagramDraw = new ImageDraw(m_pSceneTransform,
@@ -520,6 +520,14 @@ namespace rhapsodies {
 		//  	VistaSystemEvent::GetTypeId());
 
 		//m_pDepthHistogramHandler->Enable(false);
+
+		// // ImageDraw: score feedback texture
+		pTexDraw = new TexturedQuadGLDraw(
+			m_pHandTracker->GetScoreFeedbackTextureId(),
+			false, false, m_pShaderReg, "textured");
+
+		m_pUnionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
+		m_pUnionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(0, -2, 0));
 
 		m_pTextOverlay = new VistaSimpleTextOverlay(m_pSystem->GetDisplayManager());
 		m_pDebugView = new TextOverlayDebugView(

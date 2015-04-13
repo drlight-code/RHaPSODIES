@@ -86,6 +86,7 @@ namespace rhapsodies {
 		ImageDraw *m_pDifferenceTextureDraw;
 		ImageDraw *m_pUnionTextureDraw;
 		ImageDraw *m_pIntersectionTextureDraw;
+		ImageDraw *m_pScoreFeedbackTextureDraw;
 
 		VistaSimpleTextOverlay *m_pTextOverlay;
 		IDebugView *m_pDebugView;
