@@ -814,27 +814,11 @@ namespace rhapsodies {
 		m_pDebugView->Write(IDebugView::PENALTY,
 							ProfilerString("Penalty: ", penalty));
 
-		float color_red = (penalty - 1.2) / 0.3;
+		float color_red = (penalty - 0.5) / 0.9;
 		float color_green = 1.0f - color_red;
 		
 		glUseProgram(m_idColorFragProgram);
 		glUniform3f(m_locColorUniform, color_red, color_green, 0.0f);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_idDifferenceTexture);
-
-		unsigned int *diff_data = new unsigned int[8*240*8*320];
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, diff_data);
-
-		float fDepthVal = float(diff_data[320*8*240/2 + 320/2])/float(0xffffffffu);
-		m_pDebugView->Write(IDebugView::MIDPIXEL_DEPTH_FIRST,
-							ProfilerString("MidPixel depth first: ", fDepthVal));
-
-		fDepthVal = float(diff_data[320*8*240/2 + 320 + 320/2])/float(0xffffffffu);
-		m_pDebugView->Write(IDebugView::MIDPIXEL_DEPTH_SECOND,
-							ProfilerString("MidPixel depth second: ", fDepthVal));
-		
-		delete [] diff_data;
 	}
 
 	void HandTracker::ProcessCameraFrames(
