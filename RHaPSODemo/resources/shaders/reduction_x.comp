@@ -73,13 +73,7 @@ void main() {
 	 	clamped_difference = 0;
 
 	// debug output image writes
-	if(gl_GlobalInvocationID[0] < 320*1)
-		imageStore(imgDifference,   posGlobal, uvec4(renderedSample*0xffffffffu, 0, 0, 0));
-	else if(gl_GlobalInvocationID[0] < 320*2)
-		imageStore(imgDifference,   posGlobal, uvec4(cameraSample*0xffffffffu, 0, 0, 0));
-	else
-		imageStore(imgDifference,   posGlobal, uvec4(clamped_difference/0.04f*0xffffffffu, 0, 0, 0));
-	
+	imageStore(imgDifference,   posGlobal, uvec4(clamped_difference/0.04f*0xffffffffu, 0, 0, 0));
 	imageStore(imgUnion,        posGlobal, uvec4(union_val, 0, 0, 0));
 	imageStore(imgIntersection, posGlobal, uvec4(inter_val, 0, 0, 0));
 	
