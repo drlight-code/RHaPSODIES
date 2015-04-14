@@ -96,12 +96,16 @@ namespace rhapsodies {
 		float fPenaltyBest = std::numeric_limits<float>::max();
 		int iIndexBest = 0;
 		for(size_t particle = 0; particle < m_vecParticles.size(); ++particle) {
+			vstr::out() << "particle " << particle << " penalty: "
+						<< m_vecParticles[particle].GetIBestPenalty() << std::endl;
+			
 			if(m_vecParticles[particle].GetIBestPenalty() < fPenaltyBest) {
 				fPenaltyBest = m_vecParticles[particle].GetIBestPenalty();
 				iIndexBest = particle;
 			}
 		}
 
+		vstr::out() << "best particle: " << iIndexBest << std::endl;
 		Particle oParticleBest = m_vecParticles[iIndexBest];
 
 		// static constriction coefficient and behavioral parameters for now
