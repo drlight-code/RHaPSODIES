@@ -1,4 +1,4 @@
- /*============================================================================*/
+/*============================================================================*/
 /*                  Copyright (c) 2014 RWTH Aachen University                 */
 /*============================================================================*/
 /*                                  License                                   */
@@ -458,7 +458,7 @@ namespace rhapsodies {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER,
 						GL_UNSIGNED_BYTE, data_char);
 
-		// union inspection texture
+		// intersection inspection texture
 		glGenTextures(1, &m_idIntersectionTexture);
 
 		glBindTexture(GL_TEXTURE_2D, m_idIntersectionTexture);
@@ -614,8 +614,14 @@ namespace rhapsodies {
 		ProcessCameraFrames(colorFrame, depthFrame, uvMapFrame);
 		tProcessFrames = oTimer.GetMicroTime() - tStart;
 
+		m_pDebugView->Write(IDebugView::CAMERAFRAMES_TIME,
+							ProfilerString("Camera processing time: ",
+										   tProcessFrames));
+
 		UploadCameraDepthMap();
 		SetupProjection();
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_idRenderedTextureFBO);	
 
 		if(m_bTrackingEnabled) {
 			tStart = oTimer.GetMicroTime();		   
@@ -634,21 +640,20 @@ namespace rhapsodies {
 		else {
 			PerformStartPoseMatch();
 		}
-		
-		m_pDebugView->Write(IDebugView::CAMERAFRAMES_TIME,
-							ProfilerString("Camera processing time: ",
-										   tProcessFrames));
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 		return true;
 	}
 
 	void HandTracker::PerformPSOTracking() {
-		glBindFramebuffer(GL_FRAMEBUFFER, m_idRenderedTextureFBO);	
+		std::vector<float> vViewportData;
+		vViewportData.reserve(16*4);
+
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// FBO rendering of tiled zbuffers
 			glClear(GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_DEPTH_TEST);
-
-			std::vector<float> vViewportData(16*4);
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
@@ -666,6 +671,7 @@ namespace rhapsodies {
 
 					// we need to draw after 16 drawn pairs of hands (viewports)
 					//if(row%2 == 1 && col == 7) {
+					// this does not work on AMD as of now.. :/
 					m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
 					vViewportData.clear();
 						//}
@@ -680,11 +686,13 @@ namespace rhapsodies {
 			UpdateScores();
 			ResultOutput();
 		}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	void HandTracker::PerformStartPoseMatch() {
-		std::vector<float> vViewportData(4);
+		std::vector<float> vViewportData;
+
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
 		
 		m_pHandRenderer->DrawHand(
 			&(m_pSwarm->GetParticles()[0].GetHandModelLeft()),
@@ -721,6 +729,9 @@ namespace rhapsodies {
 		
 		glUseProgram(m_idColorFragProgram);
 		glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
+
+		if(fPenalty < m_oConfig.fPenaltyStart)
+			StartTracking();			
 	}
 
 	void HandTracker::UploadCameraDepthMap() {

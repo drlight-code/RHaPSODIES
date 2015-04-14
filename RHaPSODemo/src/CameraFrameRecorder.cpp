@@ -33,10 +33,10 @@ namespace rhapsodies {
 		VistaType::systemtime tDelta =
 			VistaTimer::GetStandardTimer().GetSystemTime() - m_tStart;
 
-		m_oStream << tDelta;
-		m_oStream.write((const char*)(colorFrame), 3*320*240);
-		m_oStream.write((const char*)(depthFrame), 2*320*240);
-		m_oStream.write((const char*)(uvMapFrame), 4*320*240*2);
+		m_oStream.write((const char*)(&tDelta), 8);
+		m_oStream.write((const char*)(colorFrame), 320*240*3);
+		m_oStream.write((const char*)(depthFrame), 320*240*2);
+		m_oStream.write((const char*)(uvMapFrame), 320*240*4*2);
 		m_oStream.flush();
 	}
 }

@@ -24,11 +24,17 @@ namespace rhapsodies {
 		m_iStream.open(
 			m_sInputFile, std::ios_base::in | std::ios_base::binary);
 
+		if(!m_iStream.good()) {
+			vstr::out() << "[CameraFramePlayer] Failed to open input stream"
+						<< std::endl;
+		}			
+
 		m_tStart = VistaTimer::GetStandardTimer().GetSystemTime();
 
 		VistaType::systemtime tDelta;
-		m_iStream >> tDelta;
-		m_tNextFrame = m_tStart + tDelta;		
+		m_iStream.read((char*)(&tDelta), 8);
+
+		m_tNextFrame = m_tStart + tDelta;
 	}
 
 	void CameraFramePlayer::StopPlayback() {
@@ -39,14 +45,14 @@ namespace rhapsodies {
 		  unsigned char  *pColorBuffer,
 		  unsigned short *pDepthBuffer,
 		  float          *pUVMapBuffer) {
-		
+
 		if(VistaTimer::GetStandardTimer().GetSystemTime() >= m_tNextFrame) {
 			m_iStream.read((char*)(pColorBuffer), 320*240*3);
 			m_iStream.read((char*)(pDepthBuffer), 320*240*2);
 			m_iStream.read((char*)(pUVMapBuffer), 320*240*4*2);
-			
+
 			VistaType::systemtime tDelta;
-			m_iStream >> tDelta;
+			m_iStream.read((char*)(&tDelta), 8);
 			m_tNextFrame = m_tStart + tDelta;
 
 			if(m_iStream.eof()) {

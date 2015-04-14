@@ -5,7 +5,6 @@ namespace rhapsodies {
 	Particle::Particle() {
 		m_oModelLeft.SetType(HandModel::LEFT_HAND);
 		m_oModelRight.SetType(HandModel::RIGHT_HAND);
-
 	}
 
 	Particle::~Particle() {
