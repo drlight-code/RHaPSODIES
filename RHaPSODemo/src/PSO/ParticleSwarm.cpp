@@ -45,28 +45,28 @@ namespace rhapsodies {
 		
 		// we start with 1 so the first particle is the unmodified
 		// center position.
-		for(size_t i = 1; i < m_vecParticles.size(); ++i) {
+		for(size_t particle = 1; particle < m_vecParticles.size(); ++particle) {
 			Particle p = oCenter;
 
 			// randomize angular dofs
-			for(int i = 0 ; i < HandModel::JOINTDOF_LAST ; ++i) {
+			for(int dof = 0 ; dof < HandModel::JOINTDOF_LAST ; ++dof) {
 				// randomize left hand angular dofs
-				fCenterVal = p.GetHandModelLeft().GetJointAngle(i);
+				fCenterVal = p.GetHandModelLeft().GetJointAngle(dof);
 				fCenterVal += RandomizeOffset(fMaxAngOffset);
-				p.GetHandModelLeft().SetJointAngle(i, fCenterVal);
+				p.GetHandModelLeft().SetJointAngle(dof, fCenterVal);
 
 				// randomize right hand angular dofs
-				fCenterVal = p.GetHandModelRight().GetJointAngle(i);
+				fCenterVal = p.GetHandModelRight().GetJointAngle(dof);
 				fCenterVal += RandomizeOffset(fMaxAngOffset);
-				p.GetHandModelRight().SetJointAngle(i, fCenterVal);
+				p.GetHandModelRight().SetJointAngle(dof, fCenterVal);
 			}
 
 			// randomize positions
 			vecCenterPosL = p.GetHandModelLeft().GetPosition();
 			vecCenterPosR = p.GetHandModelRight().GetPosition();
-			for(int i = 0; i < 3; ++i) {
-				vecCenterPosL[i] += RandomizeOffset(fMaxPosOffset);
-				vecCenterPosR[i] += RandomizeOffset(fMaxPosOffset);
+			for(int dim = 0; dim < 3; ++dim) {
+				vecCenterPosL[dim] += RandomizeOffset(fMaxPosOffset);
+				vecCenterPosR[dim] += RandomizeOffset(fMaxPosOffset);
 			}
 			p.GetHandModelLeft().SetPosition(vecCenterPosL);
 			p.GetHandModelRight().SetPosition(vecCenterPosR);
@@ -74,9 +74,9 @@ namespace rhapsodies {
 			// randomize orientations
 			qCenterOriL = p.GetHandModelLeft().GetOrientation();
 			qCenterOriR = p.GetHandModelRight().GetOrientation();
-			for(int i = 0; i < 3; ++i) {
-				qCenterOriL[i] += RandomizeOffset(fMaxOriOffset);
-				qCenterOriR[i] += RandomizeOffset(fMaxOriOffset);
+			for(int dim = 0; dim < 4; ++dim) {
+				qCenterOriL[dim] += RandomizeOffset(fMaxOriOffset);
+				qCenterOriR[dim] += RandomizeOffset(fMaxOriOffset);
 			}
 			// re-normalize quaternions
 			qCenterOriL.Normalize();
@@ -85,7 +85,7 @@ namespace rhapsodies {
 			p.GetHandModelLeft().SetOrientation(qCenterOriL);
 			p.GetHandModelRight().SetOrientation(qCenterOriR);
 
-			m_vecParticles[i] = p;
+			m_vecParticles[particle] = p;
 		}
 	}
 }
