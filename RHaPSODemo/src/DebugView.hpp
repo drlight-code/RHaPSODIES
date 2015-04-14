@@ -7,14 +7,14 @@ namespace rhapsodies {
 	class IDebugView {
     public:
 		enum Slot {
-			LOOP_FPS,
-			LOOP_TIME,
 			CAMERAFRAMES_TIME,
-			PSO_TIME,
 			REDUCTION_TIME,			
-			DIFFERENCE,
-			UNION,
-			INTERSECTION,
+			PSO_TIME,
+			LOOP_TIME,
+			LOOP_FPS,
+			// DIFFERENCE,
+			// UNION,
+			// INTERSECTION,
 			PENALTY,
 			FRAME_RECORDING,
 			FRAME_PLAYBACK,

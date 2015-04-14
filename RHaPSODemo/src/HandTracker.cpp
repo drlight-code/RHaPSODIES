@@ -731,7 +731,10 @@ namespace rhapsodies {
 		glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
 
 		if(fPenalty < m_oConfig.fPenaltyStart)
-			StartTracking();			
+			StartTracking();
+
+		m_pDebugView->Write(IDebugView::PENALTY,
+							ProfilerString("Penalty: ", fPenalty));
 	}
 
 	void HandTracker::UploadCameraDepthMap() {
