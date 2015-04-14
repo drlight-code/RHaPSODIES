@@ -148,6 +148,10 @@ namespace rhapsodies {
 		m_pUVMapSegDraw(NULL),
 		m_pDepthRenderedDraw(NULL),
 		m_pDepthCameraDraw(NULL),
+		m_pDifferenceTextureDraw(NULL),
+		m_pUnionTextureDraw(NULL),
+		m_pIntersectionTextureDraw(NULL),
+		m_pScoreFeedbackTextureDraw(NULL),
 		m_pTextOverlay(NULL),
 		m_pDebugView(NULL),
 		m_pDepthHistogramHandler(NULL) {
