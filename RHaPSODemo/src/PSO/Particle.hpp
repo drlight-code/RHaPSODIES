@@ -13,10 +13,6 @@ namespace rhapsodies {
 		Particle();
 		~Particle();
 		
-		void Imitate(Particle *other,
-					 float phi_individual,
-					 float phi_social);
-
 		HandModel &GetHandModelLeft();
 		HandModel &GetHandModelRight();
 
@@ -25,6 +21,10 @@ namespace rhapsodies {
 		HandModel &GetIBestModelLeft();
 		HandModel &GetIBestModelRight();
 		
+		void Imitate(Particle &other,
+					 float phi_cognitive,
+					 float phi_social);
+
     private:
 		HandModel m_oModelLeft;
 		HandModel m_oModelRight;

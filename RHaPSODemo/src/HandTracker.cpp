@@ -682,9 +682,11 @@ namespace rhapsodies {
 			// texture load memory barrier! frame/depthbuffer written?...
 
 			ReduceDepthMaps();
-
 			UpdateScores();
-			ResultOutput();
+
+			m_pSwarm->Evolve();
+			
+			//ResultOutput();
 		}
 	}
 

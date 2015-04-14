@@ -29,5 +29,13 @@ namespace rhapsodies {
 	
 	float Particle::GetIBestPenalty() {
 		return m_fIBestPenalty;
-	}		
+	}
+
+	void Particle::Imitate(Particle &other,
+						   float phi_cognitive,
+						   float phi_social) {
+		
+
+		
+	}	
 }

@@ -88,4 +88,25 @@ namespace rhapsodies {
 			m_vecParticles[particle] = p;
 		}
 	}
+
+	void ParticleSwarm::Evolve() {
+		// for now we try a fully meshed topology, i.e. there is only
+		// one global maximum.
+
+		float fPenaltyBest = std::numeric_limits<float>::max();
+		int iIndexBest = 0;
+		for(int particle = 0; particle < m_vecParticles.size(); ++particle) {
+			if(m_vecParticles[particle].GetIBestPenalty() < fPenaltyBest) {
+				fPenaltyBest = m_vecParticles[particle].GetIBestPenalty();
+				iIndexBest = particle;
+			}
+		}
+
+		Particle oParticleBest = m_vecParticles[iIndexBest];
+
+		// static constriction coefficient and behavioral parameters for now
+		for(int particle = 0; particle < m_vecParticles.size(); ++particle) {
+			m_vecParticles[particle].Imitate(oParticleBest, 2.8f, 1.3f);				
+		}		
+	}
 }

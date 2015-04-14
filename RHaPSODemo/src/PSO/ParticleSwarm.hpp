@@ -25,6 +25,8 @@ namespace rhapsodies {
 		// Initialize the swarm with random perturbations of particles
 		// around the "cluster-center" passed as argument.
 		void InitializeAround(Particle &oCenter);
+
+		void Evolve();
 		
     private:
 		ParticleVec m_vecParticles;
