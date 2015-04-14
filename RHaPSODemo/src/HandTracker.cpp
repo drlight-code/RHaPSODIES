@@ -678,7 +678,7 @@ namespace rhapsodies {
 				}
 			}
 
-			//glFinish(); // memory barrier? execution barrier?
+			glFinish(); // memory barrier? execution barrier?
 			// texture load memory barrier! frame/depthbuffer written?...
 
 			ReduceDepthMaps();
