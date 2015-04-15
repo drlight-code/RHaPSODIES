@@ -2,7 +2,8 @@
 
 namespace rhapsodies {
 
-	Particle::Particle() {
+	Particle::Particle() :
+		m_fIBestPenalty(std::numeric_limits<float>::max()) {
 		m_oModelLeft.SetType(HandModel::LEFT_HAND);
 		m_oModelRight.SetType(HandModel::RIGHT_HAND);
 	}
