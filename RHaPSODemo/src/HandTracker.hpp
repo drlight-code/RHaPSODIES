@@ -43,6 +43,7 @@ namespace rhapsodies {
 
 	class IDebugView;
 
+	class Particle;
 	class ParticleSwarm;
 
 	class CameraFrameRecorder;
@@ -209,14 +210,14 @@ namespace rhapsodies {
 		GLint  m_locColorUniform;
 		GLuint m_idColorFragProgram;
 
-		ParticleSwarm *m_pSwarm;
-
 		bool m_bFrameRecording;
 		CameraFrameRecorder *m_pRecorder;
 		bool m_bFramePlayback;
 		CameraFramePlayer *m_pPlayer;
 
 		bool m_bTrackingEnabled;
+		Particle *m_pParticleBest;
+		ParticleSwarm *m_pSwarm;
 	};
 }
 

@@ -60,8 +60,8 @@
 #include <HandRenderer.hpp>
 #include <DebugView.hpp>
 
-#include <PSO/ParticleSwarm.hpp>
 #include <PSO/Particle.hpp>
+#include <PSO/ParticleSwarm.hpp>
 
 #include <CameraFrameRecorder.hpp>
 #include <CameraFramePlayer.hpp>
@@ -225,12 +225,13 @@ namespace rhapsodies {
 		m_pHandModelRight(NULL),
 		m_pHandRenderer(new HandRenderer(pReg)),
 		m_pDebugView(NULL),
-		m_pSwarm(NULL),
 		m_bFrameRecording(false),
 		m_pRecorder(new CameraFrameRecorder),
 		m_bFramePlayback(false),
 		m_pPlayer(new CameraFramePlayer),
-		m_bTrackingEnabled(false) {
+		m_bTrackingEnabled(false),
+		m_pParticleBest(NULL),
+		m_pSwarm(NULL) {
 
 		m_pColorBuffer     = new unsigned char[320*240*3];
 		m_pDepthBuffer     = new unsigned short[320*240];
@@ -249,6 +250,7 @@ namespace rhapsodies {
 
 	HandTracker::~HandTracker() {
 		delete m_pSwarm;
+		delete m_pParticleBest;
 		
 		for(ListSkinCl::iterator it = m_lClassifiers.begin() ;
 			it != m_lClassifiers.end() ; ++it) {
@@ -522,6 +524,7 @@ namespace rhapsodies {
 
 	bool HandTracker::InitParticleSwarm() {
 
+		m_pParticleBest = new Particle;
 		m_pSwarm = new ParticleSwarm(64);
 
 		Particle oCenterParticle;
@@ -651,9 +654,7 @@ namespace rhapsodies {
 		// around the best match from the previous frame.  we might
 		// consider letting the particle swarm just do its work and
 		// keep the positions and velocities in between frames.
-
-		Particle oParticleBest = m_pSwarm->GetBestMatch();
-		m_pSwarm->InitializeAround(oParticleBest);
+		m_pSwarm->InitializeAround(*m_pParticleBest);
 		
 		std::vector<float> vViewportData;
 		vViewportData.reserve(16*4);
@@ -694,9 +695,10 @@ namespace rhapsodies {
 			m_pSwarm->Evolve();
 		}
 
-		oParticleBest = m_pSwarm->GetBestMatch();
-		*m_pHandModelLeft  = oParticleBest.GetHandModelLeft();
-		*m_pHandModelRight = oParticleBest.GetHandModelRight();
+		*m_pParticleBest = m_pSwarm->GetBestMatch();
+
+		*m_pHandModelLeft  = m_pParticleBest->GetHandModelLeft();
+		*m_pHandModelRight = m_pParticleBest->GetHandModelRight();
 	}
 
 	void HandTracker::PerformStartPoseMatch() {
@@ -1095,7 +1097,7 @@ namespace rhapsodies {
 		m_bShowSkinMap = !m_bShowSkinMap;
 
 		if(m_bShowSkinMap) {
-			cv::namedWindow( "Skin Map", CV_WINDOW_AUTOSIZE );				
+			cv::namedWindow( "Skin Map", CV_WINDOW_AUTOSIZE );
 			cv::namedWindow( "Skin Map Dilated", CV_WINDOW_AUTOSIZE );
 		}
 		else {
