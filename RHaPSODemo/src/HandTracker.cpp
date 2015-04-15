@@ -525,15 +525,13 @@ namespace rhapsodies {
 	bool HandTracker::InitParticleSwarm() {
 
 		m_pParticleBest = new Particle;
+		m_pParticleBest->GetHandModelLeft().SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
+		m_pParticleBest->GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
+		m_pParticleBest->GetHandModelRight().SetPosition(VistaVector3D(0.1, -0.1, 0.5));
+		m_pParticleBest->GetHandModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
+		
 		m_pSwarm = new ParticleSwarm(64);
-
-		Particle oCenterParticle;
-		oCenterParticle.GetHandModelLeft().SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
-		oCenterParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
-		oCenterParticle.GetHandModelRight().SetPosition(VistaVector3D(0.1, -0.1, 0.5));
-		oCenterParticle.GetHandModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
-
-		m_pSwarm->InitializeAround(oCenterParticle);
+		m_pSwarm->InitializeAround(*m_pParticleBest);
 		
 		return true;
 	}
