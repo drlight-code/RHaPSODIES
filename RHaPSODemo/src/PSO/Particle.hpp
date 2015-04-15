@@ -20,6 +20,8 @@ namespace rhapsodies {
 		float GetIBestPenalty();
 		HandModel &GetIBestModelLeft();
 		HandModel &GetIBestModelRight();
+
+		void ResetPenalty();
 		
 		void Imitate(Particle &other,
 					 float phi_cognitive,

@@ -2,8 +2,9 @@
 
 namespace rhapsodies {
 
-	Particle::Particle() :
-		m_fIBestPenalty(std::numeric_limits<float>::max()) {
+	Particle::Particle() {
+		ResetPenalty();
+		
 		m_oModelLeft.SetType(HandModel::LEFT_HAND);
 		m_oModelRight.SetType(HandModel::RIGHT_HAND);
 	}
@@ -32,6 +33,10 @@ namespace rhapsodies {
 		return m_fIBestPenalty;
 	}
 
+	void Particle::ResetPenalty() {
+		m_fIBestPenalty = std::numeric_limits<float>::max();
+	}
+	
 	void Particle::Imitate(Particle &other,
 						   float phi_cognitive,
 						   float phi_social) {

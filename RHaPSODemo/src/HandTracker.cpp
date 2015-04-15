@@ -647,6 +647,14 @@ namespace rhapsodies {
 	}
 
 	void HandTracker::PerformPSOTracking() {
+		// as in the original paper, we initialize the swarm uniformly
+		// around the best match from the previous frame.  we might
+		// consider letting the particle swarm just do its work and
+		// keep the positions and velocities in between frames.
+
+		Particle oParticleBest = m_pSwarm->GetBestMatch();
+		m_pSwarm->InitializeAround(oParticleBest);
+		
 		std::vector<float> vViewportData;
 		vViewportData.reserve(16*4);
 
@@ -687,6 +695,10 @@ namespace rhapsodies {
 			
 			//ResultOutput();
 		}
+
+		oParticleBest = m_pSwarm->GetBestMatch();
+		*m_pHandModelLeft  = oParticleBest.GetHandModelLeft();
+		*m_pHandModelRight = oParticleBest.GetHandModelRight();
 	}
 
 	void HandTracker::PerformStartPoseMatch() {

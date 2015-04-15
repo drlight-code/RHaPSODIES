@@ -27,6 +27,8 @@ namespace rhapsodies {
 		void InitializeAround(Particle &oCenter);
 
 		void Evolve();
+
+		Particle GetBestMatch();
 		
     private:
 		ParticleVec m_vecParticles;

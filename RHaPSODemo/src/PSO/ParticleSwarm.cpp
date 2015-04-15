@@ -41,12 +41,15 @@ namespace rhapsodies {
 		float fMaxPosOffset = 0.02f;
 		float fMaxOriOffset = 0.03f;
 
-		m_vecParticles[0] = oCenter;
+		Particle oCenterReset = oCenter;
+		oCenterReset.ResetPenalty();
+		
+		m_vecParticles[0] = oCenterReset;
 		
 		// we start with 1 so the first particle is the unmodified
 		// center position.
 		for(size_t particle = 1; particle < m_vecParticles.size(); ++particle) {
-			Particle p = oCenter;
+			Particle p = oCenterReset;
 
 			// randomize angular dofs
 			for(int dof = 0 ; dof < HandModel::JOINTDOF_LAST ; ++dof) {
@@ -93,6 +96,15 @@ namespace rhapsodies {
 		// for now we try a fully meshed topology, i.e. there is only
 		// one global maximum.
 
+		Particle oParticleBest = GetBestMatch();
+
+		// static constriction coefficient and behavioral parameters for now
+		for(size_t particle = 0; particle < m_vecParticles.size(); ++particle) {
+			m_vecParticles[particle].Imitate(oParticleBest, 2.8f, 1.3f);				
+		}		
+	}
+
+	Particle ParticleSwarm::GetBestMatch() {
 		float fPenaltyBest = std::numeric_limits<float>::max();
 		int iIndexBest = 0;
 		for(size_t particle = 0; particle < m_vecParticles.size(); ++particle) {
@@ -106,11 +118,7 @@ namespace rhapsodies {
 		}
 
 		vstr::out() << "best particle: " << iIndexBest << std::endl;
-		Particle oParticleBest = m_vecParticles[iIndexBest];
 
-		// static constriction coefficient and behavioral parameters for now
-		for(size_t particle = 0; particle < m_vecParticles.size(); ++particle) {
-			m_vecParticles[particle].Imitate(oParticleBest, 2.8f, 1.3f);				
-		}		
+		return m_vecParticles[iIndexBest];
 	}
 }
