@@ -22,10 +22,15 @@ namespace rhapsodies {
 		HandModel &GetIBestModelRight();
 
 		void ResetPenalty();
+		void ResetVelocity();
 		
 		void Imitate(Particle &other,
 					 float phi_cognitive,
 					 float phi_social);
+
+		// @todo cleaner solution or static methods, this is just not right!
+		void StateArrayToParticle(Particle &oParticle, float *aState);
+		void ParticleToStateArray(Particle &oParticle, float *aState);		
 
     private:
 		HandModel m_oModelLeft;
@@ -34,6 +39,8 @@ namespace rhapsodies {
 		float     m_fIBestPenalty;
 		HandModel m_oIBestModelLeft;
 		HandModel m_oIBestModelRight;
+
+		float m_aVelocity[54];
 	};
 }
 
