@@ -653,7 +653,6 @@ namespace rhapsodies {
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// FBO rendering of tiled zbuffers
 			glClear(GL_DEPTH_BUFFER_BIT);
-			glEnable(GL_DEPTH_TEST);
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
@@ -803,6 +802,9 @@ namespace rhapsodies {
 
 		VistaTransformMatrix mRotY(qRotY);
 		glMultMatrixf(mRotY.GetData());
+
+		glDisable(GL_SCISSOR_TEST);
+		glEnable(GL_DEPTH_TEST);
 	}
 	
 	void HandTracker::ReduceDepthMaps() {
