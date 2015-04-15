@@ -154,7 +154,6 @@ namespace rhapsodies {
 		
 		void ReduceDepthMaps();
 		void UpdateScores();
-		void ResultOutput();
 
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
 		MapPBO m_mapPBO;

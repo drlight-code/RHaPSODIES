@@ -692,8 +692,6 @@ namespace rhapsodies {
 			UpdateScores();
 
 			m_pSwarm->Evolve();
-			
-			//ResultOutput();
 		}
 
 		oParticleBest = m_pSwarm->GetBestMatch();
@@ -898,26 +896,6 @@ namespace rhapsodies {
 				vecParticles[8*row + col].UpdateIBest(fPenalty);
 			}
 		}
-	}
-
-	void HandTracker::ResultOutput() {
-
-		// m_pDebugView->Write(IDebugView::DIFFERENCE,
-		// 					ProfilerString("Difference: ", difference_result));
-		// m_pDebugView->Write(IDebugView::UNION,
-		// 					ProfilerString("Union: ", union_result));
-		// m_pDebugView->Write(IDebugView::INTERSECTION,
-		// 					ProfilerString("Intersection: ", intersection_result));
-		// m_pDebugView->Write(IDebugView::PENALTY,
-		// 					ProfilerString("Penalty: ", penalty));
-
-		// ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
-
-		// float fGreen = PenaltyToRed(vecParticles[0].GetIBestPenalty());
-		// float fRed = 1 - fGreen;
-		
-		// glUseProgram(m_idColorFragProgram);
-		// glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
 	}
 
 	void HandTracker::ProcessCameraFrames(
