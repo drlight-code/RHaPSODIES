@@ -17,7 +17,7 @@ namespace rhapsodies {
 		m_pModelLeft(pModelLeft),
 		m_pModelRight(pModelRight),
 		m_pModelRep(pModelRep),
-		m_pRenderer(new HandRenderer(pReg, true)) {
+		m_pRenderer(new HandRenderer(pReg, true, 10)) {
 	}
 
 	HandRenderDraw::~HandRenderDraw() {

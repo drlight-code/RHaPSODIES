@@ -21,7 +21,8 @@ namespace {
 
 namespace rhapsodies {
 	HandRenderer::HandRenderer(ShaderRegistry *pReg,
-							   bool bDrawNormals) :
+							   bool bDrawNormals,
+							   int iSegments) :
 		m_pShaderReg(pReg),
 		m_bDrawNormals(bDrawNormals),
 		m_szSphereData(0),
@@ -42,7 +43,7 @@ namespace rhapsodies {
 		VistaGeometryFactory::CreateEllipsoidData(
 			&vIndices, &vCoords, &vTexCoords, &vNormals, &vColors,
 			0.5f, 0.5f, 0.5f,
-			6, 6);
+			iSegments, iSegments);
 
 		// generate vertex list from indices
 		std::vector<VistaIndexedVertex>::iterator it;
@@ -62,7 +63,7 @@ namespace rhapsodies {
 			&vIndices, &vCoordsFloat, &vTexCoordsFloat,
 			&vNormalsFloat, &vColors,
 			0.5f, 0.5f, 1.0f,
-			6, 1, 1
+			iSegments, 1, 1
 			);
 
 		// generate vertex list from indices

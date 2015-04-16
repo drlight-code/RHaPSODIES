@@ -15,7 +15,9 @@ namespace rhapsodies {
 	
 	class HandRenderer {
 	public:
-		HandRenderer(ShaderRegistry *pReg, bool bDrawNormals = false);
+		HandRenderer(ShaderRegistry *pReg,
+					 bool bDrawNormals = false,
+					 int iSegments = 4);
 		void DrawHand(HandModel *pModel,
 					  HandModelRep *pModelRep);
 
