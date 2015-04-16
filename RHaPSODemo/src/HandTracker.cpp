@@ -658,6 +658,11 @@ namespace rhapsodies {
 		m_pSwarm->InitializeAround(*m_pParticleBest);
 
 		m_pParticleBest->ResetPenalty();
+
+		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
+		VistaType::microtime tReductionStart = 0.0;
+		VistaType::microtime tReductionAccumulated = 0.0;
+		
 		
 		std::vector<float> vViewportData;
 		vViewportData.reserve(16*4);
@@ -692,7 +697,10 @@ namespace rhapsodies {
 			glFinish(); // memory barrier? execution barrier?
 			// texture load memory barrier! frame/depthbuffer written?...
 
+			tReductionStart = oTimer.GetMicroTime();
 			ReduceDepthMaps();
+			tReductionAccumulated += oTimer.GetMicroTime() - tReductionStart;
+			
 			UpdateScores();
 
 			m_pSwarm->Evolve();
@@ -704,6 +712,10 @@ namespace rhapsodies {
 			// 	*m_pParticleBest = oParticleGenerationBest;
 			// }
 		}
+
+		m_pDebugView->Write(IDebugView::REDUCTION_TIME,
+							ProfilerString("Reduction time: ",
+										   tReductionAccumulated));
 
 		*m_pParticleBest = m_pSwarm->GetBestMatch();
 		
@@ -838,9 +850,6 @@ namespace rhapsodies {
 			return;
 		}
 		
-		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
-		VistaType::microtime tStart = oTimer.GetMicroTime();
-
 		// bind input textures
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
@@ -882,17 +891,12 @@ namespace rhapsodies {
 		glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
 		glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
 		glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
-
-		VistaType::microtime tReduction = oTimer.GetMicroTime() - tStart;
-		m_pDebugView->Write(IDebugView::REDUCTION_TIME,
-							ProfilerString("Reduction time: ", tReduction));
 	}
 
 	float HandTracker::PenaltyFromReduction(float fDiff,
 											float fUnion,
 											float fIntersection) {
 		float lambda = 25;
-
 		float fDepthTerm = lambda * fDiff / (fUnion + 1e-6);
 		float fSkinTerm = (1 - 2*fIntersection / (fIntersection + fUnion + 1e-6));
 		float fPenalty = fDepthTerm + fSkinTerm;
