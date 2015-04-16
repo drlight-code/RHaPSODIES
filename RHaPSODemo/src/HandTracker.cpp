@@ -756,10 +756,10 @@ namespace rhapsodies {
 		glEnable(GL_DEPTH_TEST);
 		
 		m_pHandRenderer->DrawHand(
-			&(m_pSwarm->GetParticles()[0].GetHandModelLeft()),
+			m_pHandModelLeft,
 			m_pHandModelRep);
 		m_pHandRenderer->DrawHand(
-			&(m_pSwarm->GetParticles()[0].GetHandModelRight()),
+			m_pHandModelRight,
 			m_pHandModelRep);
 
 		vViewportData.push_back(0);
