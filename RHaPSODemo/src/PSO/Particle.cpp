@@ -1,6 +1,28 @@
+#include <set>
+
 #include <VistaTools/VistaRandomNumberGenerator.h>
 
 #include "Particle.hpp"
+
+namespace {
+	void GetBoundsByJointIndex(size_t index,
+							   float &fMin, float &fMax) {
+		
+		index %= 20; // see JointDOF definition in HandModel.hpp
+		index %= 4;
+		
+		if(index == 1) {
+			// adduction abduction dof
+			fMin = -30;
+			fMax =  30;
+		}
+		else {
+			// flexion dof
+			fMin = -10;
+			fMax = 100;
+		}
+	}
+}
 
 namespace rhapsodies {
 
@@ -69,12 +91,26 @@ namespace rhapsodies {
 		for(size_t dim = 0; dim < 54; ++dim) {
 			float r1 = pRNG->GenerateFloat2();
 			float r2 = pRNG->GenerateFloat2();
-			
+
 			m_aVelocity[dim] = w*(m_aVelocity[dim] +
 								  phi_cognitive*r1*(aIBest[dim]-aCurrent[dim]) +
 								  phi_social*r2*(aGBest[dim]-aCurrent[dim]));
 
-			aCurrent[dim] += m_aVelocity[dim];													
+			if(dim < 40) {
+				float fMinAngle = 0;
+				float fMaxAngle = 0;
+
+				GetBoundsByJointIndex(dim, fMinAngle, fMaxAngle);
+				
+				if(aCurrent[dim] < fMinAngle && m_aVelocity[dim] < 0) {
+					m_aVelocity[dim] = 0;
+				}
+				if(aCurrent[dim] > fMaxAngle && m_aVelocity[dim] > 0) {
+					m_aVelocity[dim] = 0;
+				}
+			}
+
+			aCurrent[dim] += m_aVelocity[dim];								
 		}
 
 		StateArrayToParticle(*this, aCurrent);
