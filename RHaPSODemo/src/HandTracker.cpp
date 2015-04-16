@@ -658,23 +658,21 @@ namespace rhapsodies {
 	}
 
 	void HandTracker::PerformPSOTracking() {
-		// as in the original paper, we initialize the swarm uniformly
-		// around the best match from the previous frame.  we might
-		// consider letting the particle swarm just do its work and
-		// keep the positions and velocities in between frames.
-		m_pSwarm->InitializeAround(*m_pParticleBest);
-
-		m_pParticleBest->ResetPenalty();
-
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
 		VistaType::microtime tStart = 0.0;
 		VistaType::microtime tReductionAccumulated = 0.0;
 		VistaType::microtime tRenderingAccumulated = 0.0;
 		VistaType::microtime tSwarmUpdateAccumulated = 0.0;
 		
-		
 		std::vector<float> vViewportData;
 		vViewportData.reserve(16*4);
+
+		// as in the original paper, we initialize the swarm uniformly
+		// around the best match from the previous frame.  we might
+		// consider letting the particle swarm just do its work and
+		// keep the positions and velocities in between frames.
+		m_pSwarm->InitializeAround(*m_pParticleBest);
+		m_pParticleBest->ResetPenalty();
 
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			tStart = oTimer.GetMicroTime();
@@ -720,12 +718,16 @@ namespace rhapsodies {
 			tSwarmUpdateAccumulated += oTimer.GetMicroTime() - tStart;
 
 			// keep the best match over all generations, not just the last one
-			// Particle oParticleGenerationBest = m_pSwarm->GetBestMatch();
-			// if(oParticleGenerationBest.GetIBestPenalty() <
-			//    m_pParticleBest->GetIBestPenalty()) {
-			// 	*m_pParticleBest = oParticleGenerationBest;
-			// }
+			Particle oParticleGenerationBest = m_pSwarm->GetBestMatch();
+			if(oParticleGenerationBest.GetIBestPenalty() <
+			   m_pParticleBest->GetIBestPenalty()) {
+				*m_pParticleBest = oParticleGenerationBest;
+			}
 		}
+
+		//*m_pParticleBest = m_pSwarm->GetBestMatch();
+		*m_pHandModelLeft  = m_pParticleBest->GetHandModelLeft();
+		*m_pHandModelRight = m_pParticleBest->GetHandModelRight();
 
 		m_pDebugView->Write(IDebugView::RENDER_TIME,
 							ProfilerString("Render time: ",
@@ -737,14 +739,10 @@ namespace rhapsodies {
 							ProfilerString("Swarm update time: ",
 										   tSwarmUpdateAccumulated));
 
-		*m_pParticleBest = m_pSwarm->GetBestMatch();
-		
 		m_pDebugView->Write(IDebugView::PENALTY,
 							ProfilerString("Penalty: ",
 										   m_pParticleBest->GetIBestPenalty()));
 				
-		*m_pHandModelLeft  = m_pParticleBest->GetHandModelLeft();
-		*m_pHandModelRight = m_pParticleBest->GetHandModelRight();
 	}
 
 	void HandTracker::PerformStartPoseMatch() {
