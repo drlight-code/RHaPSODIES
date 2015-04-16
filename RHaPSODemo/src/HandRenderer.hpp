@@ -15,7 +15,7 @@ namespace rhapsodies {
 	
 	class HandRenderer {
 	public:
-		HandRenderer(ShaderRegistry *pReg);
+		HandRenderer(ShaderRegistry *pReg, bool bDrawNormals = false);
 		void DrawHand(HandModel *pModel,
 					  HandModelRep *pModelRep);
 
@@ -40,11 +40,13 @@ namespace rhapsodies {
 							   bool bThumb);
 
 		ShaderRegistry *m_pShaderReg;
-
+		bool m_bDrawNormals;
+		
 		size_t m_szSphereData;
 		size_t m_szCylinderData;
 
 		std::vector<float> m_vVertexData;
+		std::vector<float> m_vNormalData;
 		std::vector<VistaTransformMatrix> m_vSphereTransforms;
 		std::vector<VistaTransformMatrix> m_vCylinderTransforms;
 

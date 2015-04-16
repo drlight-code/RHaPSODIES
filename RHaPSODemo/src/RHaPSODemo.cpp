@@ -301,6 +301,9 @@ namespace rhapsodies {
 			"vert_vpos_indexedtransform", GL_VERTEX_SHADER,
 			"resources/shaders/vpos_indexedtransform.vert");
 		m_pShaderReg->RegisterShader(
+			"vert_vpos_vnorm_indexedtransform", GL_VERTEX_SHADER,
+			"resources/shaders/vpos_vnorm_indexedtransform.vert");
+		m_pShaderReg->RegisterShader(
 			"vert_vpos_uv", GL_VERTEX_SHADER,   
 			"resources/shaders/vpos_uv.vert");
 
@@ -328,6 +331,9 @@ namespace rhapsodies {
 		m_pShaderReg->RegisterShader(
 			"frag_solid_colored", GL_FRAGMENT_SHADER,
 			"resources/shaders/solid_colored.frag");
+		m_pShaderReg->RegisterShader(
+			"frag_shaded_colored", GL_FRAGMENT_SHADER,
+			"resources/shaders/shaded_colored.frag");
 
 		m_pShaderReg->RegisterShader(
 			"indexed_viewport", GL_GEOMETRY_SHADER,
@@ -385,6 +391,11 @@ namespace rhapsodies {
 		vec_shaders.push_back("frag_solid_colored");
 //		vec_shaders.push_back("indexed_viewport");		
 		m_pShaderReg->RegisterProgram("indexedtransform", vec_shaders);
+
+		vec_shaders.clear();
+		vec_shaders.push_back("vert_vpos_vnorm_indexedtransform");
+		vec_shaders.push_back("frag_shaded_colored");
+		m_pShaderReg->RegisterProgram("shaded_indexedtransform", vec_shaders);
 
 		vec_shaders.clear();
 		vec_shaders.push_back("difference_score");

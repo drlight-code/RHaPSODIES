@@ -20,8 +20,10 @@ namespace {
 }
 
 namespace rhapsodies {
-	HandRenderer::HandRenderer(ShaderRegistry *pReg) :
+	HandRenderer::HandRenderer(ShaderRegistry *pReg,
+							   bool bDrawNormals) :
 		m_pShaderReg(pReg),
+		m_bDrawNormals(bDrawNormals),
 		m_szSphereData(0),
 		m_szCylinderData(0) {
 
@@ -48,6 +50,8 @@ namespace rhapsodies {
 			for( int dim = 0 ; dim < 3 ; dim++ ) {
 				m_vVertexData.push_back(
 					vCoords[it->GetCoordinateIndex()][dim]);
+				m_vNormalData.push_back(
+					vNormals[it->GetNormalIndex()][dim]);
 			}
 		}
 		m_szSphereData = vIndices.size();
@@ -66,13 +70,18 @@ namespace rhapsodies {
 			for( size_t dim = 0 ; dim < 3 ; dim++ ) {
 				m_vVertexData.push_back(
 					vCoordsFloat[3*it->GetCoordinateIndex()+dim]);
+				m_vNormalData.push_back(
+					vNormalsFloat[3*it->GetNormalIndex()+dim]);
 			}
 		}
 		m_szCylinderData = vIndices.size();
 
 		PrepareBufferObjects();
 
-		m_idProgram = m_pShaderReg->GetProgram("indexedtransform");
+		if(m_bDrawNormals)
+			m_idProgram = m_pShaderReg->GetProgram("shaded_indexedtransform");
+		else
+			m_idProgram = m_pShaderReg->GetProgram("indexedtransform");
 
 		m_idTransformBlock =
 			glGetUniformBlockIndex(m_idProgram, "TransformBlock");
@@ -92,11 +101,26 @@ namespace rhapsodies {
 		// data
 		glBindVertexArray(m_idVertexArrayObject);
 		glBindBuffer(GL_ARRAY_BUFFER, m_idVertexBufferObject);
+
 		glBufferData(GL_ARRAY_BUFFER,
-					 sizeof(float)*m_vVertexData.size(),
-					 &m_vVertexData[0], GL_STATIC_DRAW);
+					 sizeof(float)*m_vVertexData.size() +
+					 sizeof(float)*m_vNormalData.size(),
+					 NULL, GL_STATIC_DRAW);
+
+		glBufferSubData(GL_ARRAY_BUFFER,
+						0,
+						sizeof(float)*m_vVertexData.size(),
+						&m_vVertexData[0]);
+		glBufferSubData(GL_ARRAY_BUFFER,
+						sizeof(float)*m_vVertexData.size(),
+						sizeof(float)*m_vNormalData.size(),
+						&m_vNormalData[0]);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0,
+							  (const GLvoid*)(sizeof(float)*m_vVertexData.size()));
+
 		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
 
 
 		// initialize sphere and cylinder UBOs for transformation matrices
@@ -263,7 +287,7 @@ namespace rhapsodies {
 			 pModelRep->GetExtent(HandModelRep::R_MC) +
 			 pModelRep->GetExtent(HandModelRep::L_MC))/4.0f/1000.0f;
 
-		fPalmHeight -= fPalmBottomRadius * 2.0f;
+		fPalmHeight -= fPalmBottomRadius;
 
 		float fLRFactor =
 			(pModel->GetType() == HandModel::LEFT_HAND) ?

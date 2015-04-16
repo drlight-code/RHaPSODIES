@@ -241,7 +241,7 @@ namespace rhapsodies {
 		m_idReductionXProgram = pReg->GetProgram("reduction_x");
 		m_idReductionYProgram = pReg->GetProgram("reduction_y");
 
-		m_idColorFragProgram = pReg->GetProgram("indexedtransform");
+		m_idColorFragProgram = pReg->GetProgram("shaded_indexedtransform");
 		m_locColorUniform = glGetUniformLocation(m_idColorFragProgram, "color_in");
 
 		glUseProgram(m_idColorFragProgram);
@@ -727,11 +727,11 @@ namespace rhapsodies {
 		unsigned int result_data[8*240*8*3];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
 
-		unsigned int difference_result   = result_data[0] * 10 / 0x7fff; // *10 in cm?
+		unsigned int difference_result   = result_data[0] / 0x7fff;
 		unsigned int union_result        = result_data[1];
 		unsigned int intersection_result = result_data[2];
 
-		float lambda = 1;
+		float lambda = 10;
 		float fPenalty = lambda * difference_result / (union_result + 1e-6) +
 			(1 - 2*intersection_result / (intersection_result + union_result + 1e-6));
 
@@ -885,7 +885,7 @@ namespace rhapsodies {
 			for(int col = 0; col < 8; ++col) {
 				size_t result_index = 3*8*240*row + 3*col;
 				
-				unsigned int difference_result   = result_data[result_index + 0] * 10 / 0x7fff; // *10 in cm?
+				unsigned int difference_result   = result_data[result_index + 0] / 0x7fff;
 				unsigned int union_result        = result_data[result_index + 1];
 				unsigned int intersection_result = result_data[result_index + 2];
 
