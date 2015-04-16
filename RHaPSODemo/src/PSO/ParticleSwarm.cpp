@@ -43,6 +43,7 @@ namespace rhapsodies {
 
 		Particle oCenterReset = oCenter;
 		oCenterReset.ResetPenalty();
+		oCenterReset.ResetVelocity();
 		
 		m_vecParticles[0] = oCenterReset;
 		
