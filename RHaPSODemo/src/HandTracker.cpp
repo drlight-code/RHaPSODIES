@@ -660,14 +660,18 @@ namespace rhapsodies {
 		m_pParticleBest->ResetPenalty();
 
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
-		VistaType::microtime tReductionStart = 0.0;
+		VistaType::microtime tStart = 0.0;
 		VistaType::microtime tReductionAccumulated = 0.0;
+		VistaType::microtime tRenderingAccumulated = 0.0;
+		VistaType::microtime tSwarmUpdateAccumulated = 0.0;
 		
 		
 		std::vector<float> vViewportData;
 		vViewportData.reserve(16*4);
 
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
+			tStart = oTimer.GetMicroTime();
+
 			// FBO rendering of tiled zbuffers
 			glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -696,14 +700,16 @@ namespace rhapsodies {
 
 			glFinish(); // memory barrier? execution barrier?
 			// texture load memory barrier! frame/depthbuffer written?...
-
-			tReductionStart = oTimer.GetMicroTime();
-			ReduceDepthMaps();
-			tReductionAccumulated += oTimer.GetMicroTime() - tReductionStart;
+			tRenderingAccumulated += oTimer.GetMicroTime() - tStart;
 			
+			tStart = oTimer.GetMicroTime();
+			ReduceDepthMaps();
+			tReductionAccumulated += oTimer.GetMicroTime() - tStart;
+			
+			tStart = oTimer.GetMicroTime();
 			UpdateScores();
-
 			m_pSwarm->Evolve();
+			tSwarmUpdateAccumulated += oTimer.GetMicroTime() - tStart;
 
 			// keep the best match over all generations, not just the last one
 			// Particle oParticleGenerationBest = m_pSwarm->GetBestMatch();
@@ -713,9 +719,15 @@ namespace rhapsodies {
 			// }
 		}
 
+		m_pDebugView->Write(IDebugView::RENDER_TIME,
+							ProfilerString("Render time: ",
+										   tRenderingAccumulated));
 		m_pDebugView->Write(IDebugView::REDUCTION_TIME,
 							ProfilerString("Reduction time: ",
 										   tReductionAccumulated));
+		m_pDebugView->Write(IDebugView::SWARMUPDATE_TIME,
+							ProfilerString("Swarm update time: ",
+										   tSwarmUpdateAccumulated));
 
 		*m_pParticleBest = m_pSwarm->GetBestMatch();
 		
@@ -922,13 +934,13 @@ namespace rhapsodies {
 			for(int col = 0; col < 8; ++col) {
 				size_t result_index = 3*8*240*row + 3*col;
 				
-				unsigned int difference_result   = result_data[result_index + 0] / 0x7fff;
-				unsigned int union_result        = result_data[result_index + 1];
-				unsigned int intersection_result = result_data[result_index + 2];
+				float difference_result   = result_data[result_index + 0] / float(0x7fff);
+				float union_result        = result_data[result_index + 1];
+				float intersection_result = result_data[result_index + 2];
 
-				float lambda = 1;
-				float fPenalty = lambda * difference_result / (union_result + 1e-6) +
-					(1 - 2*intersection_result / (intersection_result + union_result + 1e-6));
+				float fPenalty = PenaltyFromReduction(difference_result,
+													  union_result,
+													  intersection_result);
 
 				vecParticles[8*row + col].UpdateIBest(fPenalty);
 			}
