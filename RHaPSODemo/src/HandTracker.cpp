@@ -224,8 +224,7 @@ namespace rhapsodies {
 		m_bShowImage(false),
 		m_bShowSkinMap(false),
 		m_pShaderReg(pReg),
-		m_pHandModelLeft(NULL),
-		m_pHandModelRight(NULL),
+		m_pHandModelRep(new HandModelRep),
 		m_pHandRenderer(new HandRenderer(pReg)),
 		m_pDebugView(NULL),
 		m_bFrameRecording(false),
@@ -268,10 +267,6 @@ namespace rhapsodies {
 		delete m_pRecorder;
 		
 		delete m_pHandRenderer;
-
-		delete m_pHandModelLeft;
-		delete m_pHandModelRight;
-
 		delete m_pHandModelRep;
 	}
 	
@@ -285,11 +280,11 @@ namespace rhapsodies {
 	}
 	
 	HandModel *HandTracker::GetHandModelLeft() {
-		return m_pHandModelLeft;
+		return &m_pParticleBest->GetHandModelLeft();
 	}
 	
 	HandModel *HandTracker::GetHandModelRight() {
-		return m_pHandModelRight;
+		return &m_pParticleBest->GetHandModelRight();
 	}
 
 	HandModelRep *HandTracker::GetHandModelRep() {
@@ -423,7 +418,6 @@ namespace rhapsodies {
 		}
 
 		InitParticleSwarm();
-		InitHandModels();
 		
 		return true;
 	}
@@ -582,25 +576,9 @@ namespace rhapsodies {
 		return true;
 	}
 
-	bool HandTracker::InitHandModels() {
-		m_pHandModelLeft  = new HandModel;
-		m_pHandModelLeft->SetType(HandModel::LEFT_HAND);
-		m_pHandModelLeft->SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
-		m_pHandModelLeft->SetJointAngle(HandModel::T_CMC_A, 60);
-
-		m_pHandModelRight = new HandModel;
-		m_pHandModelRight->SetType(HandModel::RIGHT_HAND);
-		m_pHandModelRight->SetPosition(VistaVector3D(0.1, -0.1, 0.5));
-		m_pHandModelRight->SetJointAngle(HandModel::T_CMC_A, 60);
-
-		m_pHandModelRep = new HandModelRep;
-
-		return true;
-	}
-
 	bool HandTracker::InitParticleSwarm() {
 		m_pParticleBest = new Particle;
-		SetInitialPose(*m_pParticleBest);
+		SetToInitialPose(*m_pParticleBest);
 		
 		m_pSwarm = new ParticleSwarm(64);
 		m_pSwarm->InitializeAround(*m_pParticleBest);
@@ -608,10 +586,14 @@ namespace rhapsodies {
 		return true;
 	}
 
-	void HandTracker::SetInitialPose(Particle &oParticle) {
+	void HandTracker::SetToInitialPose(Particle &oParticle) {
 		oParticle = Particle();
 		oParticle.GetHandModelLeft().SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
+//		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
+		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_F, 0);
 		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
+		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_MCP, 30);
+		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_IP, 30);
 		oParticle.GetHandModelRight().SetPosition(VistaVector3D(0.1, -0.1, 0.5));
 		oParticle.GetHandModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
 	}
@@ -729,10 +711,6 @@ namespace rhapsodies {
 			}
 		}
 
-		//*m_pParticleBest = m_pSwarm->GetBestMatch();
-		*m_pHandModelLeft  = m_pParticleBest->GetHandModelLeft();
-		*m_pHandModelRight = m_pParticleBest->GetHandModelRight();
-
 		m_pDebugView->Write(IDebugView::RENDER_TIME,
 							ProfilerString("Render time: ",
 										   tRenderingAccumulated));
@@ -756,10 +734,10 @@ namespace rhapsodies {
 		glEnable(GL_DEPTH_TEST);
 		
 		m_pHandRenderer->DrawHand(
-			m_pHandModelLeft,
+			&m_pParticleBest->GetHandModelLeft(),
 			m_pHandModelRep);
 		m_pHandRenderer->DrawHand(
-			m_pHandModelRight,
+			&m_pParticleBest->GetHandModelRight(),
 			m_pHandModelRep);
 
 		vViewportData.push_back(0);
@@ -1170,11 +1148,6 @@ namespace rhapsodies {
 		}
 	}
 	
-	void HandTracker::RandomizeModels() {
-		m_pHandModelRight->Randomize();
-		m_pHandModelLeft->Randomize();
-	}
-
 	void HandTracker::ToggleFrameRecording() {
 		m_bFrameRecording = !m_bFrameRecording;
 
@@ -1216,9 +1189,7 @@ namespace rhapsodies {
 	void HandTracker::StopTracking() {
 		m_bTrackingEnabled = false;
 
-		SetInitialPose(*m_pParticleBest);
-		*m_pHandModelLeft  = m_pParticleBest->GetHandModelLeft();
-		*m_pHandModelRight = m_pParticleBest->GetHandModelRight();
+		SetToInitialPose(*m_pParticleBest);
 
 		m_pDebugView->Write(IDebugView::TRACKING,
 							ProfilerString("Tracking: ",

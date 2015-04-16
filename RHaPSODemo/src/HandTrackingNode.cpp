@@ -142,7 +142,7 @@ namespace rhapsodies {
 		}
 
 		if(m_sPortRandomizeModel.HasNewData()) {
-			m_pTracker->RandomizeModels();
+//			m_pTracker->RandomizeModels();
 		}
 
 		if(m_sPortRecordFrames.HasNewData()) {

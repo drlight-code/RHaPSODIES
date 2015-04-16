@@ -107,8 +107,6 @@ namespace rhapsodies {
 		void ShowOpenCVImg();
 		void ToggleSkinMap();
 
-		void RandomizeModels();
-
 		void ToggleFrameRecording();
 		void ToggleFramePlayback();
 
@@ -136,12 +134,11 @@ namespace rhapsodies {
 		};
 
 		bool InitSkinClassifiers();
-		bool InitHandModels();
 		bool InitRendering();
 		bool InitReduction();
 		bool InitParticleSwarm();
 
-		void SetInitialPose(Particle &oParticle);
+		void SetToInitialPose(Particle &oParticle);
 
 		bool HasGLComputeCapabilities();
 
@@ -180,10 +177,7 @@ namespace rhapsodies {
 
 		ShaderRegistry *m_pShaderReg;
 		
-		HandModel *m_pHandModelLeft;
-		HandModel *m_pHandModelRight;
 		HandModelRep *m_pHandModelRep;
-		
 		HandRenderer *m_pHandRenderer;
 
 		unsigned char  *m_pColorBuffer;
