@@ -129,6 +129,7 @@ namespace rhapsodies {
 			bool bLoop;
 
 			float fPenaltyMin;
+			float fPenaltyMax;
 			float fPenaltyStart;
 		};
 
@@ -154,6 +155,9 @@ namespace rhapsodies {
 		void SetupProjection();
 		
 		void ReduceDepthMaps();
+		float PenaltyFromReduction(float fDiff,
+								   float fUnion,
+								   float fIntersection);
 		void UpdateScores();
 
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;

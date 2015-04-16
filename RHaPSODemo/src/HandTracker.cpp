@@ -207,6 +207,7 @@ namespace rhapsodies {
 	const std::string sLoopName      = "LOOP";
 
 	const std::string sPenaltyMinName   = "PENALTY_MIN";
+	const std::string sPenaltyMaxName   = "PENALTY_MAX";
 	const std::string sPenaltyStartName = "PENALTY_START";
 
 /*============================================================================*/
@@ -323,6 +324,74 @@ namespace rhapsodies {
 
 	GLuint HandTracker::GetScoreFeedbackTextureId() {
 		return m_idScoreFeedbackTexture;
+	}
+
+	void HandTracker::ReadConfig() {
+		VistaIniFileParser oIniParser(true);
+		oIniParser.ReadFile(RHaPSODemo::sRDIniFile);
+
+		const VistaPropertyList oConfig = oIniParser.GetPropertyList();
+
+		if(!oConfig.HasProperty(RHaPSODemo::sTrackerSectionName)) {
+			throw std::runtime_error(
+				std::string() + "Config section ["
+				+ RHaPSODemo::sTrackerSectionName
+				+ "] not found!");			
+		}
+
+		const VistaPropertyList oTrackerConfig =
+			oConfig.GetSubListConstRef(RHaPSODemo::sTrackerSectionName);
+
+		m_oConfig.iDepthLimit = oTrackerConfig.GetValueOrDefault(
+			sDepthLimitName, 500);
+		m_oConfig.iErosionSize = oTrackerConfig.GetValueOrDefault(
+			sErosionSizeName, 3);
+		m_oConfig.iDilationSize = oTrackerConfig.GetValueOrDefault(
+			sDilationSizeName, 5);
+
+		m_oConfig.iPSOGenerations = oTrackerConfig.GetValueOrDefault(
+			sPSOGenerationsName, 45);
+
+		m_oConfig.sRecordingFile = oTrackerConfig.GetValueOrDefault(
+			sRecordingName, std::string(""));
+		m_pPlayer->SetInputFile(m_oConfig.sRecordingFile);
+
+		m_oConfig.bLoop = oTrackerConfig.GetValueOrDefault(
+			sLoopName, false);
+		m_pPlayer->SetLoop(m_oConfig.bLoop);
+		
+		const VistaPropertyList &oCameraConfig =
+			oConfig.GetSubListConstRef(RHaPSODemo::sCameraSectionName);
+
+		std::string sIntrinsicSection =
+			oCameraConfig.GetValue<std::string>("INTRINSICS");
+		m_oCameraIntrinsics = oConfig.GetSubListCopy(sIntrinsicSection);
+
+		m_oConfig.fPenaltyMin = oTrackerConfig.GetValueOrDefault(
+			sPenaltyMinName, 0.5f);
+		m_oConfig.fPenaltyMax = oTrackerConfig.GetValueOrDefault(
+			sPenaltyMaxName, 1.5f);
+		m_oConfig.fPenaltyStart = oTrackerConfig.GetValueOrDefault(
+			sPenaltyStartName, 0.6f);
+	}
+
+	void HandTracker::PrintConfig() {
+		vstr::out() << "* HandTracker configuration" << std::endl;
+		vstr::out() << "Depth Limit: " << m_oConfig.iDepthLimit
+					<< std::endl;
+		vstr::out() << "Erosion Size: " << m_oConfig.iErosionSize
+					<< std::endl;
+		vstr::out() << "Dilation Size: " << m_oConfig.iDilationSize
+					<< std::endl;
+
+		vstr::out() << "PSO Generations: " << m_oConfig.iPSOGenerations
+					<< std::endl;
+
+		vstr::out() << "Recording file: " << m_oConfig.sRecordingFile
+					<< std::endl;
+		vstr::out() << "Loop: " << std::boolalpha << m_oConfig.bLoop
+					<< std::endl;
+
 	}
 
 	bool HandTracker::Initialize() {
@@ -536,72 +605,6 @@ namespace rhapsodies {
 		return true;
 	}
 
-	void HandTracker::ReadConfig() {
-		VistaIniFileParser oIniParser(true);
-		oIniParser.ReadFile(RHaPSODemo::sRDIniFile);
-
-		const VistaPropertyList oConfig = oIniParser.GetPropertyList();
-
-		if(!oConfig.HasProperty(RHaPSODemo::sTrackerSectionName)) {
-			throw std::runtime_error(
-				std::string() + "Config section ["
-				+ RHaPSODemo::sTrackerSectionName
-				+ "] not found!");			
-		}
-
-		const VistaPropertyList oTrackerConfig =
-			oConfig.GetSubListConstRef(RHaPSODemo::sTrackerSectionName);
-
-		m_oConfig.iDepthLimit = oTrackerConfig.GetValueOrDefault(
-			sDepthLimitName, 500);
-		m_oConfig.iErosionSize = oTrackerConfig.GetValueOrDefault(
-			sErosionSizeName, 3);
-		m_oConfig.iDilationSize = oTrackerConfig.GetValueOrDefault(
-			sDilationSizeName, 5);
-
-		m_oConfig.iPSOGenerations = oTrackerConfig.GetValueOrDefault(
-			sPSOGenerationsName, 45);
-
-		m_oConfig.sRecordingFile = oTrackerConfig.GetValueOrDefault(
-			sRecordingName, std::string(""));
-		m_pPlayer->SetInputFile(m_oConfig.sRecordingFile);
-
-		m_oConfig.bLoop = oTrackerConfig.GetValueOrDefault(
-			sLoopName, false);
-		m_pPlayer->SetLoop(m_oConfig.bLoop);
-		
-		const VistaPropertyList &oCameraConfig =
-			oConfig.GetSubListConstRef(RHaPSODemo::sCameraSectionName);
-
-		std::string sIntrinsicSection =
-			oCameraConfig.GetValue<std::string>("INTRINSICS");
-		m_oCameraIntrinsics = oConfig.GetSubListCopy(sIntrinsicSection);
-
-		m_oConfig.fPenaltyMin = oTrackerConfig.GetValueOrDefault(
-			sPenaltyMinName, 0.5f);
-		m_oConfig.fPenaltyStart = oTrackerConfig.GetValueOrDefault(
-			sPenaltyStartName, 0.6f);
-	}
-
-	void HandTracker::PrintConfig() {
-		vstr::out() << "* HandTracker configuration" << std::endl;
-		vstr::out() << "Depth Limit: " << m_oConfig.iDepthLimit
-					<< std::endl;
-		vstr::out() << "Erosion Size: " << m_oConfig.iErosionSize
-					<< std::endl;
-		vstr::out() << "Dilation Size: " << m_oConfig.iDilationSize
-					<< std::endl;
-
-		vstr::out() << "PSO Generations: " << m_oConfig.iPSOGenerations
-					<< std::endl;
-
-		vstr::out() << "Recording file: " << m_oConfig.sRecordingFile
-					<< std::endl;
-		vstr::out() << "Loop: " << std::boolalpha << m_oConfig.bLoop
-					<< std::endl;
-
-	}
-
 	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
 								  const unsigned short *depthFrame,
 								  const float          *uvMapFrame) {
@@ -653,6 +656,8 @@ namespace rhapsodies {
 		// consider letting the particle swarm just do its work and
 		// keep the positions and velocities in between frames.
 		m_pSwarm->InitializeAround(*m_pParticleBest);
+
+		m_pParticleBest->ResetPenalty();
 		
 		std::vector<float> vViewportData;
 		vViewportData.reserve(16*4);
@@ -691,10 +696,21 @@ namespace rhapsodies {
 			UpdateScores();
 
 			m_pSwarm->Evolve();
+
+			// keep the best match over all generations, not just the last one
+			// Particle oParticleGenerationBest = m_pSwarm->GetBestMatch();
+			// if(oParticleGenerationBest.GetIBestPenalty() <
+			//    m_pParticleBest->GetIBestPenalty()) {
+			// 	*m_pParticleBest = oParticleGenerationBest;
+			// }
 		}
 
 		*m_pParticleBest = m_pSwarm->GetBestMatch();
-
+		
+		m_pDebugView->Write(IDebugView::PENALTY,
+							ProfilerString("Penalty: ",
+										   m_pParticleBest->GetIBestPenalty()));
+				
 		*m_pHandModelLeft  = m_pParticleBest->GetHandModelLeft();
 		*m_pHandModelRight = m_pParticleBest->GetHandModelRight();
 	}
@@ -727,13 +743,13 @@ namespace rhapsodies {
 		unsigned int result_data[8*240*8*3];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
 
-		unsigned int difference_result   = result_data[0] / 0x7fff;
-		unsigned int union_result        = result_data[1];
-		unsigned int intersection_result = result_data[2];
+		float difference_result   = result_data[0] / float(0x7fff);
+		float union_result        = result_data[1];
+		float intersection_result = result_data[2];
 
-		float lambda = 10;
-		float fPenalty = lambda * difference_result / (union_result + 1e-6) +
-			(1 - 2*intersection_result / (intersection_result + union_result + 1e-6));
+		float fPenalty = PenaltyFromReduction(difference_result,
+											  union_result,
+											  intersection_result);
 
 		float fRed = PenaltyNormalize(fPenalty);
 		float fGreen = 1 - fRed;
@@ -872,6 +888,23 @@ namespace rhapsodies {
 							ProfilerString("Reduction time: ", tReduction));
 	}
 
+	float HandTracker::PenaltyFromReduction(float fDiff,
+											float fUnion,
+											float fIntersection) {
+		float lambda = 25;
+
+		float fDepthTerm = lambda * fDiff / (fUnion + 1e-6);
+		float fSkinTerm = (1 - 2*fIntersection / (fIntersection + fUnion + 1e-6));
+		float fPenalty = fDepthTerm + fSkinTerm;
+
+		m_pDebugView->Write(IDebugView::DEPTH_TERM,
+							ProfilerString("Depth term: ", fDepthTerm));
+		m_pDebugView->Write(IDebugView::SKIN_TERM,
+							ProfilerString("Skin term: ", fSkinTerm));
+
+		return fPenalty;
+	}
+	
 	void HandTracker::UpdateScores() {
 		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
 
@@ -1166,7 +1199,7 @@ namespace rhapsodies {
 
 	float HandTracker::PenaltyNormalize(float fPenalty) {
 		fPenalty -= m_oConfig.fPenaltyMin;
-		fPenalty /= (1.4f - m_oConfig.fPenaltyMin);
+		fPenalty /= (m_oConfig.fPenaltyMax - m_oConfig.fPenaltyMin);
 
 		return fPenalty;
 	}

@@ -287,7 +287,8 @@ namespace rhapsodies {
 			 pModelRep->GetExtent(HandModelRep::R_MC) +
 			 pModelRep->GetExtent(HandModelRep::L_MC))/4.0f/1000.0f;
 
-		fPalmHeight -= fPalmBottomRadius;
+		// @todo get hand geometry straight, palm is too small...
+		fPalmHeight -= fPalmBottomRadius * 2.0f;
 
 		float fLRFactor =
 			(pModel->GetType() == HandModel::LEFT_HAND) ?

@@ -118,7 +118,7 @@ namespace rhapsodies {
 
 	void Particle::ParticleToStateArray(Particle &oParticle, float *aState) {
 		for(size_t dof = 0; dof < 20; ++dof) {
-			aState[dof]    = oParticle.m_oModelLeft.GetJointAngle(dof);
+			aState[ 0+dof] = oParticle.m_oModelLeft.GetJointAngle(dof);
 			aState[20+dof] = oParticle.m_oModelRight.GetJointAngle(dof);
 		}
 
@@ -139,7 +139,7 @@ namespace rhapsodies {
 
 	void Particle::StateArrayToParticle(Particle &oParticle, float *aState) {
 		for(size_t dof = 0; dof < 20; ++dof) {
-			oParticle.m_oModelLeft.SetJointAngle(dof, aState[dof]);
+			oParticle.m_oModelLeft.SetJointAngle (dof, aState[ 0+dof]);
 			oParticle.m_oModelRight.SetJointAngle(dof, aState[20+dof]);
 		}
 
@@ -159,7 +159,7 @@ namespace rhapsodies {
 			qOriR[dim] = aState[50+dim];
 		}
 		qOriL.Normalize();
-		qOriR.Normalize();		
+		qOriR.Normalize();	
 		oParticle.m_oModelLeft.SetOrientation(qOriL);
 		oParticle.m_oModelRight.SetOrientation(qOriR);
 	}
