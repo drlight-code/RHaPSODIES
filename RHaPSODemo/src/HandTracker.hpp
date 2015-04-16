@@ -137,9 +137,11 @@ namespace rhapsodies {
 
 		bool InitSkinClassifiers();
 		bool InitHandModels();
-		bool InitParticleSwarm();
 		bool InitRendering();
 		bool InitReduction();
+		bool InitParticleSwarm();
+
+		void SetInitialPose(Particle &oParticle);
 
 		bool HasGLComputeCapabilities();
 

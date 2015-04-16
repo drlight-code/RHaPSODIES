@@ -599,12 +599,8 @@ namespace rhapsodies {
 	}
 
 	bool HandTracker::InitParticleSwarm() {
-
 		m_pParticleBest = new Particle;
-		m_pParticleBest->GetHandModelLeft().SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
-		m_pParticleBest->GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
-		m_pParticleBest->GetHandModelRight().SetPosition(VistaVector3D(0.1, -0.1, 0.5));
-		m_pParticleBest->GetHandModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
+		SetInitialPose(*m_pParticleBest);
 		
 		m_pSwarm = new ParticleSwarm(64);
 		m_pSwarm->InitializeAround(*m_pParticleBest);
@@ -612,6 +608,14 @@ namespace rhapsodies {
 		return true;
 	}
 
+	void HandTracker::SetInitialPose(Particle &oParticle) {
+		oParticle = Particle();
+		oParticle.GetHandModelLeft().SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
+		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
+		oParticle.GetHandModelRight().SetPosition(VistaVector3D(0.1, -0.1, 0.5));
+		oParticle.GetHandModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
+	}
+	
 	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
 								  const unsigned short *depthFrame,
 								  const float          *uvMapFrame) {
@@ -1211,6 +1215,10 @@ namespace rhapsodies {
 	
 	void HandTracker::StopTracking() {
 		m_bTrackingEnabled = false;
+
+		SetInitialPose(*m_pParticleBest);
+		*m_pHandModelLeft  = m_pParticleBest->GetHandModelLeft();
+		*m_pHandModelRight = m_pParticleBest->GetHandModelRight();
 
 		m_pDebugView->Write(IDebugView::TRACKING,
 							ProfilerString("Tracking: ",
