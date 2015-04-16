@@ -206,6 +206,8 @@ namespace rhapsodies {
 	const std::string sRecordingName = "RECORDING";
 	const std::string sLoopName      = "LOOP";
 
+	const std::string sAutoTrackingName = "AUTO_TRACKING";
+
 	const std::string sPenaltyMinName   = "PENALTY_MIN";
 	const std::string sPenaltyMaxName   = "PENALTY_MAX";
 	const std::string sPenaltyStartName = "PENALTY_START";
@@ -359,7 +361,10 @@ namespace rhapsodies {
 		m_oConfig.bLoop = oTrackerConfig.GetValueOrDefault(
 			sLoopName, false);
 		m_pPlayer->SetLoop(m_oConfig.bLoop);
-		
+
+		m_oConfig.bAutoTracking = oTrackerConfig.GetValueOrDefault(
+			sAutoTrackingName, false);
+
 		const VistaPropertyList &oCameraConfig =
 			oConfig.GetSubListConstRef(RHaPSODemo::sCameraSectionName);
 
@@ -391,6 +396,8 @@ namespace rhapsodies {
 					<< std::endl;
 		vstr::out() << "Loop: " << std::boolalpha << m_oConfig.bLoop
 					<< std::endl;
+		vstr::out() << "Auto tracking: " << std::boolalpha
+					<< m_oConfig.bAutoTracking << std::endl;
 
 	}
 
@@ -697,14 +704,15 @@ namespace rhapsodies {
 						//}
 				}
 			}
+			glFinish();
 
-			glFinish(); // memory barrier? execution barrier?
-			// texture load memory barrier! frame/depthbuffer written?...
 			tRenderingAccumulated += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
 			ReduceDepthMaps();
 			tReductionAccumulated += oTimer.GetMicroTime() - tStart;
+
+			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 			
 			tStart = oTimer.GetMicroTime();
 			UpdateScores();
@@ -781,8 +789,10 @@ namespace rhapsodies {
 		glUseProgram(m_idColorFragProgram);
 		glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
 
-		if(fPenalty < m_oConfig.fPenaltyStart)
-			StartTracking();
+		if(m_oConfig.bAutoTracking && !IsTracking()) {
+			if(fPenalty < m_oConfig.fPenaltyStart)
+				StartTracking();
+		}
 
 		m_pDebugView->Write(IDebugView::PENALTY,
 							ProfilerString("Penalty: ", fPenalty));

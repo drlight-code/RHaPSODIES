@@ -128,6 +128,8 @@ namespace rhapsodies {
 			std::string sRecordingFile;
 			bool bLoop;
 
+			bool bAutoTracking;
+
 			float fPenaltyMin;
 			float fPenaltyMax;
 			float fPenaltyStart;
