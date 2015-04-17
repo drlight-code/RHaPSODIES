@@ -9,17 +9,33 @@ namespace {
 							   float &fMin, float &fMax) {
 		
 		index %= 20; // see JointDOF definition in HandModel.hpp
+
+		bool bThumb = (index / 4 == 0);
 		index %= 4;
-		
-		if(index == 1) {
-			// adduction abduction dof
-			fMin = -30;
-			fMax =  30;
+
+		if(bThumb) {
+			if(index == 1) {
+				// adduction abduction dof
+				fMin =  0;
+				fMax = 70;
+			}
+			else {
+				// flexion dof
+				fMin =  0;
+				fMax = 90;
+			}
 		}
 		else {
-			// flexion dof
-			fMin = -10;
-			fMax = 100;
+			if(index == 1) {
+				// adduction abduction dof
+				fMin = -30;
+				fMax =  30;
+			}
+			else {
+				// flexion dof
+				fMin = -10;
+				fMax = 100;
+			}
 		}
 	}
 }
@@ -78,8 +94,7 @@ namespace rhapsodies {
 		float aIBest[54];
 		float aGBest[54];
 
-//		float w = 0.72984f;
-		float w = 0.5;
+		float w = 0.72984f;
 
 		Particle oParticleIBest;
 		oParticleIBest.m_oModelLeft  = m_oIBestModelLeft;
