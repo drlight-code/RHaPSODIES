@@ -33,8 +33,8 @@ namespace {
 			}
 			else {
 				// flexion dof
-				fMin = -10;
-				fMax = 100;
+				fMin = 0;
+				fMax = 90;
 			}
 		}
 	}
