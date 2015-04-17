@@ -600,8 +600,10 @@ namespace rhapsodies {
 		oParticle.GetHandModelRight().SetPosition(VistaVector3D(0.14, -0.1, 0.5));
 		oParticle.GetHandModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
 
+		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::I_MCP_A, -20);
+		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::M_MCP_A,  20);
 		// oParticle.GetHandModelRight().SetJointAngle(HandModel::I_MCP_A, -20);
-		// oParticle.GetHandModelRight().SetJointAngle(HandModel::M_MCP_A, -20);
+		// oParticle.GetHandModelRight().SetJointAngle(HandModel::M_MCP_A,  20);
 	}
 	
 	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
@@ -908,7 +910,7 @@ namespace rhapsodies {
 							   float fDiff,
 							   float fUnion,
 							   float fIntersection) {
-		float fLambdaK = 10;
+		float fLambdaK = 2;
 		
 		float fPenalty =
 			PenaltyFromReduction(fDiff, fUnion, fIntersection) +
@@ -941,12 +943,10 @@ namespace rhapsodies {
 				-std::min(oModel.GetJointAngle(dof) - oModel.GetJointAngle(dof+4), 0.0f);
 		}	
 
-		if(oModel.GetType() == HandModel::RIGHT_HAND)
-			fPenaltySum = -fPenaltySum;
-		
 		fPenaltySum = Vista::DegToRad(fPenaltySum);
-		
-		return 0;
+//		std::cout << fPenaltySum << std::endl;
+
+		return fPenaltySum;
 	}
 	
 	void HandTracker::UpdateScores() {
