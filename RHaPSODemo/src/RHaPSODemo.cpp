@@ -493,7 +493,7 @@ namespace rhapsodies {
 		
 		// ImageDraw: rendered depth map
 		TexturedQuadGLDraw *pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetRenderedTextureId(), false, false, m_pShaderReg);
+			m_pHandTracker->GetRenderedTextureId(), true, false, m_pShaderReg);
 //		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_PSO_RENDERED, pPBODraw); 
 
 		m_pDepthRenderedDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
@@ -501,7 +501,7 @@ namespace rhapsodies {
 
 		// ImageDraw: camera depth map
 		pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetCameraTextureId(), false, false, m_pShaderReg);
+			m_pHandTracker->GetCameraTextureId(), true, false, m_pShaderReg);
 //		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_PSO_CAMERA, pPBODraw); 
 
 		m_pDepthCameraDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);

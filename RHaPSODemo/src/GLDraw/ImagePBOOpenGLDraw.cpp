@@ -42,7 +42,7 @@ namespace rhapsodies {
 /*============================================================================*/
 	ImagePBOOpenGLDraw::ImagePBOOpenGLDraw(int width, int height,
 										   ShaderRegistry *pShaderReg) :
-		TexturedQuadGLDraw(0, false, true, pShaderReg),
+		TexturedQuadGLDraw(0, true, true, pShaderReg),
 		m_pboIndex(0),
 		m_texWidth(width),
 		m_texHeight(height),
