@@ -26,6 +26,7 @@
 #include <iostream>
 #include <limits>
 #include <exception>
+#include <algorithm>
 
 #include <GL/glew.h>
 
@@ -598,6 +599,9 @@ namespace rhapsodies {
 
 		oParticle.GetHandModelRight().SetPosition(VistaVector3D(0.14, -0.1, 0.5));
 		oParticle.GetHandModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
+
+		// oParticle.GetHandModelRight().SetJointAngle(HandModel::I_MCP_A, -20);
+		// oParticle.GetHandModelRight().SetJointAngle(HandModel::M_MCP_A, -20);
 	}
 	
 	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,
@@ -899,14 +903,16 @@ namespace rhapsodies {
 		glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
 	}
 
-	float HandTracker::Penalty(const HandModel& oModelLeft,
-							   const HandModel& oModelRight,
+	float HandTracker::Penalty(HandModel& oModelLeft,
+							   HandModel& oModelRight,
 							   float fDiff,
 							   float fUnion,
 							   float fIntersection) {
+		float fLambdaK = 10;
+		
 		float fPenalty =
 			PenaltyFromReduction(fDiff, fUnion, fIntersection) +
-			PenaltyPrior(oModelLeft, oModelRight);
+			fLambdaK * (PenaltyPrior(oModelLeft) + PenaltyPrior(oModelRight));
 		
 		return fPenalty;
 	}
@@ -914,10 +920,10 @@ namespace rhapsodies {
 	float HandTracker::PenaltyFromReduction(float fDiff,
 											float fUnion,
 											float fIntersection) {
-		float lambda = 25;
-		float fDepthTerm = lambda * fDiff / (fUnion + 1e-6);
+		float fLambda = 25;
+		float fDepthTerm = fDiff / (fUnion + 1e-6);
 		float fSkinTerm = (1 - 2*fIntersection / (fIntersection + fUnion + 1e-6));
-		float fPenalty = fDepthTerm + fSkinTerm;
+		float fPenalty = fLambda * fDepthTerm + fSkinTerm;
 
 		m_pDebugView->Write(IDebugView::DEPTH_TERM,
 							ProfilerString("Depth term: ", fDepthTerm));
@@ -927,8 +933,19 @@ namespace rhapsodies {
 		return fPenalty;
 	}
 
-	float HandTracker::PenaltyPrior(const HandModel& oModelLeft,
-									const HandModel& oModelRight) {
+	float HandTracker::PenaltyPrior(HandModel& oModel) {
+		float fPenaltySum = 0;
+
+		for(size_t dof = 5; dof < 17; dof += 4) {
+			fPenaltySum +=
+				-std::min(oModel.GetJointAngle(dof) - oModel.GetJointAngle(dof+4), 0.0f);
+		}	
+
+		if(oModel.GetType() == HandModel::RIGHT_HAND)
+			fPenaltySum = -fPenaltySum;
+		
+		fPenaltySum = Vista::DegToRad(fPenaltySum);
+		
 		return 0;
 	}
 	
