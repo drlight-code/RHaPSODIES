@@ -34,7 +34,7 @@ namespace {
 			else {
 				// flexion dof
 				fMin = 0;
-				fMax = 90;
+				fMax = 60;
 			}
 		}
 	}

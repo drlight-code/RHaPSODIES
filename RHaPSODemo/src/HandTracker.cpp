@@ -924,7 +924,7 @@ namespace rhapsodies {
 	float HandTracker::PenaltyFromReduction(float fDiff,
 											float fUnion,
 											float fIntersection) {
-		float fLambda = 50;
+		float fLambda = 25;
 		float fDepthTerm = fDiff / (fUnion + 1e-6);
 		float fSkinTerm = (1 - 2*fIntersection / (fIntersection + fUnion + 1e-6));
 		float fPenalty = fLambda * fDepthTerm + fSkinTerm;

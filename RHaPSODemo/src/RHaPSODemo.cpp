@@ -295,7 +295,7 @@ namespace rhapsodies {
 		// register frame update handler
 		m_pSystem->GetEventManager()->AddEventHandler(
 			this, VistaSystemEvent::GetTypeId(), 
-			VistaSystemEvent::VSE_POSTAPPLICATIONLOOP);
+			VistaSystemEvent::VSE_POSTGRAPHICS);
 
 		return success;
 	}
@@ -558,14 +558,21 @@ namespace rhapsodies {
 		return m_pSystem->Run();
 	}
 
-	void RHaPSODemo::FrameLoop() {
-
-	}
-
 	void RHaPSODemo::HandleEvent(VistaEvent *pEvent) {
 		if(pEvent->GetType() == VistaSystemEvent::GetTypeId()) {
-			if(pEvent->GetId() == VistaSystemEvent::VSE_POSTAPPLICATIONLOOP) {
-				FrameLoop();
+			if(pEvent->GetId() == VistaSystemEvent::VSE_POSTGRAPHICS) {
+				if(m_pHandTracker->IsTracking()) {
+					static int count = 0;
+				
+					std::stringstream sStream;
+
+					sStream << "resources/recordings/frame"
+							<< std::setw(6) << std::setfill('0')
+							<< count++ << ".jpg";				
+				
+					m_pSystem->GetDisplayManager()->MakeScreenshot(
+						"MAIN_WINDOW", sStream.str());
+				}
 			}
 		}
 	}

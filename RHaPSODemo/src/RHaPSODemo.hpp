@@ -108,8 +108,6 @@ namespace rhapsodies {
 		bool Initialize(int argc, char** argv);
 		bool Run();
 
-		void FrameLoop();
-
 		// VistaEventHandler interface
 		virtual void HandleEvent(VistaEvent *pEvent);
 
