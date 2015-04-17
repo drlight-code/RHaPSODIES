@@ -78,7 +78,8 @@ namespace rhapsodies {
 		float aIBest[54];
 		float aGBest[54];
 
-		float w = 0.72984f;
+//		float w = 0.72984f;
+		float w = 0.5;
 
 		Particle oParticleIBest;
 		oParticleIBest.m_oModelLeft  = m_oIBestModelLeft;

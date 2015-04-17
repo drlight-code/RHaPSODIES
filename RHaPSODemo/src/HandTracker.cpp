@@ -588,13 +588,15 @@ namespace rhapsodies {
 
 	void HandTracker::SetToInitialPose(Particle &oParticle) {
 		oParticle = Particle();
-		oParticle.GetHandModelLeft().SetPosition(VistaVector3D(-0.1, -0.1, 0.5));
-//		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
-		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_F, 0);
+		oParticle.GetHandModelLeft().SetPosition(VistaVector3D(-0.14, -0.1, 0.5));
 		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
-		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_MCP, 30);
-		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_IP, 30);
-		oParticle.GetHandModelRight().SetPosition(VistaVector3D(0.1, -0.1, 0.5));
+
+		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_F, 0);
+		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
+		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_MCP, 60);
+		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_IP, 60);
+
+		oParticle.GetHandModelRight().SetPosition(VistaVector3D(0.14, -0.1, 0.5));
 		oParticle.GetHandModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
 	}
 	

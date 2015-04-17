@@ -276,8 +276,8 @@ namespace rhapsodies {
 		VistaTransformMatrix matOrigin;
 
 		// these go to extra vis parameter class for model pso yo
-		float fPalmWidth        = 0.08;
-		float fPalmBottomRadius = 0.02;
+		float fPalmWidth        = 0.09;
+		float fPalmBottomRadius = 0.01;
 		float fPalmDiameter     = fPalmWidth/2.0f;
 		float fFingerDiameter   = fPalmWidth/4.0f;
 
@@ -287,6 +287,7 @@ namespace rhapsodies {
 			 pModelRep->GetExtent(HandModelRep::M_MC) +
 			 pModelRep->GetExtent(HandModelRep::R_MC) +
 			 pModelRep->GetExtent(HandModelRep::L_MC))/4.0f/1000.0f;
+
 
 		// @todo get hand geometry straight, palm is too small...
 		fPalmHeight -= fPalmBottomRadius * 2.0f;
@@ -358,7 +359,7 @@ namespace rhapsodies {
 
 		// draw the thumb
 		matTransform.SetToTranslationMatrix(
-			VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/4.0f)*fLRFactor,
+			VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/2.0f)*fLRFactor,
 						  fPalmBottomRadius,
 						  0));
 			

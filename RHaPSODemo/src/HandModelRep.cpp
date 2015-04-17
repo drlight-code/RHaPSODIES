@@ -5,29 +5,29 @@ namespace rhapsodies {
 	HandModelRep::HandModelRep() :
 		m_vecExtents(19) {
 
-		m_vecExtents[T_MC] = 27;
-		m_vecExtents[T_PP] = 37;
-		m_vecExtents[T_DP] = 36;
+		m_vecExtents[T_MC] = 51;
+		m_vecExtents[T_PP] = 38;
+		m_vecExtents[T_DP] = 29;
 
-		m_vecExtents[I_MC] = 93;
-		m_vecExtents[I_PP] = 55;
-		m_vecExtents[I_MP] = 35;
-		m_vecExtents[I_DP] = 30;
+		m_vecExtents[I_MC] = 92;
+		m_vecExtents[I_PP] = 54;
+		m_vecExtents[I_MP] = 30;
+		m_vecExtents[I_DP] = 24;
 
-		m_vecExtents[M_MC] = 84;
-		m_vecExtents[M_PP] = 65;
-		m_vecExtents[M_MP] = 43;
-		m_vecExtents[M_DP] = 32;
+		m_vecExtents[M_MC] = 91;
+		m_vecExtents[M_PP] = 59;
+		m_vecExtents[M_MP] = 38;
+		m_vecExtents[M_DP] = 25;
 
-		m_vecExtents[R_MC] = 76;
-		m_vecExtents[R_PP] = 60;
-		m_vecExtents[R_MP] = 37;
-		m_vecExtents[R_DP] = 30;
+		m_vecExtents[R_MC] = 88;
+		m_vecExtents[R_PP] = 54;
+		m_vecExtents[R_MP] = 36;
+		m_vecExtents[R_DP] = 25;
 
-		m_vecExtents[L_MC] = 67;
-		m_vecExtents[L_PP] = 47;
-		m_vecExtents[L_MP] = 28;
-		m_vecExtents[L_DP] = 27;
+		m_vecExtents[L_MC] = 87;
+		m_vecExtents[L_PP] = 43;
+		m_vecExtents[L_MP] = 26;
+		m_vecExtents[L_DP] = 23;
 	}
 
 	float HandModelRep::GetExtent(size_t eExt) {
