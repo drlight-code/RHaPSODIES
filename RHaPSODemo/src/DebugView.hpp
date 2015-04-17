@@ -17,6 +17,7 @@ namespace rhapsodies {
 			PENALTY,
 			DEPTH_TERM,
 			SKIN_TERM,
+			SKIN_CLASSIFIER,
 			FRAME_RECORDING,
 			FRAME_PLAYBACK,
 			TRACKING,

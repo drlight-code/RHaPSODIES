@@ -215,7 +215,7 @@ namespace rhapsodies {
 		// 	->SetDefaultFont("FreeSans.ttf");
 
    		success &= RegisterShaders();
-		success &= InitTracker();
+		success &= InitTracker();	
 		success &= CreateScene();
 
 		// register port and functor access for pointer types. this
@@ -283,6 +283,13 @@ namespace rhapsodies {
 		bool success = true;
 
 		m_pHandTracker = new HandTracker(m_pShaderReg);
+
+		m_pTextOverlay = new VistaSimpleTextOverlay(m_pSystem->GetDisplayManager());
+		m_pDebugView = new TextOverlayDebugView(
+			m_pSystem->GetDisplayManager(), m_pTextOverlay);
+		
+		m_pHandTracker->SetDebugView(m_pDebugView);
+
 		success &= m_pHandTracker->Initialize();
 
 		// register frame update handler
@@ -430,7 +437,7 @@ namespace rhapsodies {
 			m_pShaderReg);
 		
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
-		m_pHandModelTransform->SetTranslation(-2,-2,0.1);
+		m_pHandModelTransform->SetTranslation(0,0,3);
 		m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,
 												m_pHandRenderDraw);
 
@@ -544,12 +551,6 @@ namespace rhapsodies {
 		m_pUnionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
 		m_pUnionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(0, -2, 0));
 
-		m_pTextOverlay = new VistaSimpleTextOverlay(m_pSystem->GetDisplayManager());
-		m_pDebugView = new TextOverlayDebugView(
-			m_pSystem->GetDisplayManager(), m_pTextOverlay);
-		
-		m_pHandTracker->SetDebugView(m_pDebugView);
-		
 		return true;
 	}
 

@@ -571,8 +571,10 @@ namespace rhapsodies {
 		m_lClassifiers.push_back(pSkinCl);
 
 		m_itCurrentClassifier = m_lClassifiers.begin();
-		m_itCurrentClassifier++;
-		m_itCurrentClassifier++;
+
+		m_pDebugView->Write(IDebugView::SKIN_CLASSIFIER,
+							ProfilerString("Skin classifier: ",
+										   (*m_itCurrentClassifier)->GetName()));
 
 		return true;
 	}
@@ -1154,15 +1156,19 @@ namespace rhapsodies {
 		if(m_itCurrentClassifier == m_lClassifiers.end())
 			m_itCurrentClassifier = m_lClassifiers.begin();
 
-		vstr::debug() << "Selected skin classifier: "
-					  << (*m_itCurrentClassifier)->GetName()
-					  << std::endl;
+		m_pDebugView->Write(IDebugView::SKIN_CLASSIFIER,
+							ProfilerString("Skin classifier: ",
+								(*m_itCurrentClassifier)->GetName()));
 	}
 
 	void HandTracker::PrevSkinClassifier() {
 		if(m_itCurrentClassifier == m_lClassifiers.begin())
 			m_itCurrentClassifier = m_lClassifiers.end();
 		m_itCurrentClassifier--;
+
+		m_pDebugView->Write(IDebugView::SKIN_CLASSIFIER,
+							ProfilerString("Skin classifier: ",
+										   (*m_itCurrentClassifier)->GetName()));
 	}
 
 	void HandTracker::ShowOpenCVImg() {
