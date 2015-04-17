@@ -759,9 +759,11 @@ namespace rhapsodies {
 		float union_result        = result_data[1];
 		float intersection_result = result_data[2];
 
-		float fPenalty = PenaltyFromReduction(difference_result,
-											  union_result,
-											  intersection_result);
+		float fPenalty = Penalty(m_pParticleBest->GetHandModelLeft(),
+								 m_pParticleBest->GetHandModelRight(),
+								 difference_result,
+								 union_result,
+								 intersection_result);
 
 		float fRed = PenaltyNormalize(fPenalty);
 		float fGreen = 1 - fRed;
@@ -895,6 +897,18 @@ namespace rhapsodies {
 		glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
 	}
 
+	float HandTracker::Penalty(const HandModel& oModelLeft,
+							   const HandModel& oModelRight,
+							   float fDiff,
+							   float fUnion,
+							   float fIntersection) {
+		float fPenalty =
+			PenaltyFromReduction(fDiff, fUnion, fIntersection) +
+			PenaltyPrior(oModelLeft, oModelRight);
+		
+		return fPenalty;
+	}
+
 	float HandTracker::PenaltyFromReduction(float fDiff,
 											float fUnion,
 											float fIntersection) {
@@ -909,6 +923,11 @@ namespace rhapsodies {
 							ProfilerString("Skin term: ", fSkinTerm));
 
 		return fPenalty;
+	}
+
+	float HandTracker::PenaltyPrior(const HandModel& oModelLeft,
+									const HandModel& oModelRight) {
+		return 0;
 	}
 	
 	void HandTracker::UpdateScores() {
@@ -928,9 +947,11 @@ namespace rhapsodies {
 				float union_result        = result_data[result_index + 1];
 				float intersection_result = result_data[result_index + 2];
 
-				float fPenalty = PenaltyFromReduction(difference_result,
-													  union_result,
-													  intersection_result);
+				float fPenalty = Penalty(vecParticles[8*row + col].GetHandModelLeft(),
+										 vecParticles[8*row + col].GetHandModelRight(),
+										 difference_result,
+										 union_result,
+										 intersection_result);
 
 				vecParticles[8*row + col].UpdateIBest(fPenalty);
 			}

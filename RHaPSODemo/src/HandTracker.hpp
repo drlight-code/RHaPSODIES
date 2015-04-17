@@ -156,9 +156,16 @@ namespace rhapsodies {
 		void SetupProjection();
 		
 		void ReduceDepthMaps();
+		float Penalty(const HandModel& oModelLeft,
+					  const HandModel& oModelRight,
+					  float fDiff,
+					  float fUnion,
+					  float fIntersection);
 		float PenaltyFromReduction(float fDiff,
 								   float fUnion,
 								   float fIntersection);
+		float PenaltyPrior(const HandModel& oModelLeft,
+						   const HandModel& oModelRight);
 		void UpdateScores();
 
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
