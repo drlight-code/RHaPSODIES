@@ -93,6 +93,8 @@ namespace rhapsodies {
 		
 		DepthHistogramHandler *m_pDepthHistogramHandler;
 
+		bool m_bFrameRecording;
+		
 		bool InitTracker();
 		bool RegisterShaders();
 		bool CreateScene();

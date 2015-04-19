@@ -1,4 +1,4 @@
-#version 330 core
+#version 330 compatibility
 
 uniform vec3 color_in;
 

@@ -154,7 +154,8 @@ namespace rhapsodies {
 		m_pScoreFeedbackTextureDraw(NULL),
 		m_pTextOverlay(NULL),
 		m_pDebugView(NULL),
-		m_pDepthHistogramHandler(NULL) {
+		m_pDepthHistogramHandler(NULL),
+		m_bFrameRecording(false) {
 
 		m_pSystem = new VistaSystem;
 		m_pShaderReg = new ShaderRegistry;
@@ -277,6 +278,8 @@ namespace rhapsodies {
 		// read camera parameters
 		m_camWidth  = oCameraSection.GetValueOrDefault("RESOLUTION_X", 320);
 		m_camHeight = oCameraSection.GetValueOrDefault("RESOLUTION_Y", 240);
+
+		m_bFrameRecording = oCameraSection.GetValueOrDefault("FRAME_RECORDING", false);
 	}
 
 	bool RHaPSODemo::InitTracker() {
@@ -561,7 +564,7 @@ namespace rhapsodies {
 	void RHaPSODemo::HandleEvent(VistaEvent *pEvent) {
 		if(pEvent->GetType() == VistaSystemEvent::GetTypeId()) {
 			if(pEvent->GetId() == VistaSystemEvent::VSE_POSTGRAPHICS) {
-				if(m_pHandTracker->IsTracking()) {
+				if(m_pHandTracker->IsTracking() && m_bFrameRecording) {
 					static int count = 0;
 				
 					std::stringstream sStream;
