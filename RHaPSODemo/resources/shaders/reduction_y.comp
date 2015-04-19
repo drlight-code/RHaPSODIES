@@ -7,6 +7,7 @@ shared uint work_memory[240*3];
 
 // output: per-column reduced values
 layout (binding = 0, r32ui) uniform restrict uimage2D imgResult;
+layout (binding = 4, r32ui) uniform restrict uimage2D imgFinalResult;
 
 // local thread id
 uint lid = gl_LocalInvocationID.x +
@@ -31,11 +32,12 @@ void main() {
 	}
 
 	// store shared memory to result texture
-	// if(gl_LocalInvocationID.y == 0) {
-	// 	imageStore(imgResult, posGlobal,
-	// 			   uvec4(work_memory[gl_LocalInvocationID.x], 0, 0, 0));
-	// }
+	if(gl_LocalInvocationID.y == 0) {
+		imageStore(imgFinalResult,
+				   ivec2(gl_WorkGroupID.x*3+gl_LocalInvocationID.x, gl_WorkGroupID.y),
+				   uvec4(work_memory[gl_LocalInvocationID.x], 0, 0, 0));
+	}
 	// for now all store the result value for better visibility!
-	imageStore(imgResult, posGlobal,
-			   uvec4(work_memory[gl_LocalInvocationID.x], 0, 0, 0));
+	// imageStore(imgResult, posGlobal,
+	// 		   uvec4(work_memory[gl_LocalInvocationID.x], 0, 0, 0));
 }

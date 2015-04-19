@@ -495,6 +495,22 @@ namespace rhapsodies {
 						GL_UNSIGNED_INT, data);
 		delete [] data;
 
+		glGenTextures(1, &m_idFinalResultTexture);
+
+		data = new unsigned int[3*8*8];
+		for(int i = 0; i < 3*8*8; ++i) {
+			data[i] = 0x0;
+		}		
+		
+		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 3*8, 8);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 3*8, 8, GL_RED_INTEGER,
+						GL_UNSIGNED_INT, data);
+		delete [] data;
+
 		ValidateComputeShader(m_idReductionXProgram);
 		ValidateComputeShader(m_idReductionYProgram);
 
@@ -709,8 +725,10 @@ namespace rhapsodies {
 			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 			
 			tStart = oTimer.GetMicroTime();
+
 			UpdateScores();
 			m_pSwarm->Evolve();
+
 			tSwarmUpdateAccumulated += oTimer.GetMicroTime() - tStart;
 
 			// keep the best match over all generations, not just the last one
@@ -760,9 +778,9 @@ namespace rhapsodies {
 		ReduceDepthMaps();
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
+		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
 
-		unsigned int result_data[8*240*8*3];
+		unsigned int result_data[8*8*3];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
 
 		float difference_result   = result_data[0] / float(0x7fff);
@@ -893,6 +911,9 @@ namespace rhapsodies {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
+		glBindImageTexture(4, m_idFinalResultTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+
 		// reduction in y direction
 		glUseProgram(m_idReductionYProgram);
 		glDispatchCompute(8, 8, 1);
@@ -905,6 +926,7 @@ namespace rhapsodies {
 		glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
 		glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
 		glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+		glBindImageTexture(4, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
 	}
 
 	float HandTracker::Penalty(HandModel& oModelLeft,
@@ -946,7 +968,6 @@ namespace rhapsodies {
 		}	
 
 		fPenaltySum = Vista::DegToRad(fPenaltySum);
-//		std::cout << fPenaltySum << std::endl;
 
 		return fPenaltySum;
 	}
@@ -955,14 +976,20 @@ namespace rhapsodies {
 		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
+		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
 
-		unsigned int result_data[8*240*8*3];
+		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
+		VistaType::microtime tS = oTimer.GetMicroTime();
+
+		unsigned int result_data[8*8*3];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
 
+		vstr::out() << "getteximage: " << oTimer.GetMicroTime()-tS << std::endl;
+		tS = oTimer.GetMicroTime();
+		
 		for(int row = 0; row < 8; ++row) {
 			for(int col = 0; col < 8; ++col) {
-				size_t result_index = 3*8*240*row + 3*col;
+				size_t result_index = 3*8*row + 3*col;
 				
 				float difference_result   = result_data[result_index + 0] / float(0x7fff);
 				float union_result        = result_data[result_index + 1];
@@ -977,6 +1004,8 @@ namespace rhapsodies {
 				vecParticles[8*row + col].UpdateIBest(fPenalty);
 			}
 		}
+		vstr::out() << "loop:        " << oTimer.GetMicroTime()-tS << std::endl;
+
 	}
 
 	void HandTracker::ProcessCameraFrames(

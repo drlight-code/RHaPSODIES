@@ -211,6 +211,7 @@ namespace rhapsodies {
 		GLuint m_idReductionYProgram;
 
 		GLuint m_idResultTexture;
+		GLuint m_idFinalResultTexture;
 		GLuint m_idDifferenceTexture;
 		GLuint m_idUnionTexture;
 		GLuint m_idIntersectionTexture;
