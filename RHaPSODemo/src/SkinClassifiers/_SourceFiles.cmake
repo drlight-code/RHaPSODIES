@@ -11,6 +11,7 @@ set( DirFiles
 	SkinClassifierRedMatter3.cpp
 	SkinClassifierRedMatter4.cpp
 	SkinClassifierRedMatter5.cpp
+	SkinClassifierDhawale.cpp
 	_SourceFiles.cmake
 )
 set( DirFiles_SourceGroup "${RelativeSourceGroup}" )

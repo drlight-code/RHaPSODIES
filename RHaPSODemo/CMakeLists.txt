@@ -13,7 +13,7 @@ vista_use_package( VistaCoreLibs "HEAD" REQUIRED FIND_DEPENDENCIES )
 #vista_use_package( Vfl2DDiagrams REQUIRED FIND_DEPENDENCIES )
 vista_use_package( OpenCV REQUIRED FIND_DEPENDENCIES )
 
-set(CMAKE_CXX_FLAGS "-Wall -std=c++0x")
+set(CMAKE_CXX_FLAGS "-Wall -std=c++11")
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     execute_process(

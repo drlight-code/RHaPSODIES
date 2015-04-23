@@ -55,6 +55,7 @@
 #include <SkinClassifiers/SkinClassifierRedMatter3.hpp>
 #include <SkinClassifiers/SkinClassifierRedMatter4.hpp>
 #include <SkinClassifiers/SkinClassifierRedMatter5.hpp>
+#include <SkinClassifiers/SkinClassifierDhawale.hpp>
 
 #include <HandModel.hpp>
 #include <HandModelRep.hpp>
@@ -586,6 +587,9 @@ namespace rhapsodies {
 		pSkinCl = new SkinClassifierRedMatter5;
 		m_lClassifiers.push_back(pSkinCl);
 
+		pSkinCl = new SkinClassifierDhawale;
+		m_lClassifiers.push_back(pSkinCl);
+		
 		m_itCurrentClassifier = m_lClassifiers.begin();
 
 		m_pDebugView->Write(IDebugView::SKIN_CLASSIFIER,
@@ -981,6 +985,8 @@ namespace rhapsodies {
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
 		VistaType::microtime tS = oTimer.GetMicroTime();
 
+		// glGetTexImage took ~4.3ms per iteration
+		// 3.84 PSO fps at 40 generations
 		unsigned int result_data[8*8*3];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
 
