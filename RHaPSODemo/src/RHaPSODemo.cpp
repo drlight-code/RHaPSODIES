@@ -151,7 +151,6 @@ namespace rhapsodies {
 		m_pDifferenceTextureDraw(NULL),
 		m_pUnionTextureDraw(NULL),
 		m_pIntersectionTextureDraw(NULL),
-		m_pScoreFeedbackTextureDraw(NULL),
 		m_pTextOverlay(NULL),
 		m_pDebugView(NULL),
 		m_pDepthHistogramHandler(NULL),
@@ -545,14 +544,6 @@ namespace rhapsodies {
 		//  	VistaSystemEvent::GetTypeId());
 
 		//m_pDepthHistogramHandler->Enable(false);
-
-		// // ImageDraw: score feedback texture
-		pTexDraw = new TexturedQuadGLDraw(
-			m_pHandTracker->GetScoreFeedbackTextureId(),
-			false, false, m_pShaderReg, "textured");
-
-		m_pUnionTextureDraw = new ImageDraw(m_pSceneTransform, pTexDraw, pSG);
-		m_pUnionTextureDraw->GetTransformNode()->SetTranslation(VistaVector3D(0, -2, 0));
 
 		return true;
 	}

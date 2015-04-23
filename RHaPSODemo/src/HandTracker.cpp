@@ -321,10 +321,6 @@ namespace rhapsodies {
 		return m_idIntersectionTexture;
 	}
 
-	GLuint HandTracker::GetScoreFeedbackTextureId() {
-		return m_idScoreFeedbackTexture;
-	}
-
 	void HandTracker::ReadConfig() {
 		VistaIniFileParser oIniParser(true);
 		oIniParser.ReadFile(RHaPSODemo::sRDIniFile);
@@ -463,16 +459,6 @@ namespace rhapsodies {
 		CheckFrameBufferStatus(m_idRenderedTextureFBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		glGenTextures(1, &m_idScoreFeedbackTexture);
-		
-		glBindTexture(GL_TEXTURE_2D, m_idScoreFeedbackTexture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 8, 8);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 8, 8, GL_RGB,
-						GL_FLOAT, this); // @todo remove this pointer, this is just for fun
-
 		return true;
 	}
 
@@ -559,6 +545,13 @@ namespace rhapsodies {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER,
 						GL_UNSIGNED_BYTE, data_char);
 		delete [] data_char;
+
+		// result pbo
+		glGenBuffers(1, &m_idResultPBO);
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, m_idResultPBO);
+		glBufferData(GL_PIXEL_PACK_BUFFER,
+					 8*8*3, 0, GL_DYNAMIC_READ);
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 		
 		return true;
 	}
@@ -673,146 +666,7 @@ namespace rhapsodies {
 		return true;
 	}
 
-	void HandTracker::PerformPSOTracking() {
-		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
-		VistaType::microtime tStart = 0.0;
-		VistaType::microtime tReductionAccumulated = 0.0;
-		VistaType::microtime tRenderingAccumulated = 0.0;
-		VistaType::microtime tSwarmUpdateAccumulated = 0.0;
-		
-		std::vector<float> vViewportData;
-		vViewportData.reserve(16*4);
-
-		// as in the original paper, we initialize the swarm uniformly
-		// around the best match from the previous frame.  we might
-		// consider letting the particle swarm just do its work and
-		// keep the positions and velocities in between frames.
-		m_pSwarm->InitializeAround(*m_pParticleBest);
-		m_pParticleBest->ResetPenalty();
-
-		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
-			tStart = oTimer.GetMicroTime();
-
-			// FBO rendering of tiled zbuffers
-			glClear(GL_DEPTH_BUFFER_BIT);
-
-			for(int row = 0 ; row < 8 ; row++) {
-				for(int col = 0 ; col < 8 ; col++) {
-					m_pHandRenderer->DrawHand(
-						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelLeft()),
-						m_pHandModelRep);
-					m_pHandRenderer->DrawHand(
-						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelRight()),
-						m_pHandModelRep);
-
-					vViewportData.push_back(col*320);
-					vViewportData.push_back(row*240);
-					vViewportData.push_back(320);
-					vViewportData.push_back(240);
-
-					// we need to draw after 16 drawn pairs of hands (viewports)
-					//if(row%2 == 1 && col == 7) {
-					// this does not work on AMD as of now.. :/
-					m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
-					vViewportData.clear();
-						//}
-				}
-			}
-			glFinish();
-
-			tRenderingAccumulated += oTimer.GetMicroTime() - tStart;
-			
-			tStart = oTimer.GetMicroTime();
-			ReduceDepthMaps();
-			tReductionAccumulated += oTimer.GetMicroTime() - tStart;
-
-			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-			
-			tStart = oTimer.GetMicroTime();
-
-			UpdateScores();
-			m_pSwarm->Evolve();
-
-			tSwarmUpdateAccumulated += oTimer.GetMicroTime() - tStart;
-
-			// keep the best match over all generations, not just the last one
-			Particle oParticleGenerationBest = m_pSwarm->GetBestMatch();
-			if(oParticleGenerationBest.GetIBestPenalty() <
-			   m_pParticleBest->GetIBestPenalty()) {
-				*m_pParticleBest = oParticleGenerationBest;
-			}
-		}
-
-		m_pDebugView->Write(IDebugView::RENDER_TIME,
-							ProfilerString("Render time: ",
-										   tRenderingAccumulated));
-		m_pDebugView->Write(IDebugView::REDUCTION_TIME,
-							ProfilerString("Reduction time: ",
-										   tReductionAccumulated));
-		m_pDebugView->Write(IDebugView::SWARMUPDATE_TIME,
-							ProfilerString("Swarm update time: ",
-										   tSwarmUpdateAccumulated));
-
-		m_pDebugView->Write(IDebugView::PENALTY,
-							ProfilerString("Penalty: ",
-										   m_pParticleBest->GetIBestPenalty()));
-				
-	}
-
-	void HandTracker::PerformStartPoseMatch() {
-		std::vector<float> vViewportData;
-
-		glClear(GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
-		
-		m_pHandRenderer->DrawHand(
-			&m_pParticleBest->GetHandModelLeft(),
-			m_pHandModelRep);
-		m_pHandRenderer->DrawHand(
-			&m_pParticleBest->GetHandModelRight(),
-			m_pHandModelRep);
-
-		vViewportData.push_back(0);
-		vViewportData.push_back(0);
-		vViewportData.push_back(320);
-		vViewportData.push_back(240);
-
-		m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
-
-		ReduceDepthMaps();
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
-
-		unsigned int result_data[8*8*3];
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
-
-		float difference_result   = result_data[0] / float(0x7fff);
-		float union_result        = result_data[1];
-		float intersection_result = result_data[2];
-
-		float fPenalty = Penalty(m_pParticleBest->GetHandModelLeft(),
-								 m_pParticleBest->GetHandModelRight(),
-								 difference_result,
-								 union_result,
-								 intersection_result);
-
-		float fRed = PenaltyNormalize(fPenalty);
-		float fGreen = 1 - fRed;
-		
-		glUseProgram(m_idColorFragProgram);
-		glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
-
-		if(m_oConfig.bAutoTracking && !IsTracking()) {
-			if(fPenalty < m_oConfig.fPenaltyStart)
-				StartTracking();
-		}
-
-		m_pDebugView->Write(IDebugView::PENALTY,
-							ProfilerString("Penalty: ", fPenalty));
-	}
-
-	void HandTracker::UploadCameraDepthMap() {
+		void HandTracker::UploadCameraDepthMap() {
  		// upload camera image to tiled texture
  		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
@@ -881,6 +735,155 @@ namespace rhapsodies {
 		glEnable(GL_DEPTH_TEST);
 	}
 	
+	void HandTracker::PerformStartPoseMatch() {
+		std::vector<float> vViewportData;
+
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		
+		m_pHandRenderer->DrawHand(
+			&m_pParticleBest->GetHandModelLeft(),
+			m_pHandModelRep);
+		m_pHandRenderer->DrawHand(
+			&m_pParticleBest->GetHandModelRight(),
+			m_pHandModelRep);
+
+		vViewportData.push_back(0);
+		vViewportData.push_back(0);
+		vViewportData.push_back(320);
+		vViewportData.push_back(240);
+
+		m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
+
+		ReduceDepthMaps();
+
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
+
+		unsigned int result_data[8*8*3];
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
+
+		float difference_result   = result_data[0] / float(0x7fff);
+		float union_result        = result_data[1];
+		float intersection_result = result_data[2];
+
+		float fPenalty = Penalty(m_pParticleBest->GetHandModelLeft(),
+								 m_pParticleBest->GetHandModelRight(),
+								 difference_result,
+								 union_result,
+								 intersection_result);
+
+		float fRed = PenaltyNormalize(fPenalty);
+		float fGreen = 1 - fRed;
+		
+		glUseProgram(m_idColorFragProgram);
+		glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
+
+		if(m_oConfig.bAutoTracking && !IsTracking()) {
+			if(fPenalty < m_oConfig.fPenaltyStart)
+				StartTracking();
+		}
+
+		m_pDebugView->Write(IDebugView::PENALTY,
+							ProfilerString("Penalty: ", fPenalty));
+	}
+
+	void HandTracker::PerformPSOTracking() {
+		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
+		VistaType::microtime tStart = 0.0;
+		VistaType::microtime tReductionAccumulated = 0.0;
+		VistaType::microtime tRenderingAccumulated = 0.0;
+		VistaType::microtime tSwarmUpdateAccumulated = 0.0;
+		
+		std::vector<float> vViewportData;
+		vViewportData.reserve(16*4);
+
+		// as in the original paper, we initialize the swarm uniformly
+		// around the best match from the previous frame.  we might
+		// consider letting the particle swarm just do its work and
+		// keep the positions and velocities in between frames.
+		m_pSwarm->InitializeAround(*m_pParticleBest);
+		m_pParticleBest->ResetPenalty();
+
+		// bind result PBO
+
+		vstr::out() << "id result pbo: " << m_idResultPBO << std::endl;
+		vstr::out() << "error: " << glGetError() << std::endl;
+		
+		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
+			tStart = oTimer.GetMicroTime();
+
+			// FBO rendering of tiled zbuffers
+			glClear(GL_DEPTH_BUFFER_BIT);
+
+			for(int row = 0 ; row < 8 ; row++) {
+				for(int col = 0 ; col < 8 ; col++) {
+					m_pHandRenderer->DrawHand(
+						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelLeft()),
+						m_pHandModelRep);
+					m_pHandRenderer->DrawHand(
+						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelRight()),
+						m_pHandModelRep);
+
+					vViewportData.push_back(col*320);
+					vViewportData.push_back(row*240);
+					vViewportData.push_back(320);
+					vViewportData.push_back(240);
+
+					// we need to draw after 16 drawn pairs of hands (viewports)
+					//if(row%2 == 1 && col == 7) {
+					// this does not work on AMD as of now.. :/
+					m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
+					vViewportData.clear();
+						//}
+				}
+			}
+			glFinish();
+
+			tRenderingAccumulated += oTimer.GetMicroTime() - tStart;
+			
+			tStart = oTimer.GetMicroTime();
+			ReduceDepthMaps();
+			tReductionAccumulated += oTimer.GetMicroTime() - tStart;
+
+			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+			
+			tStart = oTimer.GetMicroTime();
+
+			UpdateScores();
+			
+			vstr::err() << "error after update: " << glGetError() << std::endl;
+
+			m_pSwarm->Evolve();
+
+			tSwarmUpdateAccumulated += oTimer.GetMicroTime() - tStart;
+
+			// keep the best match over all generations, not just the last one
+			Particle oParticleGenerationBest = m_pSwarm->GetBestMatch();
+			if(oParticleGenerationBest.GetIBestPenalty() <
+			   m_pParticleBest->GetIBestPenalty()) {
+				*m_pParticleBest = oParticleGenerationBest;
+			}
+		}
+
+		m_pDebugView->Write(IDebugView::RENDER_TIME,
+							ProfilerString("Render time: ",
+										   tRenderingAccumulated));
+		m_pDebugView->Write(IDebugView::REDUCTION_TIME,
+							ProfilerString("Reduction time: ",
+										   tReductionAccumulated));
+		m_pDebugView->Write(IDebugView::SWARMUPDATE_TIME,
+							ProfilerString("Swarm update time: ",
+										   tSwarmUpdateAccumulated));
+
+		m_pDebugView->Write(IDebugView::PENALTY,
+							ProfilerString("Penalty: ",
+										   m_pParticleBest->GetIBestPenalty()));
+				
+	}
+
 	void HandTracker::ReduceDepthMaps() {
 		if(!GLEW_ARB_shader_image_load_store || !GLEW_ARB_compute_shader) {
 			return;
@@ -956,7 +959,7 @@ namespace rhapsodies {
 		float fPenalty = fLambda * fDepthTerm + fSkinTerm;
 
 		m_pDebugView->Write(IDebugView::DEPTH_TERM,
-							ProfilerString("Depth term: ", fDepthTerm));
+							ProfilerString("Depth term: ", fLambda*fDepthTerm));
 		m_pDebugView->Write(IDebugView::SKIN_TERM,
 							ProfilerString("Skin term: ", fSkinTerm));
 
@@ -975,6 +978,13 @@ namespace rhapsodies {
 
 		return fPenaltySum;
 	}
+
+	float HandTracker::PenaltyNormalize(float fPenalty) {
+		fPenalty -= m_oConfig.fPenaltyMin;
+		fPenalty /= (m_oConfig.fPenaltyMax - m_oConfig.fPenaltyMin);
+
+		return fPenalty;
+	}
 	
 	void HandTracker::UpdateScores() {
 		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
@@ -986,11 +996,23 @@ namespace rhapsodies {
 		VistaType::microtime tS = oTimer.GetMicroTime();
 
 		// glGetTexImage took ~4.3ms per iteration
-		// 3.84 PSO fps at 40 generations
-		unsigned int result_data[8*8*3];
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
+		// 3.73 PSO fps at 40 generations
+//		unsigned int result_data[8*8*3];
+//		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
 
-		vstr::out() << "getteximage: " << oTimer.GetMicroTime()-tS << std::endl;
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, m_idResultPBO);
+		m_pResultBuffer = (unsigned int*)(glMapBuffer(GL_PIXEL_PACK_BUFFER,
+													  GL_READ_ONLY));
+
+		if(!m_pResultBuffer) {
+			vstr::err() << "result buffer NULL after mapping: "
+						<< glGetError() << std::endl;
+		}
+
+		unsigned int *result_data = m_pResultBuffer;
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+
+//		vstr::out() << "getteximage: " << oTimer.GetMicroTime()-tS << std::endl;
 		tS = oTimer.GetMicroTime();
 		
 		for(int row = 0; row < 8; ++row) {
@@ -1010,7 +1032,7 @@ namespace rhapsodies {
 				vecParticles[8*row + col].UpdateIBest(fPenalty);
 			}
 		}
-		vstr::out() << "loop:        " << oTimer.GetMicroTime()-tS << std::endl;
+//		vstr::out() << "loop:        " << oTimer.GetMicroTime()-tS << std::endl;
 
 	}
 
@@ -1229,65 +1251,6 @@ namespace rhapsodies {
 		}
 	}
 	
-	void HandTracker::ToggleFrameRecording() {
-		m_bFrameRecording = !m_bFrameRecording;
-
-		if(m_bFrameRecording) {
-			m_pRecorder->StartRecording();
-		}
-		else {
-			m_pRecorder->StopRecording();
-		}
-		m_pDebugView->Write(IDebugView::FRAME_RECORDING,
-							ProfilerString("Frame Recording: ",
-										   m_bFrameRecording));
-	}
-
-	void HandTracker::ToggleFramePlayback() {
-		m_bFramePlayback = !m_bFramePlayback;
-
-		if(m_bFramePlayback) {
-			m_pPlayer->StartPlayback();
-		}
-		else {
-			m_pPlayer->StopPlayback();
-		}
-
-		m_pDebugView->Write(IDebugView::FRAME_PLAYBACK,
-							ProfilerString("Frame Playback: ",
-										   m_bFramePlayback));
-
-	}
-
-	void HandTracker::StartTracking() {
-		m_bTrackingEnabled = true;
-
-		m_pDebugView->Write(IDebugView::TRACKING,
-							ProfilerString("Tracking: ",
-										   m_bTrackingEnabled));
-	}
-	
-	void HandTracker::StopTracking() {
-		m_bTrackingEnabled = false;
-
-		SetToInitialPose(*m_pParticleBest);
-
-		m_pDebugView->Write(IDebugView::TRACKING,
-							ProfilerString("Tracking: ",
-										   m_bTrackingEnabled));
-	}
-
-	bool HandTracker::IsTracking() {
-		return m_bTrackingEnabled;
-	}
-
-	float HandTracker::PenaltyNormalize(float fPenalty) {
-		fPenalty -= m_oConfig.fPenaltyMin;
-		fPenalty /= (m_oConfig.fPenaltyMax - m_oConfig.fPenaltyMin);
-
-		return fPenalty;
-	}
-	
 	void HandTracker::DepthToRGB(const unsigned short *depth,
 								 unsigned char *rgb) {
 		for(int i = 0 ; i < 76800 ; i++) {
@@ -1337,5 +1300,57 @@ namespace rhapsodies {
 				rgb[3*i+2] = 200;
 			}
  		}
+	}
+
+	void HandTracker::StartTracking() {
+		m_bTrackingEnabled = true;
+
+		m_pDebugView->Write(IDebugView::TRACKING,
+							ProfilerString("Tracking: ",
+										   m_bTrackingEnabled));
+	}
+	
+	void HandTracker::StopTracking() {
+		m_bTrackingEnabled = false;
+
+		SetToInitialPose(*m_pParticleBest);
+
+		m_pDebugView->Write(IDebugView::TRACKING,
+							ProfilerString("Tracking: ",
+										   m_bTrackingEnabled));
+	}
+
+	bool HandTracker::IsTracking() {
+		return m_bTrackingEnabled;
+	}
+
+	void HandTracker::ToggleFrameRecording() {
+		m_bFrameRecording = !m_bFrameRecording;
+
+		if(m_bFrameRecording) {
+			m_pRecorder->StartRecording();
+		}
+		else {
+			m_pRecorder->StopRecording();
+		}
+		m_pDebugView->Write(IDebugView::FRAME_RECORDING,
+							ProfilerString("Frame Recording: ",
+										   m_bFrameRecording));
+	}
+
+	void HandTracker::ToggleFramePlayback() {
+		m_bFramePlayback = !m_bFramePlayback;
+
+		if(m_bFramePlayback) {
+			m_pPlayer->StartPlayback();
+		}
+		else {
+			m_pPlayer->StopPlayback();
+		}
+
+		m_pDebugView->Write(IDebugView::FRAME_PLAYBACK,
+							ProfilerString("Frame Playback: ",
+										   m_bFramePlayback));
+
 	}
 }

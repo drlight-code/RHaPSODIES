@@ -81,7 +81,6 @@ namespace rhapsodies {
 		GLuint GetDifferenceTextureId();
 		GLuint GetUnionTextureId();
 		GLuint GetIntersectionTextureId();
-		GLuint GetScoreFeedbackTextureId();
 		
 		bool Initialize();
 		
@@ -215,8 +214,10 @@ namespace rhapsodies {
 		GLuint m_idDifferenceTexture;
 		GLuint m_idUnionTexture;
 		GLuint m_idIntersectionTexture;
-		GLuint m_idScoreFeedbackTexture;
 
+		GLuint m_idResultPBO;
+		unsigned int *m_pResultBuffer;
+		
 		GLint  m_locColorUniform;
 		GLuint m_idColorFragProgram;
 
