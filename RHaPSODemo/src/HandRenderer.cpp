@@ -123,7 +123,7 @@ namespace rhapsodies {
 
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
-
+		glBindVertexArray(0);
 
 		// initialize sphere and cylinder SSBOs for transformation matrices
 		glGenBuffers(1, &m_idSSBOSphereTransforms);
@@ -139,7 +139,6 @@ namespace rhapsodies {
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
 	}
 	
 	void HandRenderer::DrawSphere(VistaTransformMatrix matModel) {
@@ -458,5 +457,13 @@ namespace rhapsodies {
 		// clear transform matrix vectors
 		m_vSphereTransforms.clear();
 		m_vCylinderTransforms.clear();
+	}
+
+	GLuint HandRenderer::GetSSBOSphereTransformsId() {
+		return m_idSSBOSphereTransforms;
+	}
+
+	GLuint HandRenderer::GetSSBOCylinderTransformsId() {
+		return m_idSSBOCylinderTransforms;
 	}
 }

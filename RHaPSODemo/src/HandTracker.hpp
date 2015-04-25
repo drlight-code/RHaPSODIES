@@ -134,6 +134,7 @@ namespace rhapsodies {
 
 		bool InitSkinClassifiers();
 		bool InitRendering();
+		bool InitGpuPSO();
 		bool InitReduction();
 		bool InitParticleSwarm();
 
@@ -153,6 +154,8 @@ namespace rhapsodies {
 		void FilterSkinAreas();
 		void UploadCameraDepthMap();
 		void SetupProjection();
+
+		void UploadParticleStateVectors();
 		
 		void ReduceDepthMaps();
 		float Penalty(HandModel& oModelLeft,
@@ -217,6 +220,8 @@ namespace rhapsodies {
 
 		GLuint m_idResultPBO;
 		unsigned int *m_pResultBuffer;
+
+		GLuint m_idSSBOParticleStates;
 		
 		GLint  m_locColorUniform;
 		GLuint m_idColorFragProgram;

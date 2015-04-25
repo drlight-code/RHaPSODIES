@@ -407,6 +407,7 @@ namespace rhapsodies {
 
 		if(HasGLComputeCapabilities()) {
 			PrintComputeShaderLimits();
+			InitGpuPSO();
 			InitReduction();
 		}
 		else {
@@ -458,6 +459,18 @@ namespace rhapsodies {
 
 		CheckFrameBufferStatus(m_idRenderedTextureFBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		return true;
+	}
+
+	bool HandTracker::InitGpuPSO() {
+		glGenBuffers(1, &m_idSSBOParticleStates);
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOParticleStates);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*54*4,
+					 NULL, GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 		return true;
 	}
@@ -812,10 +825,8 @@ namespace rhapsodies {
 		m_pParticleBest->ResetPenalty();
 
 		// upload particle state vectors into SSBO
+		UploadParticleStateVectors();
 
-		// generate huge transform vector in parallel 8*8
-		
-		
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			tStart = oTimer.GetMicroTime();
 
@@ -833,6 +844,8 @@ namespace rhapsodies {
 						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelRight()),
 						m_pHandModelRep);
 
+					// generate transform buffer in parallel 8*8
+
 					tRenderingTransform += oTimer.GetMicroTime() - tStartParticle;
 					tStartParticle = oTimer.GetMicroTime();
 					
@@ -846,6 +859,7 @@ namespace rhapsodies {
 					// we need to draw after 16 drawn pairs of hands (viewports)
 					//if(row%2 == 1 && col == 7) {
 					// this does not work on AMD as of now.. :/
+					//m_pHandRenderer->PerformDraw(false, row*8+col, 1, &vViewportData[0]);
 					m_pHandRenderer->PerformDraw(true, 0, 1, &vViewportData[0]);
 					vViewportData.clear();
 						//}
@@ -900,6 +914,26 @@ namespace rhapsodies {
 				
 	}
 
+	void HandTracker::UploadParticleStateVectors() {
+		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
+		float aState[54];
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOParticleStates);
+
+		for(int row = 0 ; row < 8 ; row++) {
+			for(int col = 0 ; col < 8 ; col++) {
+				size_t index = row*8+col;
+				
+				Particle::ParticleToStateArray(vecParticles[index], aState);
+				glBufferSubData(GL_SHADER_STORAGE_BUFFER,
+								index*54*4,	54*4,
+								aState);
+			}
+		}
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+	
 	void HandTracker::ReduceDepthMaps() {
 		if(!GLEW_ARB_shader_image_load_store || !GLEW_ARB_compute_shader) {
 			return;

@@ -28,9 +28,8 @@ namespace rhapsodies {
 					 float phi_cognitive,
 					 float phi_social);
 
-		// @todo cleaner solution or static methods, this is just not right!
-		void StateArrayToParticle(Particle &oParticle, float *aState);
-		void ParticleToStateArray(Particle &oParticle, float *aState);		
+		static void StateArrayToParticle(Particle &oParticle, float *aState);
+		static void ParticleToStateArray(Particle &oParticle, float *aState);		
 
     private:
 		HandModel m_oModelLeft;

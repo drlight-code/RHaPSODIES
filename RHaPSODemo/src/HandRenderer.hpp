@@ -25,6 +25,9 @@ namespace rhapsodies {
 						 unsigned int iBufferOffset,
 						 unsigned int iViewPortCount,
 						 float *pViewPortData);
+
+		GLuint GetSSBOSphereTransformsId();
+		GLuint GetSSBOCylinderTransformsId();
 		
 	private:
 		enum BufferObjectId {
