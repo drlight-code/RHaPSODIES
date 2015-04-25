@@ -550,7 +550,7 @@ namespace rhapsodies {
 		glGenBuffers(1, &m_idResultPBO);
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, m_idResultPBO);
 		glBufferData(GL_PIXEL_PACK_BUFFER,
-					 8*8*3, 0, GL_DYNAMIC_READ);
+					 8*8*3*4, 0, GL_DYNAMIC_READ);
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 		
 		return true;
@@ -807,11 +807,6 @@ namespace rhapsodies {
 		m_pSwarm->InitializeAround(*m_pParticleBest);
 		m_pParticleBest->ResetPenalty();
 
-		// bind result PBO
-
-		vstr::out() << "id result pbo: " << m_idResultPBO << std::endl;
-		vstr::out() << "error: " << glGetError() << std::endl;
-		
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			tStart = oTimer.GetMicroTime();
 
@@ -854,8 +849,6 @@ namespace rhapsodies {
 
 			UpdateScores();
 			
-			vstr::err() << "error after update: " << glGetError() << std::endl;
-
 			m_pSwarm->Evolve();
 
 			tSwarmUpdateAccumulated += oTimer.GetMicroTime() - tStart;
@@ -997,20 +990,13 @@ namespace rhapsodies {
 
 		// glGetTexImage took ~4.3ms per iteration
 		// 3.73 PSO fps at 40 generations
-//		unsigned int result_data[8*8*3];
-//		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
+		// 3.88 using PBO for pixel transfer :/
 
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, m_idResultPBO);
-		m_pResultBuffer = (unsigned int*)(glMapBuffer(GL_PIXEL_PACK_BUFFER,
-													  GL_READ_ONLY));
-
-		if(!m_pResultBuffer) {
-			vstr::err() << "result buffer NULL after mapping: "
-						<< glGetError() << std::endl;
-		}
-
-		unsigned int *result_data = m_pResultBuffer;
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+
+		unsigned int *result_data = (unsigned int*)(glMapBuffer(GL_PIXEL_PACK_BUFFER,
+																GL_READ_ONLY));
 
 //		vstr::out() << "getteximage: " << oTimer.GetMicroTime()-tS << std::endl;
 		tS = oTimer.GetMicroTime();
@@ -1032,6 +1018,7 @@ namespace rhapsodies {
 				vecParticles[8*row + col].UpdateIBest(fPenalty);
 			}
 		}
+		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 //		vstr::out() << "loop:        " << oTimer.GetMicroTime()-tS << std::endl;
 
 	}
