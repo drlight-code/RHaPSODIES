@@ -6,7 +6,7 @@ out int instance_id;
 const int ARRAY_SIZE = 704; // 16*2*22
 
 // The name of the block is used for finding the index location only
-layout (std140) uniform TransformBlock {
+layout (std140) buffer TransformBlock {
   mat4 model_transform[ARRAY_SIZE];
 };
 

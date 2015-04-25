@@ -1046,7 +1046,7 @@ namespace rhapsodies {
 		}
 
 		ImagePBOOpenGLDraw *pPBODraw;
-		// pPBODraw = m_mapPBO[COLOR];
+		// pPBODraw = m_mapPBO[COLOR];;
 		// if(pPBODraw) {
 		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
 		// }

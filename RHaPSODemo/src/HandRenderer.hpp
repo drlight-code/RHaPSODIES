@@ -58,6 +58,9 @@ namespace rhapsodies {
 		GLuint m_idUBOSphereTransforms;
 		GLuint m_idUBOCylinderTransforms;
 
+		GLuint m_idSSBOSphereTransforms;
+		GLuint m_idSSBOCylinderTransforms;
+
 		GLint m_idProgram;
 		GLint m_idTransformBlock;
 		
