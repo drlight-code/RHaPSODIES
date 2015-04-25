@@ -792,11 +792,15 @@ namespace rhapsodies {
 
 	void HandTracker::PerformPSOTracking() {
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
-		VistaType::microtime tStart = 0.0;
-		VistaType::microtime tReductionAccumulated = 0.0;
-		VistaType::microtime tRenderingAccumulated = 0.0;
+		VistaType::microtime tStart         = 0.0;
+		VistaType::microtime tReductionAccumulated   = 0.0;
+		VistaType::microtime tRenderingAccumulated   = 0.0;
 		VistaType::microtime tSwarmUpdateAccumulated = 0.0;
-		
+
+		VistaType::microtime tStartParticle      = 0.0;
+		VistaType::microtime tRenderingTransform = 0.0;
+		VistaType::microtime tRenderingPerform   = 0.0;
+
 		std::vector<float> vViewportData;
 		vViewportData.reserve(16*4);
 
@@ -807,6 +811,11 @@ namespace rhapsodies {
 		m_pSwarm->InitializeAround(*m_pParticleBest);
 		m_pParticleBest->ResetPenalty();
 
+		// upload particle state vectors into SSBO
+
+		// generate huge transform vector in parallel 8*8
+		
+		
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			tStart = oTimer.GetMicroTime();
 
@@ -815,6 +824,8 @@ namespace rhapsodies {
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
+					tStartParticle = oTimer.GetMicroTime();
+
 					m_pHandRenderer->DrawHand(
 						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelLeft()),
 						m_pHandModelRep);
@@ -822,17 +833,23 @@ namespace rhapsodies {
 						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelRight()),
 						m_pHandModelRep);
 
+					tRenderingTransform += oTimer.GetMicroTime() - tStartParticle;
+					tStartParticle = oTimer.GetMicroTime();
+					
 					vViewportData.push_back(col*320);
 					vViewportData.push_back(row*240);
 					vViewportData.push_back(320);
 					vViewportData.push_back(240);
 
+					// set offset into transform ssbo
+					
 					// we need to draw after 16 drawn pairs of hands (viewports)
 					//if(row%2 == 1 && col == 7) {
 					// this does not work on AMD as of now.. :/
 					m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
 					vViewportData.clear();
 						//}
+					tRenderingPerform += oTimer.GetMicroTime() - tStartParticle;
 				}
 			}
 			glFinish();
@@ -840,29 +857,35 @@ namespace rhapsodies {
 			tRenderingAccumulated += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
-			ReduceDepthMaps();
+			//ReduceDepthMaps();
 			tReductionAccumulated += oTimer.GetMicroTime() - tStart;
 
 			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 			
 			tStart = oTimer.GetMicroTime();
 
-			UpdateScores();
+			// UpdateScores();
 			
-			m_pSwarm->Evolve();
+			// m_pSwarm->Evolve();
 
 			tSwarmUpdateAccumulated += oTimer.GetMicroTime() - tStart;
 
 			// keep the best match over all generations, not just the last one
-			Particle oParticleGenerationBest = m_pSwarm->GetBestMatch();
-			if(oParticleGenerationBest.GetIBestPenalty() <
-			   m_pParticleBest->GetIBestPenalty()) {
-				*m_pParticleBest = oParticleGenerationBest;
-			}
+			// Particle oParticleGenerationBest = m_pSwarm->GetBestMatch();
+			// if(oParticleGenerationBest.GetIBestPenalty() <
+			//    m_pParticleBest->GetIBestPenalty()) {
+			// 	*m_pParticleBest = oParticleGenerationBest;
+			// }
 		}
 
+		m_pDebugView->Write(IDebugView::TRANSFORM_TIME,
+							ProfilerString("Render time transform: ",
+										   tRenderingTransform));
+		m_pDebugView->Write(IDebugView::PERFORM_TIME,
+							ProfilerString("Render time perform: ",
+										   tRenderingPerform));
 		m_pDebugView->Write(IDebugView::RENDER_TIME,
-							ProfilerString("Render time: ",
+							ProfilerString("Render time accumulated: ",
 										   tRenderingAccumulated));
 		m_pDebugView->Write(IDebugView::REDUCTION_TIME,
 							ProfilerString("Reduction time: ",

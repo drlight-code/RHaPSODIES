@@ -9,6 +9,8 @@ namespace rhapsodies {
 		enum Slot {
 			CAMERAFRAMES_TIME,
 			REDUCTION_TIME,			
+			TRANSFORM_TIME,			
+			PERFORM_TIME,			
 			RENDER_TIME,			
 			SWARMUPDATE_TIME,			
 			PSO_TIME,
