@@ -130,11 +130,11 @@ namespace rhapsodies {
 		glGenBuffers(1, &m_idSSBOCylinderTransforms);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOSphereTransforms);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, 16*2*22*sizeof(VistaTransformMatrix),
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*22*sizeof(VistaTransformMatrix),
 					 NULL, GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOCylinderTransforms);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, 16*2*15*sizeof(VistaTransformMatrix),
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*15*sizeof(VistaTransformMatrix),
 					 NULL, GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -377,8 +377,11 @@ namespace rhapsodies {
 			true);
 	}
 
-	void HandRenderer::PerformDraw(unsigned int iViewPortCount,
-								   float *pViewPortData) {
+	void HandRenderer::PerformDraw(
+		bool bTransformTransfer,
+		unsigned int iBufferOffset,
+		unsigned int iViewPortCount,
+		float *pViewPortData) {
 		glUseProgram(m_idProgram);
 		glBindVertexArray(m_idVertexArrayObject);
 
@@ -406,13 +409,16 @@ namespace rhapsodies {
 		size_t sizeSSBO = sizeof(VistaTransformMatrix)*m_vSphereTransforms.size();
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOSphereTransforms);
-		glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
-						 sizeSSBO,
-						 &m_vSphereTransforms[0]);
+		if(bTransformTransfer) {
+			glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
+							 sizeSSBO,
+							 &m_vSphereTransforms[0]);
+		}
 
 		glShaderStorageBlockBinding(m_idProgram, m_idTransformBlock, 0);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0,
-						 m_idSSBOSphereTransforms);
+		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
+						  m_idSSBOSphereTransforms,
+						  iBufferOffset*sizeSSBO, sizeSSBO);
 
 		// set uniform for viewport indexing
 		glUniform1i(m_locInstancesPerViewportUniform, iSpheresPerViewport);
@@ -425,13 +431,16 @@ namespace rhapsodies {
 		sizeSSBO = sizeof(VistaTransformMatrix)*m_vCylinderTransforms.size();
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOCylinderTransforms);
-		glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
-						 sizeSSBO,
-						 &m_vCylinderTransforms[0]);
+		if(bTransformTransfer) {
+			glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
+							 sizeSSBO,
+							 &m_vCylinderTransforms[0]);
+		}
 
 		glShaderStorageBlockBinding(m_idProgram, m_idTransformBlock, 0);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0,
-						 m_idSSBOCylinderTransforms);
+		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
+						  m_idSSBOCylinderTransforms,
+						  iBufferOffset*sizeSSBO, sizeSSBO);
 
 		// set uniform for viewport indexing
 		glUniform1i(m_locInstancesPerViewportUniform, iCylindersPerViewport);

@@ -21,7 +21,9 @@ namespace rhapsodies {
 		void DrawHand(HandModel *pModel,
 					  HandModelRep *pModelRep);
 
-		void PerformDraw(unsigned int iViewPortCount,
+		void PerformDraw(bool bTransformTransfer,
+						 unsigned int iBufferOffset,
+						 unsigned int iViewPortCount,
 						 float *pViewPortData);
 		
 	private:

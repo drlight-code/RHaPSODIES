@@ -27,7 +27,7 @@ namespace rhapsodies {
 	bool HandRenderDraw::Do() {
 		m_pRenderer->DrawHand(m_pModelLeft,  m_pModelRep);
 		m_pRenderer->DrawHand(m_pModelRight, m_pModelRep);
-		m_pRenderer->PerformDraw(0, NULL);
+		m_pRenderer->PerformDraw(true, 0, 0, NULL);
 		return true;
 	}
 

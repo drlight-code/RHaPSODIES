@@ -753,7 +753,7 @@ namespace rhapsodies {
 		vViewportData.push_back(320);
 		vViewportData.push_back(240);
 
-		m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
+		m_pHandRenderer->PerformDraw(true, 0, 1, &vViewportData[0]);
 
 		ReduceDepthMaps();
 
@@ -841,12 +841,12 @@ namespace rhapsodies {
 					vViewportData.push_back(320);
 					vViewportData.push_back(240);
 
-					// set offset into transform ssbo
+					// set offset into transform ssbo (pass index to performdraw?)
 					
 					// we need to draw after 16 drawn pairs of hands (viewports)
 					//if(row%2 == 1 && col == 7) {
 					// this does not work on AMD as of now.. :/
-					m_pHandRenderer->PerformDraw(1, &vViewportData[0]);
+					m_pHandRenderer->PerformDraw(true, 0, 1, &vViewportData[0]);
 					vViewportData.clear();
 						//}
 					tRenderingPerform += oTimer.GetMicroTime() - tStartParticle;
