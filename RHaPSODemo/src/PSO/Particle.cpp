@@ -8,7 +8,7 @@ namespace {
 	void GetBoundsByJointIndex(size_t index,
 							   float &fMin, float &fMax) {
 		
-		index %= 20; // see JointDOF definition in HandModel.hpp
+		index %= 27;
 
 		bool bThumb = (index / 4 == 0);
 		index %= 4;
@@ -112,7 +112,8 @@ namespace rhapsodies {
 								  phi_cognitive*r1*(aIBest[dim]-aCurrent[dim]) +
 								  phi_social*r2*(aGBest[dim]-aCurrent[dim]));
 
-			if(dim < 40) {
+			if((dim >= 0  && dim < 20) ||
+			   (dim >= 27 && dim < 47)) {
 				float fMinAngle = 0;
 				float fMaxAngle = 0;
 
@@ -135,20 +136,20 @@ namespace rhapsodies {
 	void Particle::ParticleToStateArray(Particle &oParticle, float *aState) {
 		for(size_t dof = 0; dof < 20; ++dof) {
 			aState[ 0+dof] = oParticle.m_oModelLeft.GetJointAngle(dof);
-			aState[20+dof] = oParticle.m_oModelRight.GetJointAngle(dof);
+			aState[27+dof] = oParticle.m_oModelRight.GetJointAngle(dof);
 		}
 
 		VistaVector3D vPosL = oParticle.m_oModelLeft.GetPosition();
 		VistaVector3D vPosR = oParticle.m_oModelRight.GetPosition();
 		for(size_t dim = 0; dim < 3; ++dim) {
-			aState[40+dim] = vPosL[dim];
+			aState[20+dim] = vPosL[dim];
 			aState[47+dim] = vPosR[dim];
 		}
 
 		VistaQuaternion qOriL = oParticle.m_oModelLeft.GetOrientation();
 		VistaQuaternion qOriR = oParticle.m_oModelRight.GetOrientation();
 		for(size_t dim = 0; dim < 4; ++dim) {
-			aState[43+dim] = qOriL[dim];
+			aState[23+dim] = qOriL[dim];
 			aState[50+dim] = qOriR[dim];
 		}
 	}
@@ -156,13 +157,13 @@ namespace rhapsodies {
 	void Particle::StateArrayToParticle(Particle &oParticle, float *aState) {
 		for(size_t dof = 0; dof < 20; ++dof) {
 			oParticle.m_oModelLeft.SetJointAngle (dof, aState[ 0+dof]);
-			oParticle.m_oModelRight.SetJointAngle(dof, aState[20+dof]);
+			oParticle.m_oModelRight.SetJointAngle(dof, aState[27+dof]);
 		}
 
 		VistaVector3D vPosL;
 		VistaVector3D vPosR;
 		for(size_t dim = 0; dim < 3; ++dim) {
-			vPosL[dim] = aState[40+dim];
+			vPosL[dim] = aState[20+dim];
 			vPosR[dim] = aState[47+dim];
 		}
 		oParticle.m_oModelLeft.SetPosition(vPosL);
@@ -171,11 +172,11 @@ namespace rhapsodies {
 		VistaQuaternion qOriL;
 		VistaQuaternion qOriR;
 		for(size_t dim = 0; dim < 4; ++dim) {
-			qOriL[dim] = aState[43+dim];
+			qOriL[dim] = aState[23+dim];
 			qOriR[dim] = aState[50+dim];
 		}
 		qOriL.Normalize();
-		qOriR.Normalize();	
+		qOriR.Normalize();
 		oParticle.m_oModelLeft.SetOrientation(qOriL);
 		oParticle.m_oModelRight.SetOrientation(qOriR);
 	}
