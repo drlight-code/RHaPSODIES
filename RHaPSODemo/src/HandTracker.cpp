@@ -596,7 +596,7 @@ namespace rhapsodies {
 		pSkinCl = new SkinClassifierDhawale;
 		m_lClassifiers.push_back(pSkinCl);
 		
-		m_itCurrentClassifier = m_lClassifiers.begin();
+		m_itCurrentClassifier = --m_lClassifiers.end();
 
 		m_pDebugView->Write(IDebugView::SKIN_CLASSIFIER,
 							ProfilerString("Skin classifier: ",
