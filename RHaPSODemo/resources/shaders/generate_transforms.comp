@@ -51,22 +51,22 @@ struct HandModel {
 	vec4 qOri; 
 };
 
-layout(std430, binding = 0) buffer HandModelBuffer
+layout(std140, binding = 0) buffer HandModelBuffer
 {
 	HandModel models[128];
 } HandModels;
 
-layout(std430, binding = 1) buffer HandGeometryBuffer
+layout(std140, binding = 1) buffer HandGeometryBuffer
 {
 	float extents[19];
 } HandGeometry;
 
-layout(std430, binding = 2) buffer SphereTransformBuffer
+layout(std140, binding = 2) buffer SphereTransformBuffer
 {
 	mat4 transforms[64*2*22];
 } SphereTransforms;
 
-layout(std430, binding = 3) buffer CylinderTransformBuffer
+layout(std140, binding = 3) buffer CylinderTransformBuffer
 {
 	mat4 transforms[64*2*15];
 } CylinderTransforms;
@@ -110,13 +110,13 @@ mat4 TranslationMatrix(vec3 vTrans) {
 vec4 AAAToQuaternion(vec4 aaa) {
 	vec4 quat;
 	
-	float fSin = sin( aaa.w / 2 );
+	float fSin = sin( aaa.w / 2.0f );
 
 	quat.x = fSin * aaa.x;
 	quat.y = fSin * aaa.y;
 	quat.z = fSin * aaa.z;
 
-	quat.w = cos( aaa.w / 2 );
+	quat.w = cos( aaa.w / 2.0f );
 
 	return quat;
 }
@@ -136,8 +136,7 @@ mat4 QuaternionToMatrix(vec4 quat) {
 
 	matrix[3][3] = 1.0f;
 
-	if( fNorm < Epsilon )
-	{		
+	if( fNorm < Epsilon ) {		
 		matrix[0][0] = 1.0f;
 		matrix[1][0] = 0.0f;
 		matrix[2][0] = 0.0f;
@@ -149,6 +148,7 @@ mat4 QuaternionToMatrix(vec4 quat) {
 		matrix[0][2] = 0.0f;
 		matrix[1][2] = 0.0f;
 		matrix[2][2] = 1.0f;
+		
 		return matrix;
 	}
 
@@ -179,7 +179,17 @@ mat4 AAAToTransformMatrix(vec4 aaa) {
 }
 
 mat4 ComposeMatrix(vec3 vTrans, vec4 qRot, vec3 vScale) {
-	return QuaternionToMatrix(qRot) * ScaleMatrix(vScale) * TranslationMatrix(vTrans);
+//	return QuaternionToMatrix(qRot) * ScaleMatrix(vScale) * TranslationMatrix(vTrans);
+
+	mat4 matrix = ScaleMatrix(vScale);
+	matrix = QuaternionToMatrix(qRot) * matrix;
+
+	matrix[3][0] = vTrans.x;
+	matrix[3][1] = vTrans.y;
+	matrix[3][2] = vTrans.z;
+	matrix[3][3] = 1;
+	
+	return matrix;
 }
 
 float GetExtent(int extent) {
@@ -191,6 +201,12 @@ float GetAngle(int dof) {
 }
 
 void DrawSphere(mat4 matModel) {
+	matModel = mat4(
+		0.05,0,0,0,
+		0,0.05,0,0,
+		0,0,0.05,0,
+		0.17,0.02,0.5,1);
+	
 	SphereTransforms.transforms[
 		2*22*gl_WorkGroupID.x +
 		22*gl_WorkGroupID.y +
@@ -341,12 +357,6 @@ void DrawHand() {
 		 GetExtent(L_MC))/4.0f/1000.0f;
 
 	fPalmHeight -= fPalmBottomRadius * 2.0f;
-
-	// for now we will upload the same model transform matrix in
-	// advance to calling glDrawArrays. If this turns out to be
-	// slow, we might upload all the model matrices at once at the
-	// beginning and use DrawArraysInstanced to look up the
-	// specific matrix in the vertex shader by the instance id.
 
 	matOrigin = ComposeMatrix(
 		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].vPos,

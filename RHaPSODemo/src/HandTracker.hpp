@@ -155,7 +155,7 @@ namespace rhapsodies {
 		void UploadCameraDepthMap();
 		void SetupProjection();
 
-		void UploadParticleStateVectors();
+		void UploadHandModels();
 		void GenerateTransforms();
 
 		void ReduceDepthMaps();

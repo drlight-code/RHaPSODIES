@@ -468,7 +468,7 @@ namespace rhapsodies {
 	bool HandTracker::InitGpuPSO() {
 		glGenBuffers(1, &m_idSSBOHandModels);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*54*4,
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*27*4,
 					 NULL, GL_DYNAMIC_DRAW);
 
 		glGenBuffers(1, &m_idSSBOHandGeometry);
@@ -829,17 +829,15 @@ namespace rhapsodies {
 		m_pSwarm->InitializeAround(*m_pParticleBest);
 		m_pParticleBest->ResetPenalty();
 
-		// upload particle state vectors into SSBO
-		UploadParticleStateVectors();
+		// upload hand models into SSBO
+		UploadHandModels();
 
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			tStart = oTimer.GetMicroTime();
 
 			// generate transform buffer in parallel 8*8*2
 			GenerateTransforms();
-
 			tRenderingTransform += oTimer.GetMicroTime() - tStart;
-
 
 			// FBO rendering of tiled zbuffers
 			glClear(GL_DEPTH_BUFFER_BIT);
@@ -864,13 +862,11 @@ namespace rhapsodies {
 					vViewportData.push_back(320);
 					vViewportData.push_back(240);
 
-					// set offset into transform ssbo (pass index to performdraw?)
-					
 					// we need to draw after 16 drawn pairs of hands (viewports)
 					//if(row%2 == 1 && col == 7) {
 					// this does not work on AMD as of now.. :/
-					//m_pHandRenderer->PerformDraw(false, row*8+col, 1, &vViewportData[0]);
-					m_pHandRenderer->PerformDraw(true, 0, 1, &vViewportData[0]);
+					m_pHandRenderer->PerformDraw(false, row*8+col, 1, &vViewportData[0]);
+					//m_pHandRenderer->PerformDraw(true, 0, 1, &vViewportData[0]);
 					vViewportData.clear();
 						//}
 					tRenderingPerform += oTimer.GetMicroTime() - tStartViewport;
@@ -924,12 +920,11 @@ namespace rhapsodies {
 				
 	}
 
-	void HandTracker::UploadParticleStateVectors() {
+	void HandTracker::UploadHandModels() {
 		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
 		float aState[54];
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
-
 		for(int row = 0 ; row < 8 ; row++) {
 			for(int col = 0 ; col < 8 ; col++) {
 				size_t index = row*8+col;
@@ -940,49 +935,22 @@ namespace rhapsodies {
 								aState);
 			}
 		}
-
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
 	}
 
 	void HandTracker::GenerateTransforms() {
-		GLuint block_index = 0;
-
-		block_index = glGetProgramResourceIndex(
-			m_idGenerateTransformsProgram,
-			GL_SHADER_STORAGE_BLOCK,
-			"HandModelBuffer");
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
-		glShaderStorageBlockBinding(m_idGenerateTransformsProgram,
-									block_index, 0);
-
-		block_index = glGetProgramResourceIndex(
-			m_idGenerateTransformsProgram,
-			GL_SHADER_STORAGE_BLOCK,
-			"HandGeometryBuffer");
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandGeometry);
-		glShaderStorageBlockBinding(m_idGenerateTransformsProgram,
-									block_index, 1);		
-
-		block_index = glGetProgramResourceIndex(
-			m_idGenerateTransformsProgram,
-			GL_SHADER_STORAGE_BLOCK,
-			"SphereTransformBuffer");
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
-					 m_pHandRenderer->GetSSBOSphereTransformsId());
-		glShaderStorageBlockBinding(m_idGenerateTransformsProgram,
-									block_index, 2);
-
-		block_index = glGetProgramResourceIndex(
-			m_idGenerateTransformsProgram,
-			GL_SHADER_STORAGE_BLOCK,
-			"CylinderTransformBuffer");
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
-					 m_pHandRenderer->GetSSBOCylinderTransformsId());
-		glShaderStorageBlockBinding(m_idGenerateTransformsProgram,
-									block_index, 3);
-
 		glUseProgram(m_idGenerateTransformsProgram);
-		glDispatchCompute(64, 2, 1);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0,
+						 m_idSSBOHandModels);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1,
+						 m_idSSBOHandGeometry);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2,
+						 m_pHandRenderer->GetSSBOSphereTransformsId());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3,
+						 m_pHandRenderer->GetSSBOCylinderTransformsId());
+
+   		glDispatchCompute(64, 2, 1);
 
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
