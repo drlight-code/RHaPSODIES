@@ -423,8 +423,9 @@ namespace rhapsodies {
 		glUniform1i(m_locInstancesPerViewportUniform, iSpheresPerViewport);
 		
 		// draw all shperes
-		glDrawArraysInstanced(GL_TRIANGLES, 0, m_szSphereData,
-							  m_vSphereTransforms.size());
+		glDrawArraysInstanced(GL_TRIANGLES,
+							  0, m_szSphereData,
+							  22*2);
 		
 		// bind and fill cylinder transform SSBO
 		sizeSSBO = sizeof(VistaTransformMatrix)*m_vCylinderTransforms.size();
@@ -445,8 +446,9 @@ namespace rhapsodies {
 		glUniform1i(m_locInstancesPerViewportUniform, iCylindersPerViewport);
 
 		// draw all cylinders
-		glDrawArraysInstanced(GL_TRIANGLES, m_szSphereData, m_szCylinderData,
-							  m_vCylinderTransforms.size());
+		glDrawArraysInstanced(GL_TRIANGLES,
+							  m_szSphereData, m_szCylinderData,
+							  15*2);
 
 		
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

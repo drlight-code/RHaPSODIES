@@ -242,6 +242,8 @@ namespace rhapsodies {
 		m_pDepthBufferUInt = new unsigned int[320*240];
 		m_pUVMapBuffer     = new float[320*240*2];
 
+		m_idGenerateTransformsProgram = pReg->GetProgram("generate_transforms");
+
 		m_idReductionXProgram = pReg->GetProgram("reduction_x");
 		m_idReductionYProgram = pReg->GetProgram("reduction_y");
 
@@ -464,11 +466,15 @@ namespace rhapsodies {
 	}
 
 	bool HandTracker::InitGpuPSO() {
-		glGenBuffers(1, &m_idSSBOParticleStates);
-
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOParticleStates);
+		glGenBuffers(1, &m_idSSBOHandModels);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*54*4,
 					 NULL, GL_DYNAMIC_DRAW);
+
+		glGenBuffers(1, &m_idSSBOHandGeometry);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandGeometry);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 19*4,
+					 &m_pHandGeometry->GetExtents()[0], GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
@@ -805,14 +811,13 @@ namespace rhapsodies {
 
 	void HandTracker::PerformPSOTracking() {
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
-		VistaType::microtime tStart         = 0.0;
-		VistaType::microtime tReductionAccumulated   = 0.0;
-		VistaType::microtime tRenderingAccumulated   = 0.0;
-		VistaType::microtime tSwarmUpdateAccumulated = 0.0;
-
-		VistaType::microtime tStartParticle      = 0.0;
+		VistaType::microtime tStart = 0.0;
+		VistaType::microtime tStartViewport = 0.0;
+		VistaType::microtime tReduction = 0.0;
+		VistaType::microtime tRendering = 0.0;
 		VistaType::microtime tRenderingTransform = 0.0;
-		VistaType::microtime tRenderingPerform   = 0.0;
+		VistaType::microtime tRenderingPerform = 0.0;
+		VistaType::microtime tSwarmUpdate = 0.0;
 
 		std::vector<float> vViewportData;
 		vViewportData.reserve(16*4);
@@ -830,24 +835,29 @@ namespace rhapsodies {
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			tStart = oTimer.GetMicroTime();
 
+			// generate transform buffer in parallel 8*8*2
+			GenerateTransforms();
+
+			tRenderingTransform += oTimer.GetMicroTime() - tStart;
+
+
 			// FBO rendering of tiled zbuffers
 			glClear(GL_DEPTH_BUFFER_BIT);
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-					tStartParticle = oTimer.GetMicroTime();
+					//tStartViewport = oTimer.GetMicroTime();
 
-					m_pHandRenderer->DrawHand(
-						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelLeft()),
-						m_pHandGeometry);
-					m_pHandRenderer->DrawHand(
-						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelRight()),
-						m_pHandGeometry);
+					// m_pHandRenderer->DrawHand(
+					// 	&(m_pSwarm->GetParticles()[row*8+col].GetHandModelLeft()),
+					// 	m_pHandGeometry);
+					// m_pHandRenderer->DrawHand(
+					// 	&(m_pSwarm->GetParticles()[row*8+col].GetHandModelRight()),
+					// 	m_pHandGeometry);
 
-					// generate transform buffer in parallel 8*8
-
-					tRenderingTransform += oTimer.GetMicroTime() - tStartParticle;
-					tStartParticle = oTimer.GetMicroTime();
+					//tRenderingTransform += oTimer.GetMicroTime() - tStartViewport;
+					
+					tStartViewport = oTimer.GetMicroTime();
 					
 					vViewportData.push_back(col*320);
 					vViewportData.push_back(row*240);
@@ -863,16 +873,16 @@ namespace rhapsodies {
 					m_pHandRenderer->PerformDraw(true, 0, 1, &vViewportData[0]);
 					vViewportData.clear();
 						//}
-					tRenderingPerform += oTimer.GetMicroTime() - tStartParticle;
+					tRenderingPerform += oTimer.GetMicroTime() - tStartViewport;
 				}
 			}
 			glFinish();
 
-			tRenderingAccumulated += oTimer.GetMicroTime() - tStart;
+			tRendering += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
 			//ReduceDepthMaps();
-			tReductionAccumulated += oTimer.GetMicroTime() - tStart;
+			tReduction += oTimer.GetMicroTime() - tStart;
 
 			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 			
@@ -882,14 +892,14 @@ namespace rhapsodies {
 			
 			// m_pSwarm->Evolve();
 
-			tSwarmUpdateAccumulated += oTimer.GetMicroTime() - tStart;
+			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 
 			// keep the best match over all generations, not just the last one
-			// Particle oParticleGenerationBest = m_pSwarm->GetBestMatch();
-			// if(oParticleGenerationBest.GetIBestPenalty() <
-			//    m_pParticleBest->GetIBestPenalty()) {
-			// 	*m_pParticleBest = oParticleGenerationBest;
-			// }
+			Particle oParticleGenerationBest = m_pSwarm->GetBestMatch();
+			if(oParticleGenerationBest.GetIBestPenalty() <
+			   m_pParticleBest->GetIBestPenalty()) {
+				*m_pParticleBest = oParticleGenerationBest;
+			}
 		}
 
 		m_pDebugView->Write(IDebugView::TRANSFORM_TIME,
@@ -899,14 +909,14 @@ namespace rhapsodies {
 							ProfilerString("Render time perform: ",
 										   tRenderingPerform));
 		m_pDebugView->Write(IDebugView::RENDER_TIME,
-							ProfilerString("Render time accumulated: ",
-										   tRenderingAccumulated));
+							ProfilerString("Render time: ",
+										   tRendering));
 		m_pDebugView->Write(IDebugView::REDUCTION_TIME,
 							ProfilerString("Reduction time: ",
-										   tReductionAccumulated));
+										   tReduction));
 		m_pDebugView->Write(IDebugView::SWARMUPDATE_TIME,
 							ProfilerString("Swarm update time: ",
-										   tSwarmUpdateAccumulated));
+										   tSwarmUpdate));
 
 		m_pDebugView->Write(IDebugView::PENALTY,
 							ProfilerString("Penalty: ",
@@ -918,7 +928,7 @@ namespace rhapsodies {
 		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
 		float aState[54];
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOParticleStates);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
 
 		for(int row = 0 ; row < 8 ; row++) {
 			for(int col = 0 ; col < 8 ; col++) {
@@ -932,6 +942,49 @@ namespace rhapsodies {
 		}
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+	void HandTracker::GenerateTransforms() {
+		GLuint block_index = 0;
+
+		block_index = glGetProgramResourceIndex(
+			m_idGenerateTransformsProgram,
+			GL_SHADER_STORAGE_BLOCK,
+			"HandModelBuffer");
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
+		glShaderStorageBlockBinding(m_idGenerateTransformsProgram,
+									block_index, 0);
+
+		block_index = glGetProgramResourceIndex(
+			m_idGenerateTransformsProgram,
+			GL_SHADER_STORAGE_BLOCK,
+			"HandGeometryBuffer");
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandGeometry);
+		glShaderStorageBlockBinding(m_idGenerateTransformsProgram,
+									block_index, 1);		
+
+		block_index = glGetProgramResourceIndex(
+			m_idGenerateTransformsProgram,
+			GL_SHADER_STORAGE_BLOCK,
+			"SphereTransformBuffer");
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
+					 m_pHandRenderer->GetSSBOSphereTransformsId());
+		glShaderStorageBlockBinding(m_idGenerateTransformsProgram,
+									block_index, 2);
+
+		block_index = glGetProgramResourceIndex(
+			m_idGenerateTransformsProgram,
+			GL_SHADER_STORAGE_BLOCK,
+			"CylinderTransformBuffer");
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
+					 m_pHandRenderer->GetSSBOCylinderTransformsId());
+		glShaderStorageBlockBinding(m_idGenerateTransformsProgram,
+									block_index, 3);
+
+		glUseProgram(m_idGenerateTransformsProgram);
+		glDispatchCompute(64, 2, 1);
+
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 	
 	void HandTracker::ReduceDepthMaps() {

@@ -351,14 +351,15 @@ namespace rhapsodies {
 		m_pShaderReg->RegisterShader(
 			"reduction_x", GL_COMPUTE_SHADER,
 			"resources/shaders/reduction_x.comp");
-
 		m_pShaderReg->RegisterShader(
 			"reduction_y", GL_COMPUTE_SHADER,
 			"resources/shaders/reduction_y.comp");
-
 		m_pShaderReg->RegisterShader(
 			"difference_score", GL_COMPUTE_SHADER,
 			"resources/shaders/difference_score.comp");
+		m_pShaderReg->RegisterShader(
+			"generate_transforms", GL_COMPUTE_SHADER,
+			"resources/shaders/generate_transforms.comp");
 
 		std::vector<std::string> vec_shaders;
 		vec_shaders.push_back("vert_vpos_uv");		
@@ -417,6 +418,10 @@ namespace rhapsodies {
 		vec_shaders.clear();
 		vec_shaders.push_back("reduction_y");
 		m_pShaderReg->RegisterProgram("reduction_y", vec_shaders);
+
+		vec_shaders.clear();
+		vec_shaders.push_back("generate_transforms");
+		m_pShaderReg->RegisterProgram("generate_transforms", vec_shaders);
 
 		return true;
 	}

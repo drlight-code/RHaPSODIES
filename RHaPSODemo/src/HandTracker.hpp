@@ -156,7 +156,8 @@ namespace rhapsodies {
 		void SetupProjection();
 
 		void UploadParticleStateVectors();
-		
+		void GenerateTransforms();
+
 		void ReduceDepthMaps();
 		float Penalty(HandModel& oModelLeft,
 					  HandModel& oModelRight,
@@ -209,6 +210,7 @@ namespace rhapsodies {
 		GLuint m_idCameraTexturePBO;
 		void *m_pCameraTexturePBO;
 
+		GLuint m_idGenerateTransformsProgram;
 		GLuint m_idReductionXProgram;
 		GLuint m_idReductionYProgram;
 
@@ -221,7 +223,8 @@ namespace rhapsodies {
 		GLuint m_idResultPBO;
 		unsigned int *m_pResultBuffer;
 
-		GLuint m_idSSBOParticleStates;
+		GLuint m_idSSBOHandModels;
+		GLuint m_idSSBOHandGeometry;
 		
 		GLint  m_locColorUniform;
 		GLuint m_idColorFragProgram;

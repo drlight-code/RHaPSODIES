@@ -34,6 +34,10 @@ namespace rhapsodies {
 		return m_vecExtents[eExt];
 	}
 
+	std::vector<float> &HandGeometry::GetExtents() {
+		return m_vecExtents;
+	}
+	
 	void HandGeometry::SetExtent(size_t eExt,
 								 float fLengthMm) {
 		m_vecExtents[eExt] = fLengthMm;

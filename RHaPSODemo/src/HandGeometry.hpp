@@ -56,6 +56,7 @@ namespace rhapsodies {
 	   * @return Length in millimeters.
 	   */
 	  float GetExtent(size_t eExt);
+	  std::vector<float> &GetExtents();
 
 	  /**
 	   * Set a skeleton bone extent in millimeters.

@@ -1,0 +1,424 @@
+#version 430
+
+// geometry extents
+#define T_MC  0
+#define T_PP  1
+#define T_DP  2
+#define I_MC  3
+#define I_PP  4
+#define I_MP  5
+#define I_DP  6
+#define M_MC  7
+#define M_PP  8
+#define M_MP  9
+#define M_DP 10
+#define R_MC 11
+#define R_PP 12
+#define R_MP 13
+#define R_DP 14
+#define L_MC 15
+#define L_PP 16
+#define L_MP 17
+#define L_DP 18
+
+// joint dofs
+#define T_CMC_F  0
+#define T_CMC_A  1
+#define T_MCP    2
+#define T_IP     3
+#define I_MCP_F  4
+#define I_MCP_A  5
+#define I_PIP    6
+#define I_DIP    7
+#define M_MCP_F  8
+#define M_MCP_A  9
+#define M_PIP   10
+#define M_DIP   11
+#define R_MCP_F 12
+#define R_MCP_A 13
+#define R_PIP   14
+#define R_DIP   15
+#define L_MCP_F 16
+#define L_MCP_A 17
+#define L_PIP   18
+#define L_DI    19
+
+layout (local_size_x = 1, local_size_y = 1) in;
+
+struct HandModel {
+	float afJoints[20];
+	vec3 vPos;
+	vec4 qOri; 
+};
+
+layout(std430, binding = 0) buffer HandModelBuffer
+{
+	HandModel models[128];
+} HandModels;
+
+layout(std430, binding = 1) buffer HandGeometryBuffer
+{
+	float extents[19];
+} HandGeometry;
+
+layout(std430, binding = 2) buffer SphereTransformBuffer
+{
+	mat4 transforms[64*2*22];
+} SphereTransforms;
+
+layout(std430, binding = 3) buffer CylinderTransformBuffer
+{
+	mat4 transforms[64*2*15];
+} CylinderTransforms;
+
+const float Pi = 3.14159265358979323846f;
+const float Epsilon = 1.19209e-07;
+
+shared int iSphereCount;
+shared int iCylinderCount;
+shared float fLRFactor;
+
+void DrawHand();
+
+void main() {
+	iSphereCount   = 0;
+	iCylinderCount = 0;
+	fLRFactor = (gl_WorkGroupID.y == 0) ? -1.0f : 1.0f;
+
+	DrawHand();
+}
+
+float DegToRad(float fDegrees)
+{
+	return fDegrees / 180.0f * Pi;
+}
+
+mat4 ScaleMatrix(vec3 vScale) {
+	return mat4(vScale.x, 0, 0, 0,
+				0, vScale.y, 0, 0,
+				0, 0, vScale.z, 0,
+				0, 0, 0, 1.0f);
+}
+
+mat4 TranslationMatrix(vec3 vTrans) {
+	return mat4(1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
+				vTrans.x, vTrans.y, vTrans.z, 1);
+}
+
+vec4 AAAToQuaternion(vec4 aaa) {
+	vec4 quat;
+	
+	float fSin = sin( aaa.w / 2 );
+
+	quat.x = fSin * aaa.x;
+	quat.y = fSin * aaa.y;
+	quat.z = fSin * aaa.z;
+
+	quat.w = cos( aaa.w / 2 );
+
+	return quat;
+}
+
+mat4 QuaternionToMatrix(vec4 quat) {
+	mat4 matrix;
+	
+	float fNorm = dot(quat, quat);
+
+	matrix[3][0] = 0.0f;
+	matrix[3][1] = 0.0f;
+	matrix[3][2] = 0.0f;
+
+	matrix[0][3] = 0.0f;
+	matrix[1][3] = 0.0f;
+	matrix[2][3] = 0.0f;
+
+	matrix[3][3] = 1.0f;
+
+	if( fNorm < Epsilon )
+	{		
+		matrix[0][0] = 1.0f;
+		matrix[1][0] = 0.0f;
+		matrix[2][0] = 0.0f;
+		
+		matrix[0][1] = 0.0f;
+		matrix[1][1] = 1.0f;
+		matrix[2][1] = 0.0f;
+		
+		matrix[0][2] = 0.0f;
+		matrix[1][2] = 0.0f;
+		matrix[2][2] = 1.0f;
+		return matrix;
+	}
+
+	float s = 2.0f / fNorm;
+
+	float xs = quat.x * s,   ys = quat.y * s,   zs = quat.z * s;
+	float wx = quat.w * xs,  wy = quat.w * ys,  wz = quat.w * zs;
+	float xx = quat.x * xs,  xy = quat.x * ys,  xz = quat.x * zs;
+	float yy = quat.y * ys,  yz = quat.y * zs,  zz = quat.z * zs;
+
+	matrix[0][0] = 1.0f - (yy + zz);  
+	matrix[1][0] = xy - wz;          
+	matrix[2][0] = xz + wy;         
+	
+	matrix[0][1] = xy + wz;          
+	matrix[1][1] = 1.0f - (xx + zz);  
+	matrix[2][1] = yz - wx;          
+
+	matrix[0][2] = xz - wy;	        
+	matrix[1][2] = yz + wx;          
+	matrix[2][2] = 1.0f - (xx + yy);
+
+	return matrix;
+}
+
+mat4 AAAToTransformMatrix(vec4 aaa) {
+	return QuaternionToMatrix(AAAToQuaternion(aaa));
+}
+
+mat4 ComposeMatrix(vec3 vTrans, vec4 qRot, vec3 vScale) {
+	return QuaternionToMatrix(qRot) * ScaleMatrix(vScale) * TranslationMatrix(vTrans);
+}
+
+float GetExtent(int extent) {
+	return HandGeometry.extents[extent];
+}
+
+float GetAngle(int dof) {
+	return HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].afJoints[dof];
+}
+
+void DrawSphere(mat4 matModel) {
+	SphereTransforms.transforms[
+		2*22*gl_WorkGroupID.x +
+		22*gl_WorkGroupID.y +
+		iSphereCount++] = matModel;
+}
+
+void DrawCylinder(mat4 matModel) {
+	CylinderTransforms.transforms[
+		2*15*gl_WorkGroupID.x +
+		15*gl_WorkGroupID.y +
+		iCylinderCount++] = matModel;
+}
+
+void DrawFinger(mat4 matOrigin,
+				float fFingerDiameter,
+				float fAng1F, float fAng1A, float fLen1,
+				float fAng2, float fLen2,
+				float fAng3, float fLen3,
+				bool bThumb) {
+		
+	// rotate locally around X for flexion/extension
+	vec4 aaaX = vec4(vec3(1,0,0), 0.0);
+	// rotate locally around Z for adduction/abduction
+	vec4 aaaZ = vec4(vec3(0,0,1), 0.0);
+		
+	mat4 matModel;     // final applied transform
+	mat4 matTransform; // auxiliary for accumulative transforms
+
+	// reused sphere scale
+	mat4 matSphereScale = ScaleMatrix(vec3(fFingerDiameter));
+		
+	// start at first joint
+	matModel = matOrigin * matSphereScale;
+	if(!bThumb) {
+		DrawSphere(matModel);
+	}
+
+	// first joint flexion rotation
+	aaaX.w = DegToRad(-fAng1F);
+	matTransform = AAAToTransformMatrix(aaaX);
+	matOrigin *= matTransform;
+
+	// first joint abduction rotation
+	aaaZ.w = DegToRad(fAng1A*fLRFactor);
+	matTransform = AAAToTransformMatrix(aaaZ);
+	matOrigin *= matTransform;
+		
+	// move to center of first segment
+	matTransform = TranslationMatrix(vec3(0, fLen1/1000.0f/2.0f, 0));
+	matOrigin *= matTransform;
+
+	// set scale and draw first segment
+	if(bThumb) {
+		matTransform =
+			ScaleMatrix(vec3(fFingerDiameter*1.5f,
+							 fLen1/1000.0f*1.5f,
+							 fFingerDiameter*1.5f));
+		matModel = matOrigin * matTransform;
+
+		DrawSphere(matModel);
+	}
+	else {
+		matTransform =
+			ScaleMatrix(vec3(fFingerDiameter,
+							 fLen1/1000.0f,
+							 fFingerDiameter));
+		matModel = matOrigin * matTransform;
+
+		DrawCylinder(matModel);
+	}
+
+	// move to second joint
+	matTransform = TranslationMatrix(
+		vec3(0, fLen1/1000.0f/2.0f, 0));
+	matOrigin *= matTransform;
+
+	// draw scaled sphere
+	matModel = matOrigin * matSphereScale;
+	DrawSphere(matModel);
+
+	// second joint flexion rotation
+	aaaX.w = DegToRad(-fAng2);
+	matTransform = AAAToTransformMatrix(aaaX);
+	matOrigin *= matTransform;
+
+	// move to center of second segment
+	matTransform = TranslationMatrix(
+		vec3(0, fLen2/1000.0f/2.0f, 0));
+	matOrigin *= matTransform;
+
+	// set scale and draw second segment cylinder
+	matTransform = ScaleMatrix(
+		vec3(fFingerDiameter, fLen2/1000.0f, fFingerDiameter));
+	matModel = matOrigin * matTransform;
+	DrawCylinder(matModel);
+
+	// move to third joint
+	matTransform = TranslationMatrix(
+		vec3(0, fLen2/1000.0f/2.0f, 0));
+	matOrigin *= matTransform;
+
+	// draw scaled sphere
+	matModel = matOrigin * matSphereScale;
+	DrawSphere(matModel);
+
+	// third joint flexion rotation
+	aaaX.w = DegToRad(-fAng3);
+	matTransform = AAAToTransformMatrix(aaaX);
+	matOrigin *= matTransform;
+		
+	// move to center of third segment
+	matTransform = TranslationMatrix(
+		vec3(0, fLen3/1000.0f/2.0f, 0));
+	matOrigin *= matTransform;
+
+	// set scale and draw third segment cylinder
+	matTransform = ScaleMatrix(
+		vec3(fFingerDiameter, fLen3/1000.0f, fFingerDiameter));
+	matModel = matOrigin * matTransform;
+	DrawCylinder(matModel);
+
+	// move to tip
+	matTransform = TranslationMatrix(
+		vec3(0, fLen3/1000.0f/2.0f, 0));
+	matOrigin *= matTransform;
+
+	// draw scaled sphere
+	matModel = matOrigin * matSphereScale;
+	DrawSphere(matModel);
+}
+
+void DrawHand() {
+	mat4 matModel;
+	mat4 matTransform;
+	mat4 matOrigin;
+
+	// these go to extra vis parameter class for model pso yo
+	float fPalmWidth        = 0.09;
+	float fPalmBottomRadius = 0.01;
+	float fPalmDiameter     = fPalmWidth/2.0f;
+	float fFingerDiameter   = fPalmWidth/4.0f;
+
+	// for now we average the metacarpal lengths for palm height
+	float fPalmHeight =
+		(GetExtent(I_MC) +
+		 GetExtent(M_MC) +
+		 GetExtent(R_MC) +
+		 GetExtent(L_MC))/4.0f/1000.0f;
+
+	fPalmHeight -= fPalmBottomRadius * 2.0f;
+
+	// for now we will upload the same model transform matrix in
+	// advance to calling glDrawArrays. If this turns out to be
+	// slow, we might upload all the model matrices at once at the
+	// beginning and use DrawArraysInstanced to look up the
+	// specific matrix in the vertex shader by the instance id.
+
+	matOrigin = ComposeMatrix(
+		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].vPos,
+		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].qOri,
+		vec3(1,1,1));
+		
+	// bottom palm cap
+	matTransform = ComposeMatrix(
+		vec3(0, fPalmBottomRadius, 0),
+		vec4(0, 0, 0, 1),
+		vec3(fPalmWidth,
+			 fPalmBottomRadius*2.0f,
+			 fPalmDiameter));
+	matModel = matOrigin * matTransform;		
+	DrawSphere(matModel);
+
+	// top palm cap
+	matTransform = ComposeMatrix(
+		vec3(0, fPalmBottomRadius+fPalmHeight, 0),
+		vec4(0, 0, 0, 1),
+		vec3(fPalmWidth,
+			 fPalmBottomRadius*2.0f,
+			 fPalmDiameter));
+	matModel = matOrigin * matTransform;		
+	DrawSphere(matModel);
+		
+	// palm cylinder
+	matTransform = ComposeMatrix(
+		vec3(0, fPalmBottomRadius + fPalmHeight/2.0f, 0),
+		vec4(0, 0, 0, 1),
+		vec3(fPalmWidth, fPalmHeight, fPalmDiameter));
+	matModel = matOrigin * matTransform;		
+
+	DrawCylinder(matModel);
+
+	// draw the fingers
+	for(int finger = 0 ; finger < 4 ; finger++) {
+		matTransform = TranslationMatrix(
+				vec3((-fPalmWidth/2.0f + fPalmWidth/8.0f +
+					  finger*fPalmWidth/4.0f) * fLRFactor,
+					 fPalmBottomRadius + fPalmHeight,
+					 0));
+
+			
+		DrawFinger(
+			matOrigin * matTransform,
+			fFingerDiameter,
+			GetAngle(4*(1+finger)),
+			GetAngle(4*(1+finger)+1),
+			GetExtent(3+4*finger+1),
+			GetAngle(4*(1+finger)+2),
+			GetExtent(3+4*finger+2),
+			GetAngle(4*(1+finger)+3),
+			GetExtent(3+4*finger+3),
+			false);
+	}
+
+	// draw the thumb
+	matTransform = TranslationMatrix(
+		vec3((-fPalmWidth/2.0f + fPalmWidth/2.0f)*fLRFactor,
+			 fPalmBottomRadius,
+			 0));
+			
+	DrawFinger(
+		matOrigin * matTransform,
+		fFingerDiameter*1.2,
+		GetAngle(T_CMC_F),
+		GetAngle(T_CMC_A),
+		GetExtent(T_MC),
+		GetAngle(T_MCP),
+		GetExtent(T_PP),
+		GetAngle(T_IP),
+		GetExtent(T_DP),
+		true);
+}
