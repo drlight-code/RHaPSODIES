@@ -11,7 +11,7 @@
 namespace rhapsodies {
 	class ShaderRegistry;
 	class HandModel;
-	class HandModelRep;
+	class HandGeometry;
 	
 	class HandRenderer {
 	public:
@@ -19,7 +19,7 @@ namespace rhapsodies {
 					 bool bDrawNormals = false,
 					 int iSegments = 4);
 		void DrawHand(HandModel *pModel,
-					  HandModelRep *pModelRep);
+					  HandGeometry *pModelGeometry);
 
 		void PerformDraw(bool bTransformTransfer,
 						 unsigned int iBufferOffset,

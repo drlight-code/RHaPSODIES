@@ -38,7 +38,7 @@ namespace rhapsodies {
 	class SkinClassifier;
 
 	class HandModel;
-	class HandModelRep;
+	class HandGeometry;
 	class HandRenderer;
 
 	class IDebugView;
@@ -70,7 +70,7 @@ namespace rhapsodies {
 		
 		HandModel *GetHandModelLeft();
 		HandModel *GetHandModelRight();
-		HandModelRep *GetHandModelRep();
+		HandGeometry *GetHandGeometry();
 
 		void SetHandRenderer(HandRenderer *pRenderer);
 
@@ -186,7 +186,7 @@ namespace rhapsodies {
 
 		ShaderRegistry *m_pShaderReg;
 		
-		HandModelRep *m_pHandModelRep;
+		HandGeometry *m_pHandGeometry;
 		HandRenderer *m_pHandRenderer;
 
 		unsigned char  *m_pColorBuffer;

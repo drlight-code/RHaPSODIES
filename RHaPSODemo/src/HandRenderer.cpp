@@ -11,7 +11,7 @@
 #include <ShaderRegistry.hpp>
 
 #include <HandModel.hpp>
-#include <HandModelRep.hpp>
+#include <HandGeometry.hpp>
 
 #include "HandRenderer.hpp"
 
@@ -269,7 +269,7 @@ namespace rhapsodies {
 	}
 
 	void HandRenderer::DrawHand(HandModel *pModel,
-								HandModelRep *pModelRep) {
+								HandGeometry *pGeometry) {
 
 		VistaTransformMatrix matModel;
 		VistaTransformMatrix matTransform;
@@ -283,10 +283,10 @@ namespace rhapsodies {
 
 		// for now we average the metacarpal lengths for palm height
 		float fPalmHeight =
-			(pModelRep->GetExtent(HandModelRep::I_MC) +
-			 pModelRep->GetExtent(HandModelRep::M_MC) +
-			 pModelRep->GetExtent(HandModelRep::R_MC) +
-			 pModelRep->GetExtent(HandModelRep::L_MC))/4.0f/1000.0f;
+			(pGeometry->GetExtent(HandGeometry::I_MC) +
+			 pGeometry->GetExtent(HandGeometry::M_MC) +
+			 pGeometry->GetExtent(HandGeometry::R_MC) +
+			 pGeometry->GetExtent(HandGeometry::L_MC))/4.0f/1000.0f;
 
 
 		// @todo get hand geometry straight, palm is too small...
@@ -349,11 +349,11 @@ namespace rhapsodies {
 				fFingerDiameter, fLRFactor,
 				pModel->GetJointAngle(4*(1+finger)),
 				pModel->GetJointAngle(4*(1+finger)+1),
-				pModelRep->GetExtent(3+4*finger+1),
+				pGeometry->GetExtent(3+4*finger+1),
 				pModel->GetJointAngle(4*(1+finger)+2),
-				pModelRep->GetExtent(3+4*finger+2),
+				pGeometry->GetExtent(3+4*finger+2),
 				pModel->GetJointAngle(4*(1+finger)+3),
-				pModelRep->GetExtent(3+4*finger+3),
+				pGeometry->GetExtent(3+4*finger+3),
 				false);
 		}
 
@@ -368,11 +368,11 @@ namespace rhapsodies {
 			fFingerDiameter*1.2, fLRFactor,
 			pModel->GetJointAngle(HandModel::T_CMC_F),
 			pModel->GetJointAngle(HandModel::T_CMC_A),
-			pModelRep->GetExtent(HandModelRep::T_MC),
+			pGeometry->GetExtent(HandGeometry::T_MC),
 			pModel->GetJointAngle(HandModel::T_MCP),
-			pModelRep->GetExtent(HandModelRep::T_PP),
+			pGeometry->GetExtent(HandGeometry::T_PP),
 			pModel->GetJointAngle(HandModel::T_IP),
-			pModelRep->GetExtent(HandModelRep::T_DP),
+			pGeometry->GetExtent(HandGeometry::T_DP),
 			true);
 	}
 

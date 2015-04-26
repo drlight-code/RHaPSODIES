@@ -435,7 +435,7 @@ namespace rhapsodies {
 		m_pHandRenderDraw = new HandRenderDraw(
 			m_pHandTracker->GetHandModelLeft(),
 			m_pHandTracker->GetHandModelRight(),
-			m_pHandTracker->GetHandModelRep(),
+			m_pHandTracker->GetHandGeometry(),
 			m_pShaderReg);
 		
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);

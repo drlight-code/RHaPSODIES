@@ -12,7 +12,7 @@ namespace rhapsodies {
 	public:
 		HandRenderDraw(HandModel *pModelLeft,
 					   HandModel *pModelRight,
-					   HandModelRep *pModelRep,
+					   HandGeometry *pModelRep,
 					   ShaderRegistry *pReg);
 
 		~HandRenderDraw();
@@ -24,8 +24,7 @@ namespace rhapsodies {
 		HandModel *m_pModelLeft;
 		HandModel *m_pModelRight;
 
-		HandModelRep *m_pModelRep;
-
+		HandGeometry *m_pGeometry;
 		HandRenderer *m_pRenderer;
 
 		GLint  m_locColorUniform;

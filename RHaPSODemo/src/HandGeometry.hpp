@@ -1,13 +1,13 @@
-#ifndef _RHAPSODIES_HANDMODELREP
-#define _RHAPSODIES_HANDMODELREP
+#ifndef _RHAPSODIES_HANDGEOMETRY
+#define _RHAPSODIES_HANDGEOMETRY
 
 #include <cstddef>
 #include <vector>
 
 namespace rhapsodies {
-  class HandModelRep {
+  class HandGeometry {
     public:
-	  HandModelRep();
+	  HandGeometry();
 	  
 	  /**
 	   * Extent indices are named as: FINGER_BONE
@@ -71,4 +71,4 @@ namespace rhapsodies {
   };
 }
 
-#endif // _RHAPSODIES_HANDMODELREP
+#endif // _RHAPSODIES_HANDGEOMETRY

@@ -1,8 +1,8 @@
-#include "HandModelRep.hpp"
+#include "HandGeometry.hpp"
 
 namespace rhapsodies {
 	
-	HandModelRep::HandModelRep() :
+	HandGeometry::HandGeometry() :
 		m_vecExtents(19) {
 
 		m_vecExtents[T_MC] = 51;
@@ -30,11 +30,11 @@ namespace rhapsodies {
 		m_vecExtents[L_DP] = 23;
 	}
 
-	float HandModelRep::GetExtent(size_t eExt) {
+	float HandGeometry::GetExtent(size_t eExt) {
 		return m_vecExtents[eExt];
 	}
 
-	void HandModelRep::SetExtent(size_t eExt,
+	void HandGeometry::SetExtent(size_t eExt,
 								 float fLengthMm) {
 		m_vecExtents[eExt] = fLengthMm;
 	}

@@ -58,7 +58,7 @@
 #include <SkinClassifiers/SkinClassifierDhawale.hpp>
 
 #include <HandModel.hpp>
-#include <HandModelRep.hpp>
+#include <HandGeometry.hpp>
 #include <HandRenderer.hpp>
 #include <DebugView.hpp>
 
@@ -226,7 +226,7 @@ namespace rhapsodies {
 		m_bShowImage(false),
 		m_bShowSkinMap(false),
 		m_pShaderReg(pReg),
-		m_pHandModelRep(new HandModelRep),
+		m_pHandGeometry(new HandGeometry),
 		m_pHandRenderer(new HandRenderer(pReg)),
 		m_pDebugView(NULL),
 		m_bFrameRecording(false),
@@ -269,7 +269,7 @@ namespace rhapsodies {
 		delete m_pRecorder;
 		
 		delete m_pHandRenderer;
-		delete m_pHandModelRep;
+		delete m_pHandGeometry;
 	}
 	
 	void HandTracker::SetViewPBODraw(ViewType type,
@@ -289,8 +289,8 @@ namespace rhapsodies {
 		return &m_pParticleBest->GetHandModelRight();
 	}
 
-	HandModelRep *HandTracker::GetHandModelRep() {
-		return m_pHandModelRep;
+	HandGeometry *HandTracker::GetHandGeometry() {
+		return m_pHandGeometry;
 	}
 
 	void HandTracker::SetHandRenderer(HandRenderer *pRenderer) {
@@ -756,10 +756,10 @@ namespace rhapsodies {
 		
 		m_pHandRenderer->DrawHand(
 			&m_pParticleBest->GetHandModelLeft(),
-			m_pHandModelRep);
+			m_pHandGeometry);
 		m_pHandRenderer->DrawHand(
 			&m_pParticleBest->GetHandModelRight(),
-			m_pHandModelRep);
+			m_pHandGeometry);
 
 		vViewportData.push_back(0);
 		vViewportData.push_back(0);
@@ -839,10 +839,10 @@ namespace rhapsodies {
 
 					m_pHandRenderer->DrawHand(
 						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelLeft()),
-						m_pHandModelRep);
+						m_pHandGeometry);
 					m_pHandRenderer->DrawHand(
 						&(m_pSwarm->GetParticles()[row*8+col].GetHandModelRight()),
-						m_pHandModelRep);
+						m_pHandGeometry);
 
 					// generate transform buffer in parallel 8*8
 
