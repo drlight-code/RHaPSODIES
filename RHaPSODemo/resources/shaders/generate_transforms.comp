@@ -51,22 +51,22 @@ struct HandModel {
 	vec4 qOri; 
 };
 
-layout(std140, binding = 0) buffer HandModelBuffer
+layout(std430, binding = 0) buffer HandModelBuffer
 {
 	HandModel models[128];
 } HandModels;
 
-layout(std140, binding = 1) buffer HandGeometryBuffer
+layout(std430, binding = 1) buffer HandGeometryBuffer
 {
 	float extents[19];
 } HandGeometry;
 
-layout(std140, binding = 2) buffer SphereTransformBuffer
+layout(std430, binding = 2) buffer SphereTransformBuffer
 {
 	mat4 transforms[64*2*22];
 } SphereTransforms;
 
-layout(std140, binding = 3) buffer CylinderTransformBuffer
+layout(std430, binding = 3) buffer CylinderTransformBuffer
 {
 	mat4 transforms[64*2*15];
 } CylinderTransforms;
@@ -201,12 +201,6 @@ float GetAngle(int dof) {
 }
 
 void DrawSphere(mat4 matModel) {
-	matModel = mat4(
-		0.05,0,0,0,
-		0,0.05,0,0,
-		0,0,0.05,0,
-		0.17,0.02,0.5,1);
-	
 	SphereTransforms.transforms[
 		2*22*gl_WorkGroupID.x +
 		22*gl_WorkGroupID.y +
