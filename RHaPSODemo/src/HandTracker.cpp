@@ -833,22 +833,8 @@ namespace rhapsodies {
 		// upload hand models into SSBO
 		UploadHandModels();
 
-		unsigned char* pNullData = new unsigned char[64*2*22*16*4];
-		memset(pNullData, 0, 64*2*22*16*4);
-			
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			tStart = oTimer.GetMicroTime();
-
-			// for now clear the ssbos before generating transforms...
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER,
-						 m_pHandRenderer->GetSSBOSphereTransformsId());
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-							64*2*22*16*4, pNullData);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER,
-						 m_pHandRenderer->GetSSBOCylinderTransformsId());
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-							64*2*16*16*4, pNullData);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 			// generate transform buffer in parallel 8*8*2
 			GenerateTransforms();
@@ -900,7 +886,6 @@ namespace rhapsodies {
 				*m_pParticleBest = oParticleGenerationBest;
 			}
 		}
-		delete [] pNullData;			
 
 		m_pDebugView->Write(IDebugView::TRANSFORM_TIME,
 							ProfilerString("Render time transform: ",
