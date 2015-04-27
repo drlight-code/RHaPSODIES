@@ -381,6 +381,7 @@ namespace rhapsodies {
 		unsigned int iBufferOffset,
 		unsigned int iViewPortCount,
 		float *pViewPortData) {
+
 		glUseProgram(m_idProgram);
 		glBindVertexArray(m_idVertexArrayObject);
 
@@ -410,14 +411,13 @@ namespace rhapsodies {
 		// bind and fill sphere transform SSBO
 		size_t sizeSSBO = sizeof(VistaTransformMatrix)*iSpheresPerViewport;
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOSphereTransforms);
 		if(bTransformTransfer) {
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOSphereTransforms);
 			glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
 							 sizeSSBO,
 							 &m_vSphereTransforms[0]);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		}
-
-		glShaderStorageBlockBinding(m_idProgram, m_idTransformBlock, 0);
 		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
 						  m_idSSBOSphereTransforms,
 						  iBufferOffset*sizeSSBO, sizeSSBO);
@@ -429,18 +429,17 @@ namespace rhapsodies {
 		glDrawArraysInstanced(GL_TRIANGLES,
 							  0, m_szSphereData,
 							  iSpheresPerViewport);
-		
+
 		// bind and fill cylinder transform SSBO
 		sizeSSBO = sizeof(VistaTransformMatrix)*iCylindersPerViewport;
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOCylinderTransforms);
 		if(bTransformTransfer) {
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOCylinderTransforms);
 			glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
 							 sizeSSBO,
 							 &m_vCylinderTransforms[0]);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		}
-
-		glShaderStorageBlockBinding(m_idProgram, m_idTransformBlock, 0);
 		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
 						  m_idSSBOCylinderTransforms,
 						  iBufferOffset*sizeSSBO, sizeSSBO);
@@ -453,7 +452,6 @@ namespace rhapsodies {
 							  m_szSphereData, m_szCylinderData,
 							  iCylindersPerViewport);
 
-		
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
