@@ -468,12 +468,13 @@ namespace rhapsodies {
 	bool HandTracker::InitGpuPSO() {
 		glGenBuffers(1, &m_idSSBOHandModels);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*27*4,
+		// 32 instead of 27 for padding
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*32*sizeof(float),
 					 NULL, GL_DYNAMIC_DRAW);
 
 		glGenBuffers(1, &m_idSSBOHandGeometry);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandGeometry);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, 19*4,
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 19*sizeof(float),
 					 &m_pHandGeometry->GetExtents()[0], GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -832,8 +833,22 @@ namespace rhapsodies {
 		// upload hand models into SSBO
 		UploadHandModels();
 
+		unsigned char* pNullData = new unsigned char[64*2*22*16*4];
+		memset(pNullData, 0, 64*2*22*16*4);
+			
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			tStart = oTimer.GetMicroTime();
+
+			// for now clear the ssbos before generating transforms...
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER,
+						 m_pHandRenderer->GetSSBOSphereTransformsId());
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+							64*2*22*16*4, pNullData);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER,
+						 m_pHandRenderer->GetSSBOCylinderTransformsId());
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+							64*2*16*16*4, pNullData);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 			// generate transform buffer in parallel 8*8*2
 			GenerateTransforms();
@@ -897,6 +912,7 @@ namespace rhapsodies {
 				*m_pParticleBest = oParticleGenerationBest;
 			}
 		}
+		delete [] pNullData;			
 
 		m_pDebugView->Write(IDebugView::TRANSFORM_TIME,
 							ProfilerString("Render time transform: ",
@@ -922,17 +938,19 @@ namespace rhapsodies {
 
 	void HandTracker::UploadHandModels() {
 		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
-		float aState[54];
+		float aState[64];
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
 		for(int row = 0 ; row < 8 ; row++) {
 			for(int col = 0 ; col < 8 ; col++) {
 				size_t index = row*8+col;
 				
-				Particle::ParticleToStateArray(vecParticles[index], aState);
-				glBufferSubData(GL_SHADER_STORAGE_BUFFER,
-								index*54*4,	54*4,
-								aState);
+					Particle::ParticleToStateArray(vecParticles[index], aState);
+
+					// 64 instead of 54 for alignment
+					glBufferSubData(GL_SHADER_STORAGE_BUFFER,
+									index*64*4,	64*4,
+									aState);
 			}
 		}
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

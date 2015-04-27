@@ -389,7 +389,7 @@ namespace rhapsodies {
 		glBindBuffer(GL_ARRAY_BUFFER, m_idVertexBufferObject);
 
 		size_t iSpheresPerViewport   = 22*2;
-		size_t iCylindersPerViewport = 15*2;
+		size_t iCylindersPerViewport = 16*2;
 
 		size_t iSpheresPerViewportUniform   = iSpheresPerViewport;
 		size_t iCylindersPerViewportUniform = iCylindersPerViewport;

@@ -92,6 +92,8 @@ namespace rhapsodies {
 	   */
 	  void Randomize();
 
+	  static void HandModelToStateArray(HandModel &model, float *aState);
+	  static void StateArrayToHandModel(HandModel &model, float *aState);
 	  
   private:
 	  VistaVector3D   m_vPosition;

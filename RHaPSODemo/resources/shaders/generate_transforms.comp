@@ -46,9 +46,11 @@
 layout (local_size_x = 1, local_size_y = 1) in;
 
 struct HandModel {
-	float afJoints[20];
-	vec3 vPos;
-	vec4 qOri; 
+	// float afJoints[20];
+	// vec4 vPos;
+	// vec4 qOri;
+	// vec4 vPad;
+	float modelstate[32];
 };
 
 layout(std430, binding = 0) buffer HandModelBuffer
@@ -68,7 +70,7 @@ layout(std430, binding = 2) buffer SphereTransformBuffer
 
 layout(std430, binding = 3) buffer CylinderTransformBuffer
 {
-	mat4 transforms[64*2*15];
+	mat4 transforms[64*2*16];
 } CylinderTransforms;
 
 const float Pi = 3.14159265358979323846f;
@@ -179,8 +181,6 @@ mat4 AAAToTransformMatrix(vec4 aaa) {
 }
 
 mat4 ComposeMatrix(vec3 vTrans, vec4 qRot, vec3 vScale) {
-//	return QuaternionToMatrix(qRot) * ScaleMatrix(vScale) * TranslationMatrix(vTrans);
-
 	mat4 matrix = ScaleMatrix(vScale);
 	matrix = QuaternionToMatrix(qRot) * matrix;
 
@@ -197,7 +197,24 @@ float GetExtent(int extent) {
 }
 
 float GetAngle(int dof) {
-	return HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].afJoints[dof];
+	return HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[dof];
+}
+
+vec3 GetPosition() {
+	return vec3(
+		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[20],
+		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[21],
+		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[22]
+		);
+}
+
+vec4 GetOrientation() {
+	return vec4(
+		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[24],
+		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[25],
+		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[26],
+		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[27]
+		);
 }
 
 void DrawSphere(mat4 matModel) {
@@ -209,8 +226,8 @@ void DrawSphere(mat4 matModel) {
 
 void DrawCylinder(mat4 matModel) {
 	CylinderTransforms.transforms[
-		2*15*gl_WorkGroupID.x +
-		15*gl_WorkGroupID.y +
+		2*16*gl_WorkGroupID.x +
+		16*gl_WorkGroupID.y +
 		iCylinderCount++] = matModel;
 }
 
@@ -353,8 +370,8 @@ void DrawHand() {
 	fPalmHeight -= fPalmBottomRadius * 2.0f;
 
 	matOrigin = ComposeMatrix(
-		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].vPos,
-		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].qOri,
+		GetPosition(),
+		GetOrientation(),
 		vec3(1,1,1));
 		
 	// bottom palm cap
@@ -425,4 +442,7 @@ void DrawHand() {
 		GetAngle(T_IP),
 		GetExtent(T_DP),
 		true);
+
+	// pad the buffer to 16 transforms
+	DrawCylinder(mat4(0));
 }
