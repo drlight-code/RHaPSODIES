@@ -941,12 +941,22 @@ namespace rhapsodies {
 
 	void HandTracker::GenerateTransforms() {
 		glUseProgram(m_idGenerateTransformsProgram);
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0,
 						 m_idSSBOHandModels);
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandGeometry);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1,
 						 m_idSSBOHandGeometry);
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
+					m_pHandRenderer->GetSSBOSphereTransformsId());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2,
 						 m_pHandRenderer->GetSSBOSphereTransformsId());
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
+					 m_pHandRenderer->GetSSBOCylinderTransformsId());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3,
 						 m_pHandRenderer->GetSSBOCylinderTransformsId());
 
