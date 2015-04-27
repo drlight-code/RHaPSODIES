@@ -859,17 +859,6 @@ namespace rhapsodies {
 
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-					//tStartViewport = oTimer.GetMicroTime();
-
-					// m_pHandRenderer->DrawHand(
-					// 	&(m_pSwarm->GetParticles()[row*8+col].GetHandModelLeft()),
-					// 	m_pHandGeometry);
-					// m_pHandRenderer->DrawHand(
-					// 	&(m_pSwarm->GetParticles()[row*8+col].GetHandModelRight()),
-					// 	m_pHandGeometry);
-
-					//tRenderingTransform += oTimer.GetMicroTime() - tStartViewport;
-					
 					tStartViewport = oTimer.GetMicroTime();
 					
 					vViewportData.push_back(col*320);
@@ -881,7 +870,6 @@ namespace rhapsodies {
 					//if(row%2 == 1 && col == 7) {
 					// this does not work on AMD as of now.. :/
 					m_pHandRenderer->PerformDraw(false, row*8+col, 1, &vViewportData[0]);
-					//m_pHandRenderer->PerformDraw(true, 0, 1, &vViewportData[0]);
 					vViewportData.clear();
 						//}
 					tRenderingPerform += oTimer.GetMicroTime() - tStartViewport;
