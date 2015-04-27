@@ -134,7 +134,9 @@ namespace rhapsodies {
 					 NULL, GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOCylinderTransforms);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*15*16*4,
+		// actually we have only 15 transforms per frame, but pad to
+		// 16 because of SSBO offset alignment restricitons
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*16*16*4,
 					 NULL, GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -384,6 +386,7 @@ namespace rhapsodies {
 
 		glUseProgram(m_idProgram);
 		glBindVertexArray(m_idVertexArrayObject);
+		glBindBuffer(GL_ARRAY_BUFFER, m_idVertexBufferObject);
 
 		size_t iSpheresPerViewport   = 22*2;
 		size_t iCylindersPerViewport = 15*2;
@@ -411,19 +414,20 @@ namespace rhapsodies {
 		// bind and fill sphere transform SSBO
 		size_t sizeSSBO = sizeof(VistaTransformMatrix)*iSpheresPerViewport;
 
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
+					 m_idSSBOSphereTransforms);
 		if(bTransformTransfer) {
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOSphereTransforms);
 			glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
 							 sizeSSBO,
 							 &m_vSphereTransforms[0]);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		}
 		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
 						  m_idSSBOSphereTransforms,
 						  iBufferOffset*sizeSSBO, sizeSSBO);
 
 		// set uniform for viewport indexing
-		glUniform1i(m_locInstancesPerViewportUniform, iSpheresPerViewportUniform);
+		glUniform1i(m_locInstancesPerViewportUniform,
+					iSpheresPerViewportUniform);
 		
 		// draw all shperes
 		glDrawArraysInstanced(GL_TRIANGLES,
@@ -431,21 +435,23 @@ namespace rhapsodies {
 							  iSpheresPerViewport);
 
 		// bind and fill cylinder transform SSBO
-		sizeSSBO = sizeof(VistaTransformMatrix)*iCylindersPerViewport;
+		// padded length, only 15 transforms actually
+		sizeSSBO = sizeof(VistaTransformMatrix)*16*2; 
 
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
+					 m_idSSBOCylinderTransforms);
 		if(bTransformTransfer) {
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOCylinderTransforms);
 			glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
 							 sizeSSBO,
 							 &m_vCylinderTransforms[0]);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		}
 		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
 						  m_idSSBOCylinderTransforms,
 						  iBufferOffset*sizeSSBO, sizeSSBO);
 
 		// set uniform for viewport indexing
-		glUniform1i(m_locInstancesPerViewportUniform, iCylindersPerViewportUniform);
+		glUniform1i(m_locInstancesPerViewportUniform,
+					iCylindersPerViewportUniform);
 
 		// draw all cylinders
 		glDrawArraysInstanced(GL_TRIANGLES,
