@@ -12,6 +12,7 @@ namespace rhapsodies {
     private:
 		bool InitGlut();
 		bool InitDeviceDriver();
+		bool InitHandTracker();
 	};
 }
 

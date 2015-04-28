@@ -4,6 +4,8 @@
 
 #include <VistaBase/VistaTimeUtils.h>
 
+#include <RHaPSODIES.hpp>
+
 #include "RHaPSODaemon.hpp"
 
 namespace {
@@ -25,11 +27,11 @@ namespace rhapsodies {
 
 	bool RHaPSODaemon::Initialize() {
 		bool success = true;
-		
+
 		success &= InitGlut();
 		success &= InitDeviceDriver();
 
-		// loop it out
+		RHaPSODIES::Initialize();
 
 		return success;
 	}
@@ -64,6 +66,12 @@ namespace rhapsodies {
 	
 	bool RHaPSODaemon::InitDeviceDriver() {
 
+		return true;
+	}
+
+	bool RHaPSODaemon::InitHandTracker() {
+
+		return true;
 	}
 
 }
