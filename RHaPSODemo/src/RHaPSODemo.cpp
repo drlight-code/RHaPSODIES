@@ -399,12 +399,13 @@ namespace rhapsodies {
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos_indexedtransform");
 		vec_shaders.push_back("frag_solid_colored");
-//		vec_shaders.push_back("indexed_viewport");		
+		vec_shaders.push_back("indexed_viewport");		
 		m_pShaderReg->RegisterProgram("indexedtransform", vec_shaders);
 
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos_vnorm_indexedtransform");
 		vec_shaders.push_back("frag_shaded_colored");
+//		vec_shaders.push_back("indexed_viewport");		
 		m_pShaderReg->RegisterProgram("shaded_indexedtransform", vec_shaders);
 
 		vec_shaders.clear();

@@ -814,10 +814,9 @@ namespace rhapsodies {
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
 		VistaType::microtime tStart = 0.0;
 		VistaType::microtime tStartViewport = 0.0;
-		VistaType::microtime tReduction = 0.0;
+		VistaType::microtime tTransform = 0.0;
 		VistaType::microtime tRendering = 0.0;
-		VistaType::microtime tRenderingTransform = 0.0;
-		VistaType::microtime tRenderingPerform = 0.0;
+		VistaType::microtime tReduction = 0.0;
 		VistaType::microtime tSwarmUpdate = 0.0;
 
 		std::vector<float> vViewportData;
@@ -834,49 +833,42 @@ namespace rhapsodies {
 		UploadHandModels();
 
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
-			tStart = oTimer.GetMicroTime();
-
 			// generate transform buffer in parallel 8*8*2
+			tStart = oTimer.GetMicroTime();
 			GenerateTransforms();
-			tRenderingTransform += oTimer.GetMicroTime() - tStart;
+			tTransform += oTimer.GetMicroTime() - tStart;
 
 			// FBO rendering of tiled zbuffers
+			tStart = oTimer.GetMicroTime();
 			glClear(GL_DEPTH_BUFFER_BIT);
-
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-					tStartViewport = oTimer.GetMicroTime();
-					
 					vViewportData.push_back(col*320);
 					vViewportData.push_back(row*240);
 					vViewportData.push_back(320);
 					vViewportData.push_back(240);
 
-					// we need to draw after 16 drawn pairs of hands (viewports)
-					//if(row%2 == 1 && col == 7) {
-					// this does not work on AMD as of now.. :/
-					m_pHandRenderer->PerformDraw(false, row*8+col, 1, &vViewportData[0]);
-					vViewportData.clear();
-						//}
-					tRenderingPerform += oTimer.GetMicroTime() - tStartViewport;
+					// we draw 16 viewports at once..
+					if((row*8+col)%16 == 15) {
+						m_pHandRenderer->PerformDraw(false,
+													 (row*8+col)/16, 16,
+													 &vViewportData[0]);
+						vViewportData.clear();
+					}
 				}
 			}
 			glFinish();
-
 			tRendering += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
-			//ReduceDepthMaps();
-			tReduction += oTimer.GetMicroTime() - tStart;
-
+			ReduceDepthMaps();
 			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+			tReduction += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
-
+//			GpuPSOStep();
 			// UpdateScores();
-			
 			// m_pSwarm->Evolve();
-
 			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 
 			// keep the best match over all generations, not just the last one
@@ -888,11 +880,8 @@ namespace rhapsodies {
 		}
 
 		m_pDebugView->Write(IDebugView::TRANSFORM_TIME,
-							ProfilerString("Render time transform: ",
-										   tRenderingTransform));
-		m_pDebugView->Write(IDebugView::PERFORM_TIME,
-							ProfilerString("Render time perform: ",
-										   tRenderingPerform));
+							ProfilerString("Transform time: ",
+										   tTransform));
 		m_pDebugView->Write(IDebugView::RENDER_TIME,
 							ProfilerString("Render time: ",
 										   tRendering));

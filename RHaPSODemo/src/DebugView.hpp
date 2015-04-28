@@ -8,10 +8,9 @@ namespace rhapsodies {
     public:
 		enum Slot {
 			CAMERAFRAMES_TIME,
-			REDUCTION_TIME,			
 			TRANSFORM_TIME,			
-			PERFORM_TIME,			
 			RENDER_TIME,			
+			REDUCTION_TIME,			
 			SWARMUPDATE_TIME,			
 			PSO_TIME,
 			LOOP_TIME,

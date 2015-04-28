@@ -395,24 +395,31 @@ namespace rhapsodies {
 		size_t iCylindersPerViewportUniform = iCylindersPerViewport;
 
 		if(iViewPortCount > 0) {
-			// glViewportArrayv(0, iViewPortCount, pViewPortData);
+			glViewportArrayv(0, iViewPortCount, pViewPortData);
 			// for(size_t vp = 0 ; vp < iViewPortCount ; ++vp) {
 			// 	glViewportIndexedfv(vp, pViewPortData+(4*vp));
 			// }
-			glViewport(
-				pViewPortData[0], 
-				pViewPortData[1], 
-				pViewPortData[2], 
-				pViewPortData[3]);
+			// glViewport(
+			// 	pViewPortData[0], 
+			// 	pViewPortData[1], 
+			// 	pViewPortData[2], 
+			// 	pViewPortData[3]);
 		}
 		else {
 			// so instance id division always yields 0 in shader
-			iSpheresPerViewportUniform   = ~0; 
+			iSpheresPerViewportUniform   = ~0;
 			iCylindersPerViewportUniform = ~0;
 		}			
 
 		// bind and fill sphere transform SSBO
-		size_t sizeSSBO = sizeof(VistaTransformMatrix)*iSpheresPerViewport;
+		size_t sizeSSBO =
+			sizeof(VistaTransformMatrix) *
+			iSpheresPerViewport;
+		int iDrawCount = iSpheresPerViewport;
+		if(iViewPortCount) {
+			sizeSSBO   *= iViewPortCount;
+			iDrawCount *= iViewPortCount;
+		}
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
 					 m_idSSBOSphereTransforms);
@@ -432,11 +439,18 @@ namespace rhapsodies {
 		// draw all shperes
 		glDrawArraysInstanced(GL_TRIANGLES,
 							  0, m_szSphereData,
-							  iSpheresPerViewport);
+							  iDrawCount);
 
 		// bind and fill cylinder transform SSBO
 		// padded length, only 15 transforms actually
-		sizeSSBO = sizeof(VistaTransformMatrix)*16*2; 
+		sizeSSBO =
+			sizeof(VistaTransformMatrix) *
+			iCylindersPerViewport;
+		iDrawCount = iCylindersPerViewport;
+		if(iViewPortCount) {
+			sizeSSBO   *= iViewPortCount;
+			iDrawCount *= iViewPortCount;
+		}
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
 					 m_idSSBOCylinderTransforms);
@@ -456,7 +470,7 @@ namespace rhapsodies {
 		// draw all cylinders
 		glDrawArraysInstanced(GL_TRIANGLES,
 							  m_szSphereData, m_szCylinderData,
-							  iCylindersPerViewport);
+							  iDrawCount);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
