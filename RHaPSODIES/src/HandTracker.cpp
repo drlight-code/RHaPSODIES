@@ -44,29 +44,28 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include <RHaPSODemo.hpp>
-#include <ShaderRegistry.hpp>
-#include <GLDraw/ImagePBOOpenGLDraw.hpp>
+#include "RHaPSODIES.hpp"
+#include "ShaderRegistry.hpp"
 
-#include <SkinClassifiers/SkinClassifierLogOpponentYIQ.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter0.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter1.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter2.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter3.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter4.hpp>
-#include <SkinClassifiers/SkinClassifierRedMatter5.hpp>
-#include <SkinClassifiers/SkinClassifierDhawale.hpp>
+#include "SkinClassifiers/SkinClassifierLogOpponentYIQ.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter0.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter1.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter2.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter3.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter4.hpp"
+#include "SkinClassifiers/SkinClassifierRedMatter5.hpp"
+#include "SkinClassifiers/SkinClassifierDhawale.hpp"
 
-#include <HandModel.hpp>
-#include <HandGeometry.hpp>
-#include <HandRenderer.hpp>
-#include <DebugView.hpp>
+#include "HandModel.hpp"
+#include "HandGeometry.hpp"
+#include "HandRenderer.hpp"
+#include "DebugView.hpp"
 
-#include <PSO/Particle.hpp>
-#include <PSO/ParticleSwarm.hpp>
+#include "PSO/Particle.hpp"
+#include "PSO/ParticleSwarm.hpp"
 
-#include <CameraFrameRecorder.hpp>
-#include <CameraFramePlayer.hpp>
+#include "CameraFrameRecorder.hpp"
+#include "CameraFramePlayer.hpp"
 
 #include "HandTracker.hpp"
 
@@ -331,19 +330,19 @@ namespace rhapsodies {
 
 	void HandTracker::ReadConfig() {
 		VistaIniFileParser oIniParser(true);
-		oIniParser.ReadFile(RHaPSODemo::sRDIniFile);
+		oIniParser.ReadFile(RHaPSODIES::sRDIniFile);
 
 		const VistaPropertyList oConfig = oIniParser.GetPropertyList();
 
-		if(!oConfig.HasProperty(RHaPSODemo::sTrackerSectionName)) {
+		if(!oConfig.HasProperty(RHaPSODIES::sTrackerSectionName)) {
 			throw std::runtime_error(
 				std::string() + "Config section ["
-				+ RHaPSODemo::sTrackerSectionName
+				+ RHaPSODIES::sTrackerSectionName
 				+ "] not found!");			
 		}
 
 		const VistaPropertyList oTrackerConfig =
-			oConfig.GetSubListConstRef(RHaPSODemo::sTrackerSectionName);
+			oConfig.GetSubListConstRef(RHaPSODIES::sTrackerSectionName);
 
 		m_oConfig.iDepthLimit = oTrackerConfig.GetValueOrDefault(
 			sDepthLimitName, 500);
@@ -367,7 +366,7 @@ namespace rhapsodies {
 			sAutoTrackingName, false);
 
 		const VistaPropertyList &oCameraConfig =
-			oConfig.GetSubListConstRef(RHaPSODemo::sCameraSectionName);
+			oConfig.GetSubListConstRef(RHaPSODIES::sCameraSectionName);
 
 		std::string sIntrinsicSection =
 			oCameraConfig.GetValue<std::string>("INTRINSICS");
@@ -1144,7 +1143,7 @@ namespace rhapsodies {
 			// 		   m_pUVMapRGBBuffer);
 			UVMapToRGB(m_pUVMapBuffer, m_pDepthBuffer, m_pColorBuffer,
 					   m_pUVMapRGBBuffer);
-			pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
+			//pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
 		}
 
 		if(m_bShowImage) {
@@ -1166,10 +1165,10 @@ namespace rhapsodies {
 		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
 		// }
 
-		pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
-		if(pPBODraw) {
-			pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
-		}
+		// pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
+		// }
 
 		// pPBODraw = m_mapPBO[UVMAP_SEGMENTED];
 		// if(pPBODraw) {

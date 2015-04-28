@@ -37,14 +37,6 @@ class VistaSimpleTextOverlay;
 
 class DepthHistogramHandler;
 
-// @todo: remove this hack! properly integrate into baselibs!
-class IVistaDeSerializer;
-IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned char* val );
-IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned short* val );
-IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const float* val );
-
-
-
 namespace rhapsodies {
 	class ShaderRegistry;
 
@@ -111,11 +103,6 @@ namespace rhapsodies {
 
 		// VistaEventHandler interface
 		virtual void HandleEvent(VistaEvent *pEvent);
-
-		static const std::string sRDIniFile;
-		static const std::string sAppSectionName;
-		static const std::string sCameraSectionName;
-		static const std::string sTrackerSectionName;
 	};
 }
 

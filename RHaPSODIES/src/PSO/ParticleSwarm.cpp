@@ -4,8 +4,7 @@
 
 #include <VistaTools/VistaRandomNumberGenerator.h>
 
-#include <PSO/Particle.hpp>
-
+#include "Particle.hpp"
 #include "ParticleSwarm.hpp"
 
 namespace {

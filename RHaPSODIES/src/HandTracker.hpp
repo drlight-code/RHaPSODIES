@@ -31,7 +31,7 @@
 
 #include <VistaAspects/VistaPropertyList.h>
 
-#include <DebugView.hpp>
+#include "DebugView.hpp"
 
 namespace rhapsodies {
 	class ShaderRegistry;

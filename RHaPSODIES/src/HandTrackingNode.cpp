@@ -1,8 +1,7 @@
-#include "RHaPSODemo.hpp"
 #include <VistaDataFlowNet/VdfnUtil.h>
 
-#include <HandTracker.hpp>
-
+#include "RHaPSODIES.hpp"
+#include "HandTracker.hpp"
 #include "HandTrackingNode.hpp"
 
 namespace {

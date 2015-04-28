@@ -1,7 +1,7 @@
 #ifndef _RHAPSODIES_PARTICLE
 #define _RHAPSODIES_PARTICLE
 
-#include <HandModel.hpp>
+#include "../HandModel.hpp"
 
 namespace rhapsodies {
 

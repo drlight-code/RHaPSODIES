@@ -8,10 +8,10 @@
 
 #include <VistaKernel/GraphicsManager/VistaGeometryFactory.h>
 
-#include <ShaderRegistry.hpp>
+#include "ShaderRegistry.hpp"
 
-#include <HandModel.hpp>
-#include <HandGeometry.hpp>
+#include "HandModel.hpp"
+#include "HandGeometry.hpp"
 
 #include "HandRenderer.hpp"
 

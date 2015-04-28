@@ -1,15 +1,19 @@
 # $Id:$
 
 set( RelativeDir "src" )
-set( RelativeSourceGroup "source" )
-set( SubDirs GLDraw )
+set( RelativeSourceGroup "Source Files" )
+set( SubDirs PSO SkinClassifiers )
 
 set( DirFiles
-	main.cpp
-	RHaPSODemo.cpp
-  	TextOverlayDebugView.cpp
-#	DepthHistogramHandler.cpp
-#	HistogramUpdater.cpp
+	RHaPSODIES.cpp
+	ShaderRegistry.cpp
+	HandGeometry.cpp
+	HandModel.cpp
+	HandRenderer.cpp
+	HandTracker.cpp
+	HandTrackingNode.cpp
+	CameraFramePlayer.cpp
+	CameraFrameRecorder.cpp
 	_SourceFiles.cmake
 )
 set( DirFiles_SourceGroup "${RelativeSourceGroup}" )
@@ -29,3 +33,4 @@ endforeach()
 foreach( SubDirFile ${SubDirFiles} )
 	include( ${SubDirFile} )
 endforeach()
+

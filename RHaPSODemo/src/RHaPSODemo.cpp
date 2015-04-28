@@ -54,6 +54,7 @@
 // #include <Vfl2DDiagrams/Diagrams/V2dDiagramDefault.h>
 // #include <Vfl2DDiagrams/V2dDiagramTextureVista.h>
 
+#include <RHaPSODIES.hpp>
 #include <ShaderRegistry.hpp>
 
 #include <HandModel.hpp>
@@ -75,12 +76,6 @@
 /*============================================================================*/
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
 /*============================================================================*/
-namespace rhapsodies {
-	const std::string RHaPSODemo::sRDIniFile          = "configfiles/rhapsodemo.ini";
-	const std::string RHaPSODemo::sAppSectionName     = "APPLICATION";
-	const std::string RHaPSODemo::sCameraSectionName  = "CAMERA";
-	const std::string RHaPSODemo::sTrackerSectionName = "HANDTRACKER";
-}
 
 /*============================================================================*/
 /* LOCAL VARS AND FUNCS                                                       */
@@ -103,25 +98,6 @@ namespace {
 		}
 	}
 }
-
-IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned char* val )
-{
-	ser.ReadUInt64(reinterpret_cast<VistaType::uint64&>(val));
-	return ser;
-}
-
-IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned short* val )
-{
-	ser.ReadUInt64(reinterpret_cast<VistaType::uint64&>(val));
-	return ser;
-}
-
-IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const float* val )
-{
-	ser.ReadUInt64(reinterpret_cast<VistaType::uint64&>(val));
-	return ser;
-}
-
 
 namespace rhapsodies {
 /*============================================================================*/
@@ -238,27 +214,27 @@ namespace rhapsodies {
 	
 	void RHaPSODemo::ReadConfig() {
 		VistaIniFileParser oIniParser(true);
-		oIniParser.ReadFile(sRDIniFile);
+		oIniParser.ReadFile(RHaPSODIES::sRDIniFile);
 
 		const VistaPropertyList &oConfig = oIniParser.GetPropertyList();
 
-		if(!oConfig.HasProperty(sAppSectionName)) {
+		if(!oConfig.HasProperty(RHaPSODIES::sAppSectionName)) {
 			throw std::runtime_error(
 				std::string() + "Config section ["
-				+ RHaPSODemo::sAppSectionName
+				+ RHaPSODIES::sAppSectionName
 				+ "] not found!");
 		}
-		if(!oConfig.HasProperty(sCameraSectionName)) {
+		if(!oConfig.HasProperty(RHaPSODIES::sCameraSectionName)) {
 			throw std::runtime_error(
 				std::string() + "Config section ["
-				+ RHaPSODemo::sCameraSectionName
+				+ RHaPSODIES::sCameraSectionName
 				+ "] not found!");
 		}
 		
 		const VistaPropertyList &oApplicationSection =
-			oConfig.GetSubListConstRef( sAppSectionName );
+			oConfig.GetSubListConstRef( RHaPSODIES::sAppSectionName );
 		const VistaPropertyList &oCameraSection =
-			oConfig.GetSubListConstRef( sAppSectionName );
+			oConfig.GetSubListConstRef( RHaPSODIES::sCameraSectionName );
 
 		// read the ini file names from rhapsodemo ini
 		m_pSystem->SetIniFile(

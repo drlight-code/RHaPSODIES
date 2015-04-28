@@ -1,7 +1,7 @@
 #ifndef _RHAPSODIES_SKINCLASSIFIERREDMATTER0
 #define _RHAPSODIES_SKINCLASSIFIERREDMATTER0
 
-#include <SkinClassifiers/SkinClassifier.hpp>
+#include "SkinClassifier.hpp"
 
 namespace rhapsodies {
 	class SkinClassifierRedMatter0 : public SkinClassifier {
