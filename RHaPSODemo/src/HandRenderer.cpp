@@ -395,15 +395,8 @@ namespace rhapsodies {
 		size_t iCylindersPerViewportUniform = iCylindersPerViewport;
 
 		if(iViewPortCount > 0) {
-			glViewportArrayv(0, iViewPortCount, pViewPortData);
-			// for(size_t vp = 0 ; vp < iViewPortCount ; ++vp) {
-			// 	glViewportIndexedfv(vp, pViewPortData+(4*vp));
-			// }
-			// glViewport(
-			// 	pViewPortData[0], 
-			// 	pViewPortData[1], 
-			// 	pViewPortData[2], 
-			// 	pViewPortData[3]);
+			glViewportArrayv(0, iViewPortCount,
+							 &pViewPortData[4*iBufferOffset]);
 		}
 		else {
 			// so instance id division always yields 0 in shader

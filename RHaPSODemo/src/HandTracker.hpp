@@ -130,6 +130,8 @@ namespace rhapsodies {
 			float fPenaltyMin;
 			float fPenaltyMax;
 			float fPenaltyStart;
+
+			unsigned int iViewportBatch;
 		};
 
 		bool InitSkinClassifiers();
@@ -200,6 +202,8 @@ namespace rhapsodies {
 		// depth frame and uv map RGB buffers
 		unsigned char m_pDepthRGBBuffer[320*240*3];
 		unsigned char m_pUVMapRGBBuffer[320*240*3];
+
+		std::vector<float> m_vViewportData;
 
 		IDebugView *m_pDebugView;
 

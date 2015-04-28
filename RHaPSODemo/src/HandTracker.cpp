@@ -155,7 +155,7 @@ namespace {
 		return true;
 	}
 
-	void PrintComputeShaderLimits() {
+	void PrintGpuLimits() {
 		GLint values[3];
 
 		glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, values);
@@ -175,6 +175,9 @@ namespace {
 		vstr::out() << "GL_MAX_COMPUTE_WORK_GROUP_SIZE:     "
 					<< "[" << values[0] << ", " << values[1] << ", " << values[2]
 					<< "]" << std::endl;
+
+		glGetIntegerv(GL_MAX_VIEWPORTS, values);
+		vstr::out() << "GL_MAX_VIEWPORTS:                   " << values[0] << std::endl;
 	}
 
 	template<typename T> std::string ProfilerString(
@@ -214,6 +217,8 @@ namespace rhapsodies {
 	const std::string sPenaltyMaxName   = "PENALTY_MAX";
 	const std::string sPenaltyStartName = "PENALTY_START";
 
+	const std::string sViewportBatchName = "VIEWPORT_BATCH";
+
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
@@ -228,6 +233,7 @@ namespace rhapsodies {
 		m_pShaderReg(pReg),
 		m_pHandGeometry(new HandGeometry),
 		m_pHandRenderer(new HandRenderer(pReg)),
+		m_vViewportData(4*64),
 		m_pDebugView(NULL),
 		m_bFrameRecording(false),
 		m_pRecorder(new CameraFrameRecorder),
@@ -373,6 +379,9 @@ namespace rhapsodies {
 			sPenaltyMaxName, 1.5f);
 		m_oConfig.fPenaltyStart = oTrackerConfig.GetValueOrDefault(
 			sPenaltyStartName, 0.6f);
+
+		m_oConfig.iViewportBatch = oTrackerConfig.GetValueOrDefault(
+			sViewportBatchName, 1);
 	}
 
 	void HandTracker::PrintConfig() {
@@ -408,7 +417,7 @@ namespace rhapsodies {
 		InitRendering();
 
 		if(HasGLComputeCapabilities()) {
-			PrintComputeShaderLimits();
+			PrintGpuLimits();
 			InitGpuPSO();
 			InitReduction();
 		}
@@ -461,6 +470,17 @@ namespace rhapsodies {
 
 		CheckFrameBufferStatus(m_idRenderedTextureFBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// prepare constant viewport data array
+		for(int row = 0 ; row < 8 ; row++) {
+			for(int col = 0 ; col < 8 ; col++) {
+				size_t index = row*8 + col;
+				m_vViewportData[4*index+0] = col*320;
+				m_vViewportData[4*index+1] = row*240;
+				m_vViewportData[4*index+2] = 320;
+				m_vViewportData[4*index+3] = 240;
+			}
+		}
 
 		return true;
 	}
@@ -813,14 +833,10 @@ namespace rhapsodies {
 	void HandTracker::PerformPSOTracking() {
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
 		VistaType::microtime tStart = 0.0;
-		VistaType::microtime tStartViewport = 0.0;
 		VistaType::microtime tTransform = 0.0;
 		VistaType::microtime tRendering = 0.0;
 		VistaType::microtime tReduction = 0.0;
 		VistaType::microtime tSwarmUpdate = 0.0;
-
-		std::vector<float> vViewportData;
-		vViewportData.reserve(16*4);
 
 		// as in the original paper, we initialize the swarm uniformly
 		// around the best match from the previous frame.  we might
@@ -843,17 +859,14 @@ namespace rhapsodies {
 			glClear(GL_DEPTH_BUFFER_BIT);
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
-					vViewportData.push_back(col*320);
-					vViewportData.push_back(row*240);
-					vViewportData.push_back(320);
-					vViewportData.push_back(240);
+					size_t index = row*8 + col;
 
-					// we draw 16 viewports at once..
-					if((row*8+col)%16 == 15) {
-						m_pHandRenderer->PerformDraw(false,
-													 (row*8+col)/16, 16,
-													 &vViewportData[0]);
-						vViewportData.clear();
+					if( (index+1) % m_oConfig.iViewportBatch == 0 ) {
+						m_pHandRenderer->PerformDraw(
+							false,
+							index/m_oConfig.iViewportBatch,
+							m_oConfig.iViewportBatch,
+							&m_vViewportData[0]);
 					}
 				}
 			}
@@ -1053,8 +1066,8 @@ namespace rhapsodies {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
 
-		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
-		VistaType::microtime tS = oTimer.GetMicroTime();
+		//const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
+		//VistaType::microtime tS = oTimer.GetMicroTime();
 
 		// glGetTexImage took ~4.3ms per iteration
 		// 3.73 PSO fps at 40 generations
@@ -1066,8 +1079,8 @@ namespace rhapsodies {
 		unsigned int *result_data = (unsigned int*)(glMapBuffer(GL_PIXEL_PACK_BUFFER,
 																GL_READ_ONLY));
 
-//		vstr::out() << "getteximage: " << oTimer.GetMicroTime()-tS << std::endl;
-		tS = oTimer.GetMicroTime();
+		//vstr::out() << "getteximage: " << oTimer.GetMicroTime()-tS << std::endl;
+		//tS = oTimer.GetMicroTime();
 		
 		for(int row = 0; row < 8; ++row) {
 			for(int col = 0; col < 8; ++col) {
@@ -1087,7 +1100,7 @@ namespace rhapsodies {
 			}
 		}
 		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-//		vstr::out() << "loop:        " << oTimer.GetMicroTime()-tS << std::endl;
+		//vstr::out() << "loop:        " << oTimer.GetMicroTime()-tS << std::endl;
 
 	}
 
