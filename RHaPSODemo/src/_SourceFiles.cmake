@@ -8,6 +8,7 @@ set( DirFiles
 	main.cpp
 	RHaPSODemo.cpp
   	TextOverlayDebugView.cpp
+	HandTrackingNode.cpp
 #	DepthHistogramHandler.cpp
 #	HistogramUpdater.cpp
 	_SourceFiles.cmake

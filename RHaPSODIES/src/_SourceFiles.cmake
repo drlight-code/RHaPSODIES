@@ -11,7 +11,6 @@ set( DirFiles
 	HandModel.cpp
 	HandRenderer.cpp
 	HandTracker.cpp
-	HandTrackingNode.cpp
 	CameraFramePlayer.cpp
 	CameraFrameRecorder.cpp
 	_SourceFiles.cmake
