@@ -449,9 +449,9 @@ namespace rhapsodies {
 		m_pHandModelGLNode = pSG->NewOpenGLNode(m_pHandModelTransform,
 												m_pHandRenderDraw);
 
-		m_pAxesTransform = pSG->NewTransformNode(m_pHandModelTransform);
-		m_pAxesTransform->SetScale(0.05f, 0.05f, 0.05f);
-		m_pAxes = new VistaAxes(pSG, m_pAxesTransform);
+		// m_pAxesTransform = pSG->NewTransformNode(m_pHandModelTransform);
+		// m_pAxesTransform->SetScale(0.05f, 0.05f, 0.05f);
+		// m_pAxes = new VistaAxes(pSG, m_pAxesTransform);
 								
 		// ImageDraw: color image
 		// ImagePBOOpenGLDraw *pPBODraw = 

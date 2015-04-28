@@ -123,6 +123,7 @@ namespace rhapsodies {
 
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
+		
 		glBindVertexArray(0);
 
 		// initialize sphere and cylinder SSBOs for transformation matrices
@@ -380,7 +381,7 @@ namespace rhapsodies {
 
 	void HandRenderer::PerformDraw(
 		bool bTransformTransfer,
-		unsigned int iBufferOffset,
+		unsigned int iBaseViewport,
 		unsigned int iViewPortCount,
 		float *pViewPortData) {
 
@@ -396,23 +397,24 @@ namespace rhapsodies {
 
 		if(iViewPortCount > 0) {
 			glViewportArrayv(0, iViewPortCount,
-							 &pViewPortData[4*iBufferOffset]);
+							 &pViewPortData[4*iBaseViewport]);
 		}
 		else {
 			// so instance id division always yields 0 in shader
 			iSpheresPerViewportUniform   = ~0;
 			iCylindersPerViewportUniform = ~0;
+
+			// we use 0 to mark not setting a viewport, but for
+			// following buffer size calculations we set it to 1 here!
+			iViewPortCount = 1; 
 		}			
 
 		// bind and fill sphere transform SSBO
 		size_t sizeSSBO =
 			sizeof(VistaTransformMatrix) *
-			iSpheresPerViewport;
-		int iDrawCount = iSpheresPerViewport;
-		if(iViewPortCount) {
-			sizeSSBO   *= iViewPortCount;
-			iDrawCount *= iViewPortCount;
-		}
+			iSpheresPerViewport *
+			iViewPortCount;
+		int iDrawCount = iSpheresPerViewport * iViewPortCount;
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
 					 m_idSSBOSphereTransforms);
@@ -423,7 +425,8 @@ namespace rhapsodies {
 		}
 		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
 						  m_idSSBOSphereTransforms,
-						  iBufferOffset*sizeSSBO, sizeSSBO);
+						  iBaseViewport/iViewPortCount*sizeSSBO,
+						  sizeSSBO);
 
 		// set uniform for viewport indexing
 		glUniform1i(m_locInstancesPerViewportUniform,
@@ -438,12 +441,9 @@ namespace rhapsodies {
 		// padded length, only 15 transforms actually
 		sizeSSBO =
 			sizeof(VistaTransformMatrix) *
-			iCylindersPerViewport;
-		iDrawCount = iCylindersPerViewport;
-		if(iViewPortCount) {
-			sizeSSBO   *= iViewPortCount;
-			iDrawCount *= iViewPortCount;
-		}
+			iCylindersPerViewport *
+			iViewPortCount;
+		iDrawCount = iCylindersPerViewport * iViewPortCount;
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
 					 m_idSSBOCylinderTransforms);
@@ -454,7 +454,8 @@ namespace rhapsodies {
 		}
 		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
 						  m_idSSBOCylinderTransforms,
-						  iBufferOffset*sizeSSBO, sizeSSBO);
+						  iBaseViewport/iViewPortCount*sizeSSBO,
+						  sizeSSBO);
 
 		// set uniform for viewport indexing
 		glUniform1i(m_locInstancesPerViewportUniform,

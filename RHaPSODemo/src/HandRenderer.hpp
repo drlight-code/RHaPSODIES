@@ -22,7 +22,7 @@ namespace rhapsodies {
 					  HandGeometry *pModelGeometry);
 
 		void PerformDraw(bool bTransformTransfer,
-						 unsigned int iBufferOffset,
+						 unsigned int iBaseViewport,
 						 unsigned int iViewPortCount,
 						 float *pViewPortData);
 

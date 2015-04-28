@@ -779,7 +779,6 @@ namespace rhapsodies {
 		std::vector<float> vViewportData;
 
 		glClear(GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
 		
 		m_pHandRenderer->DrawHand(
 			&m_pParticleBest->GetHandModelLeft(),
@@ -864,7 +863,8 @@ namespace rhapsodies {
 					if( (index+1) % m_oConfig.iViewportBatch == 0 ) {
 						m_pHandRenderer->PerformDraw(
 							false,
-							index/m_oConfig.iViewportBatch,
+							index/m_oConfig.iViewportBatch *
+							m_oConfig.iViewportBatch,
 							m_oConfig.iViewportBatch,
 							&m_vViewportData[0]);
 					}
