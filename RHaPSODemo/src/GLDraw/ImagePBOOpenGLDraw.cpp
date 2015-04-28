@@ -51,14 +51,14 @@ namespace rhapsodies {
 			new unsigned char[m_texWidth*m_texHeight*3];
 
 		// fill with raster pattern
-		int raster_offset = 10;
-		for(int i = 0; i < m_texWidth*m_texHeight*3; i++) {
-			int px = i/3;
-			if( i%3 == 0 && 
-				(px%m_texWidth%raster_offset == 0 || 
-				 px/m_texWidth%raster_offset == 0) )
-				texData[i] = 255;
-		}
+		// int raster_offset = 10;
+		// for(int i = 0; i < m_texWidth*m_texHeight*3; i++) {
+		// 	int px = i/3;
+		// 	if( i%3 == 0 && 
+		// 		(px%m_texWidth%raster_offset == 0 || 
+		// 		 px/m_texWidth%raster_offset == 0) )
+		// 		texData[i] = 255;
+		// }
 
 		glGenBuffers(2, m_pboIds);
 
