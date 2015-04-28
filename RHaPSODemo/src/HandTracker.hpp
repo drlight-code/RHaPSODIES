@@ -31,6 +31,8 @@
 
 #include <VistaAspects/VistaPropertyList.h>
 
+#include <DebugView.hpp>
+
 namespace rhapsodies {
 	class ShaderRegistry;
 	
@@ -63,16 +65,9 @@ namespace rhapsodies {
 		HandTracker(ShaderRegistry *pReg);
 		virtual ~HandTracker();
 		
-		void SetViewPBODraw(ViewType type,
-							ImagePBOOpenGLDraw *pPBODraw);
-
-		void SetDebugView(IDebugView *pDebugView);
-		
 		HandModel *GetHandModelLeft();
 		HandModel *GetHandModelRight();
 		HandGeometry *GetHandGeometry();
-
-		void SetHandRenderer(HandRenderer *pRenderer);
 
 		GLuint GetRenderedTextureId();
 		GLuint GetCameraTextureId();
@@ -82,6 +77,11 @@ namespace rhapsodies {
 		GLuint GetUnionTextureId();
 		GLuint GetIntersectionTextureId();
 		
+		void SetDebugView(IDebugView *pDebugView);
+		void SetViewPBODraw(ViewType type,
+							ImagePBOOpenGLDraw *pPBODraw);
+		void SetHandRenderer(HandRenderer *pRenderer);
+
 		bool Initialize();
 		
 		void ReadConfig();
@@ -91,14 +91,6 @@ namespace rhapsodies {
 						 const unsigned short *depthFrame,
 						 const float          *uvMapFrame);
 
-		void ProcessCameraFrames(
-			const unsigned char  *colorFrame,
-			const unsigned short *depthFrame,
-			const float          *uvMapFrame);
-
-		void PerformPSOTracking();
-		void PerformStartPoseMatch();
-		
 		SkinClassifier *GetSkinClassifier();
 		void NextSkinClassifier();
 		void PrevSkinClassifier();
@@ -134,6 +126,8 @@ namespace rhapsodies {
 			unsigned int iViewportBatch;
 		};
 
+		bool HasGLComputeCapabilities();
+
 		bool InitSkinClassifiers();
 		bool InitRendering();
 		bool InitGpuPSO();
@@ -141,10 +135,14 @@ namespace rhapsodies {
 		bool InitParticleSwarm();
 
 		void SetToInitialPose(Particle &oParticle);
+		void PerformPSOTracking();
+		void PerformStartPoseMatch();
+		
+		void ProcessCameraFrames(
+			const unsigned char  *colorFrame,
+			const unsigned short *depthFrame,
+			const float          *uvMapFrame);
 
-		bool HasGLComputeCapabilities();
-
-		float PenaltyNormalize(float fPenalty);
 		void DepthToRGB(const unsigned short *depth,
 						unsigned char *rgb);
 
@@ -154,6 +152,8 @@ namespace rhapsodies {
 						unsigned char *rgb);
 
 		void FilterSkinAreas();
+
+		
 		void UploadCameraDepthMap();
 		void SetupProjection();
 
@@ -161,6 +161,8 @@ namespace rhapsodies {
 		void GenerateTransforms();
 
 		void ReduceDepthMaps();
+		void UpdateScores();
+		
 		float Penalty(HandModel& oModelLeft,
 					  HandModel& oModelRight,
 					  float fDiff,
@@ -170,8 +172,10 @@ namespace rhapsodies {
 								   float fUnion,
 								   float fIntersection);
 		float PenaltyPrior(HandModel& oModel);
+		float PenaltyNormalize(float fPenalty);
 						  
-		void UpdateScores();
+		void WriteDebug(IDebugView::Slot eSlot,
+						std::string sMessage);
 
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
 		MapPBO m_mapPBO;
