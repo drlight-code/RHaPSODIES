@@ -34,7 +34,6 @@
 #include <VistaBase/VistaTimeUtils.h>
 #include <VistaBase/VistaTimer.h>
 
-#include <VistaTools/VistaBasicProfiler.h>
 #include <VistaTools/VistaIniFileParser.h>
 #include <VistaTools/VistaRandomNumberGenerator.h>
 
@@ -1188,10 +1187,6 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::FilterSkinAreas() {
-
-		VistaBasicProfiler *pProf = VistaBasicProfiler::GetSingleton();
-
-		pProf->StartSection("Skin classification");
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
 			// don't filter the color map since it is considerably expensive
 			// if( (*m_itCurrentClassifier)->IsSkinPixel(colorImage+3*pixel) ) {
@@ -1211,7 +1206,6 @@ namespace rhapsodies {
 			 	m_pSkinMap[pixel] = 0;
 			}
 		}
-		pProf->StopSection();
 
 		// dilate the skin map with opencv
 		cv::Mat image = cv::Mat(240, 320, CV_8UC1, m_pSkinMap);
@@ -1228,18 +1222,15 @@ namespace rhapsodies {
 			cv::Size(m_oConfig.iDilationSize, m_oConfig.iDilationSize),
 			cv::Point(m_oConfig.iDilationSize/2));
 
-		pProf->StartSection("SkinMap dilate/erode");
-		cv::erode(image, image_processed, erode_element);
+			cv::erode(image, image_processed, erode_element);
 		image = image_processed.clone();
 		cv::dilate(image, image_processed, dilate_element);
-		pProf->StopSection();
-
+	
 		if(m_bShowSkinMap) {
 			cv::imshow("Skin Map Dilated", image_processed);
 			cv::waitKey(1);
 		}
 
-		pProf->StartSection("Depth/UV filtering");
 		unsigned int uiDepthValue = 0x7fffffffu;
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
 			// if( image_processed.data[pixel] == 0 ||
@@ -1279,7 +1270,6 @@ namespace rhapsodies {
 
 			m_pDepthBufferUInt[320*targetRow + targetCol] = uiDepthValue;
 		}
-		pProf->StopSection();
 	}
 
 	SkinClassifier *HandTracker::GetSkinClassifier() {
