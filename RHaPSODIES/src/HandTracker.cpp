@@ -1058,7 +1058,8 @@ namespace rhapsodies {
 
 		for(size_t dof = 5; dof < 17; dof += 4) {
 			fPenaltySum +=
-				-std::min(oModel.GetJointAngle(dof) - oModel.GetJointAngle(dof+4), 0.0f);
+				-std::min(oModel.GetJointAngle(dof) -
+						  oModel.GetJointAngle(dof+4), 0.0f);
 		}	
 
 		fPenaltySum = Vista::DegToRad(fPenaltySum);

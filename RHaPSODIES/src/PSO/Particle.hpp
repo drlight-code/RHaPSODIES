@@ -39,7 +39,7 @@ namespace rhapsodies {
 		HandModel m_oIBestModelLeft;
 		HandModel m_oIBestModelRight;
 
-		float m_aVelocity[54];
+		float m_aVelocity[64];
 	};
 }
 

@@ -8,7 +8,7 @@ namespace {
 	void GetBoundsByJointIndex(size_t index,
 							   float &fMin, float &fMax) {
 		
-		index %= 27;
+		index %= 32;
 
 		bool bThumb = (index / 4 == 0);
 		index %= 4;
@@ -79,7 +79,7 @@ namespace rhapsodies {
 	}
 
 	void Particle::ResetVelocity() {
-		for(size_t dim = 0; dim < 54; ++dim) {
+		for(size_t dim = 0; dim < 64; ++dim) {
 			m_aVelocity[dim] = 0;
 		}
 	}
@@ -90,9 +90,9 @@ namespace rhapsodies {
 		VistaRandomNumberGenerator *pRNG =
 			VistaRandomNumberGenerator::GetStandardRNG();
 		
-		float aCurrent[54];
-		float aIBest[54];
-		float aGBest[54];
+		float aCurrent[64];
+		float aIBest[64];
+		float aGBest[64];
 
 		float w = 0.72984f;
 
@@ -104,7 +104,10 @@ namespace rhapsodies {
 		ParticleToStateArray(oParticleIBest, aIBest);
 		ParticleToStateArray(oParticleGBest, aGBest);
 
-		for(size_t dim = 0; dim < 54; ++dim) {
+		for(size_t dim = 0; dim < 64; ++dim) {
+			if(dim%32 >= 28)
+				continue;				
+			
 			float r1 = pRNG->GenerateFloat2();
 			float r2 = pRNG->GenerateFloat2();
 
@@ -112,8 +115,7 @@ namespace rhapsodies {
 								  phi_cognitive*r1*(aIBest[dim]-aCurrent[dim]) +
 								  phi_social*r2*(aGBest[dim]-aCurrent[dim]));
 
-			if((dim >= 0  && dim < 20) ||
-			   (dim >= 27 && dim < 47)) {
+			if((dim%32 >= 0  && dim%32 < 20)) {
 				float fMinAngle = 0;
 				float fMaxAngle = 0;
 
