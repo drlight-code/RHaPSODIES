@@ -856,6 +856,7 @@ namespace rhapsodies {
 		// upload hand models into SSBO
 		UploadHandModels();
 
+		m_pHandRenderer->PreDraw();
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// generate transform buffer in parallel 8*8*2
 			tStart = oTimer.GetMicroTime();
@@ -879,7 +880,7 @@ namespace rhapsodies {
 					}
 				}
 			}
-			glFinish();
+//			glFinish();
 			tRendering += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
@@ -900,6 +901,7 @@ namespace rhapsodies {
 				*m_pParticleBest = oParticleGenerationBest;
 			}
 		}
+		m_pHandRenderer->PostDraw();
 
 		WriteDebug(IDebugView::TRANSFORM_TIME,
 				   ProfilerString("Transform time: ",

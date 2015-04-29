@@ -21,10 +21,12 @@ namespace rhapsodies {
 		void DrawHand(HandModel *pModel,
 					  HandGeometry *pModelGeometry);
 
+		void PreDraw();
 		void PerformDraw(bool bTransformTransfer,
 						 unsigned int iBaseViewport,
 						 unsigned int iViewPortCount,
 						 float *pViewPortData);
+		void PostDraw();
 
 		GLuint GetSSBOSphereTransformsId();
 		GLuint GetSSBOCylinderTransformsId();

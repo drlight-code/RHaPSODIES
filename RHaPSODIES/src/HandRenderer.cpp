@@ -379,15 +379,18 @@ namespace rhapsodies {
 			true);
 	}
 
+	void HandRenderer::PreDraw() {
+		glUseProgram(m_idProgram);
+		glBindVertexArray(m_idVertexArrayObject);
+		glBindBuffer(GL_ARRAY_BUFFER, m_idVertexBufferObject);
+	}
+	
 	void HandRenderer::PerformDraw(
 		bool bTransformTransfer,
 		unsigned int iBaseViewport,
 		unsigned int iViewPortCount,
 		float *pViewPortData) {
 
-		glUseProgram(m_idProgram);
-		glBindVertexArray(m_idVertexArrayObject);
-		glBindBuffer(GL_ARRAY_BUFFER, m_idVertexBufferObject);
 
 		size_t iSpheresPerViewport   = 22*2;
 		size_t iCylindersPerViewport = 16*2;
@@ -416,8 +419,6 @@ namespace rhapsodies {
 			iViewPortCount;
 		int iDrawCount = iSpheresPerViewport * iViewPortCount;
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
-					 m_idSSBOSphereTransforms);
 		if(bTransformTransfer) {
 			glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
 							 sizeSSBO,
@@ -445,8 +446,6 @@ namespace rhapsodies {
 			iViewPortCount;
 		iDrawCount = iCylindersPerViewport * iViewPortCount;
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
-					 m_idSSBOCylinderTransforms);
 		if(bTransformTransfer) {
 			glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
 							 sizeSSBO,
@@ -466,14 +465,18 @@ namespace rhapsodies {
 							  m_szSphereData, m_szCylinderData,
 							  iDrawCount);
 
+		// clear transform matrix vectors
+		if(bTransformTransfer) {
+			m_vSphereTransforms.clear();
+			m_vCylinderTransforms.clear();
+		}
+	}
+
+	void HandRenderer::PostDraw() {
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 		glUseProgram(0);
-
-		// clear transform matrix vectors
-		m_vSphereTransforms.clear();
-		m_vCylinderTransforms.clear();
 	}
 
 	GLuint HandRenderer::GetSSBOSphereTransformsId() {
