@@ -34,6 +34,7 @@ target_link_libraries( RHaPSODIES
 
 vista_configure_lib( RHaPSODIES )
 vista_install( RHaPSODIES )
+
+set(RHAPSODIES_INCLUDE_OUTDIR "${CMAKE_SOURCE_DIR}/src")
 vista_create_cmake_configs( RHaPSODIES )
 vista_create_default_info_file( RHaPSODIES )
-
