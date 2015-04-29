@@ -2,9 +2,11 @@
 */set_path_for_*
 RHaPSODemo/RHaPSODemo
 RHaPSODemo/RHaPSODemoD
+RHaPSODemo/*.trace
 RHaPSODemo/resources/recordings
 RHaPSODaemon/RHaPSODaemon
 RHaPSODaemon/RHaPSODaemonD
+RHaPSODaemon/*.trace
 BROWSE
 
 
