@@ -10,17 +10,6 @@
 
 #include "RHaPSODaemon.hpp"
 
-namespace {
-	void DisplayUpdate()
-	{
-		glutPostRedisplay();
-	}
-
-	void DisplayReshape( int iWidth, int iHeight )
-	{
-	}
-}
-
 namespace rhapsodies {
 	RHaPSODaemon::RHaPSODaemon() :
 		m_pTracker(NULL) {
@@ -55,11 +44,16 @@ namespace rhapsodies {
 
 		m_pTracker->StartTracking();
 		
-		while(oTimer.GetMicroTime() - tStart < 3) {
+		while(oTimer.GetMicroTime() - tStart < 1) {
 			m_pTracker->FrameUpdate(
 				m_pFakeColorBuffer,
 				m_pFakeDepthBuffer,
 				m_pFakeUVMapBuffer);
+
+			glFinish();
+		
+			glutPostRedisplay();
+			glutSwapBuffers();
 		}
 	}
 
@@ -76,10 +70,6 @@ namespace rhapsodies {
 		glutInitWindowSize(1024, 768);
 		int iWindowID = glutCreateWindow("RHaPSODaemon");
 		glutSetWindow(iWindowID);
-
-		glutDisplayFunc(&DisplayUpdate);
-		glutIdleFunc(&DisplayUpdate);
-		glutReshapeFunc(&DisplayReshape);
 
 		return true;
 	}
