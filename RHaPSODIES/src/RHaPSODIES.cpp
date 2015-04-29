@@ -26,8 +26,7 @@ IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const float* val )
 }
 
 namespace rhapsodies {
-	const std::string RHaPSODIES::sRDIniFile          = "configfiles/rhapsodemo.ini";
-	const std::string RHaPSODIES::sAppSectionName     = "APPLICATION";
+	const std::string RHaPSODIES::sRDIniFile          = "configfiles/rhapsodies.ini";
 	const std::string RHaPSODIES::sCameraSectionName  = "CAMERA";
 	const std::string RHaPSODIES::sTrackerSectionName = "HANDTRACKER";
 
