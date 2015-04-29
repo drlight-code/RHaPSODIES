@@ -31,8 +31,6 @@ namespace rhapsodies {
 		success &= InitGlut();
 		success &= InitDeviceDriver();
 
-		RHaPSODIES::Initialize();
-
 		return success;
 	}
 	

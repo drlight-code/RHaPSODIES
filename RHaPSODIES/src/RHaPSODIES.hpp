@@ -1,6 +1,8 @@
 #ifndef _RHAPSODIES_RHAPSODIES
 #define _RHAPSODIES_RHAPSODIES
 
+#include "ShaderRegistry.hpp"
+
 class IVistaDeSerializer;
 IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned char* val );
 IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const unsigned short* val );
@@ -13,6 +15,11 @@ namespace rhapsodies {
 		static const std::string sAppSectionName;
 		static const std::string sCameraSectionName;
 		static const std::string sTrackerSectionName;
+
+		static ShaderRegistry &GetShaderRegistry();
+		
+	private:
+		static ShaderRegistry S_oShaderRegistry;
 	};
 }
 

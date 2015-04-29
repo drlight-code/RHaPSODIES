@@ -27,4 +27,10 @@ namespace rhapsodies {
 	const std::string RHaPSODIES::sAppSectionName     = "APPLICATION";
 	const std::string RHaPSODIES::sCameraSectionName  = "CAMERA";
 	const std::string RHaPSODIES::sTrackerSectionName = "HANDTRACKER";
+
+	ShaderRegistry RHaPSODIES::S_oShaderRegistry = ShaderRegistry();
+	
+	ShaderRegistry &RHaPSODIES::GetShaderRegistry() {
+		return S_oShaderRegistry;
+	}
 }

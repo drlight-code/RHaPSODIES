@@ -34,8 +34,6 @@
 #include "DebugView.hpp"
 
 namespace rhapsodies {
-	class ShaderRegistry;
-	
 	class ImagePBOOpenGLDraw;
 	class SkinClassifier;
 
@@ -62,7 +60,7 @@ namespace rhapsodies {
 			UVMAP_SEGMENTED
 		};
 
-		HandTracker(ShaderRegistry *pReg);
+		HandTracker();
 		virtual ~HandTracker();
 		
 		HandModel *GetHandModelLeft();
@@ -238,9 +236,9 @@ namespace rhapsodies {
 		GLuint m_idColorFragProgram;
 
 		bool m_bFrameRecording;
-		CameraFrameRecorder *m_pRecorder;
 		bool m_bFramePlayback;
-		CameraFramePlayer *m_pPlayer;
+		CameraFrameRecorder *m_pFrameRecorder;
+		CameraFramePlayer   *m_pFramePlayer;
 
 		bool m_bTrackingEnabled;
 		Particle *m_pParticleBest;

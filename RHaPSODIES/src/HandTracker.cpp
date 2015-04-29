@@ -225,35 +225,46 @@ namespace rhapsodies {
 /*============================================================================*/
 /* IMPLEMENTATION                                                             */
 /*============================================================================*/
-	HandTracker::HandTracker(ShaderRegistry *pReg) :
+	HandTracker::HandTracker() :
 		m_bCameraUpdate(true),
 		m_bShowImage(false),
 		m_bShowSkinMap(false),
-		m_pShaderReg(pReg),
-		m_pHandGeometry(new HandGeometry),
-		m_pHandRenderer(new HandRenderer(pReg)),
+		m_pShaderReg(NULL),
+		m_pHandGeometry(NULL),
+		m_pHandRenderer(NULL),
 		m_vViewportData(4*64),
 		m_pDebugView(NULL),
 		m_bFrameRecording(false),
-		m_pRecorder(new CameraFrameRecorder),
 		m_bFramePlayback(false),
-		m_pPlayer(new CameraFramePlayer),
+		m_pFrameRecorder(NULL),
+		m_pFramePlayer(NULL),
 		m_bTrackingEnabled(false),
 		m_pParticleBest(NULL),
 		m_pSwarm(NULL) {
 
+		m_pShaderReg = &RHaPSODIES::GetShaderRegistry();
+
+		m_pHandGeometry = new HandGeometry;
+		m_pHandRenderer = new HandRenderer(m_pShaderReg);
+
+		m_pFrameRecorder = new CameraFrameRecorder;
+		m_pFramePlayer   = new CameraFramePlayer;
+		
 		m_pColorBuffer     = new unsigned char[320*240*3];
 		m_pDepthBuffer     = new unsigned short[320*240];
 		m_pDepthBufferUInt = new unsigned int[320*240];
 		m_pUVMapBuffer     = new float[320*240*2];
 
-		m_idGenerateTransformsProgram = pReg->GetProgram("generate_transforms");
+		m_idGenerateTransformsProgram =
+			m_pShaderReg->GetProgram("generate_transforms");
 
-		m_idReductionXProgram = pReg->GetProgram("reduction_x");
-		m_idReductionYProgram = pReg->GetProgram("reduction_y");
+		m_idReductionXProgram = m_pShaderReg->GetProgram("reduction_x");
+		m_idReductionYProgram = m_pShaderReg->GetProgram("reduction_y");
 
-		m_idColorFragProgram = pReg->GetProgram("shaded_indexedtransform");
-		m_locColorUniform = glGetUniformLocation(m_idColorFragProgram, "color_in");
+		m_idColorFragProgram =
+			m_pShaderReg->GetProgram("shaded_indexedtransform");
+		m_locColorUniform =
+			glGetUniformLocation(m_idColorFragProgram, "color_in");
 
 		glUseProgram(m_idColorFragProgram);
 		glUniform3f(m_locColorUniform, 1.0f, 0.0f, 0.0f);
@@ -273,7 +284,7 @@ namespace rhapsodies {
 		delete [] m_pDepthBufferUInt;
 		delete [] m_pUVMapBuffer;
 		
-		delete m_pRecorder;
+		delete m_pFrameRecorder;
 		
 		delete m_pHandRenderer;
 		delete m_pHandGeometry;
@@ -356,11 +367,11 @@ namespace rhapsodies {
 
 		m_oConfig.sRecordingFile = oTrackerConfig.GetValueOrDefault(
 			sRecordingName, std::string(""));
-		m_pPlayer->SetInputFile(m_oConfig.sRecordingFile);
+		m_pFramePlayer->SetInputFile(m_oConfig.sRecordingFile);
 
 		m_oConfig.bLoop = oTrackerConfig.GetValueOrDefault(
 			sLoopName, false);
-		m_pPlayer->SetLoop(m_oConfig.bLoop);
+		m_pFramePlayer->SetLoop(m_oConfig.bLoop);
 
 		m_oConfig.bAutoTracking = oTrackerConfig.GetValueOrDefault(
 			sAutoTrackingName, false);
@@ -1109,10 +1120,10 @@ namespace rhapsodies {
 		const float          *uvMapFrame) {
 
 		if(m_bFrameRecording)
-			m_pRecorder->RecordFrames(colorFrame, depthFrame, uvMapFrame);
+			m_pFrameRecorder->RecordFrames(colorFrame, depthFrame, uvMapFrame);
 
 		if(m_bFramePlayback) {
-			bool frameread = m_pPlayer->PlaybackFrames(m_pColorBuffer,
+			bool frameread = m_pFramePlayer->PlaybackFrames(m_pColorBuffer,
 													   m_pDepthBuffer,
 													   m_pUVMapBuffer);
 			
@@ -1395,10 +1406,10 @@ namespace rhapsodies {
 		m_bFrameRecording = !m_bFrameRecording;
 
 		if(m_bFrameRecording) {
-			m_pRecorder->StartRecording();
+			m_pFrameRecorder->StartRecording();
 		}
 		else {
-			m_pRecorder->StopRecording();
+			m_pFrameRecorder->StopRecording();
 		}
 		WriteDebug(IDebugView::FRAME_RECORDING,
 				   ProfilerString("Frame Recording: ",
@@ -1409,10 +1420,10 @@ namespace rhapsodies {
 		m_bFramePlayback = !m_bFramePlayback;
 
 		if(m_bFramePlayback) {
-			m_pPlayer->StartPlayback();
+			m_pFramePlayer->StartPlayback();
 		}
 		else {
-			m_pPlayer->StopPlayback();
+			m_pFramePlayer->StopPlayback();
 		}
 
 		WriteDebug(IDebugView::FRAME_PLAYBACK,
