@@ -41,8 +41,8 @@ namespace rhapsodies {
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
 		VistaType::microtime tStart = oTimer.GetMicroTime();
 				
-		while(oTimer.GetMicroTime() - tStart < 10) {
-			std::cout << "daemonizeit" << std::endl;
+		while(oTimer.GetMicroTime() - tStart < 3) {
+			
 		}
 	}
 
@@ -76,8 +76,7 @@ namespace rhapsodies {
 		RHaPSODIES::Initialize();
 
 		m_pTracker = new HandTracker();
-
-		return true;
+		return m_pTracker->Initialize();
 	}
 
 }

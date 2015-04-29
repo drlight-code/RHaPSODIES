@@ -12,8 +12,14 @@ int main(int argc, char **argv) {
 	vstr::out() << "RHaPSODaemon proud to serve!" << std::endl;
 
 	glutInit(&argc, argv);
-	
-	daemon.Initialize();
+
+	bool success = daemon.Initialize();
+	if(!success) {
+		vstr::err() << "Failed to initialize RHaPSODaemon! Aborting."
+					<< std::endl;
+		exit(1);
+	}
+
 	daemon.Run();
 	
 	return 0;
