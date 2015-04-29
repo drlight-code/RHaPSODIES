@@ -19,7 +19,6 @@ namespace {
 
 			result = std::string(buffer.begin(), buffer.end());
 		}
-
 	}
 }
 

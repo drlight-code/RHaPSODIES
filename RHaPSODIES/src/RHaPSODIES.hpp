@@ -22,7 +22,7 @@ namespace rhapsodies {
 	private:
 		static bool RegisterShaders();
 
-		static ShaderRegistry S_oShaderRegistry;
+		static ShaderRegistry *S_pShaderRegistry;
 	};
 }
 

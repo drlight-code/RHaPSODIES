@@ -63,6 +63,8 @@ namespace rhapsodies {
 		glutDisplayFunc(&DisplayUpdate);
 		glutIdleFunc(&DisplayUpdate);
 		glutReshapeFunc(&DisplayReshape);
+
+		return true;
 	}
 	
 	bool RHaPSODaemon::InitDeviceDriver() {
@@ -72,6 +74,7 @@ namespace rhapsodies {
 
 	bool RHaPSODaemon::InitHandTracker() {
 		RHaPSODIES::Initialize();
+
 		m_pTracker = new HandTracker();
 
 		return true;
