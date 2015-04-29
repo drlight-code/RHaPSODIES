@@ -16,9 +16,12 @@ namespace rhapsodies {
 		static const std::string sCameraSectionName;
 		static const std::string sTrackerSectionName;
 
+		static bool Initialize();
 		static ShaderRegistry &GetShaderRegistry();
 		
 	private:
+		static bool RegisterShaders();
+
 		static ShaderRegistry S_oShaderRegistry;
 	};
 }

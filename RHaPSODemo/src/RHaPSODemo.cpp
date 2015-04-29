@@ -190,7 +190,6 @@ namespace rhapsodies {
 		// V2dGlobalConfig::GetInstance()
 		// 	->SetDefaultFont("FreeSans.ttf");
 
-   		success &= RegisterShaders();
 		success &= InitTracker();	
 		success &= CreateScene();
 
@@ -260,7 +259,8 @@ namespace rhapsodies {
 	bool RHaPSODemo::InitTracker() {
 		bool success = true;
 
-		m_pHandTracker = new HandTracker(m_pShaderReg);
+		RHaPSODIES::Initialize();
+		m_pHandTracker = new HandTracker();
 
 		m_pTextOverlay = new VistaSimpleTextOverlay(m_pSystem->GetDisplayManager());
 		m_pDebugView = new TextOverlayDebugView(
@@ -276,131 +276,6 @@ namespace rhapsodies {
 			VistaSystemEvent::VSE_POSTGRAPHICS);
 
 		return success;
-	}
-
-	bool RHaPSODemo::RegisterShaders() {
-		m_pShaderReg->RegisterShader(
-			"vert_vpos", GL_VERTEX_SHADER,
-			"resources/shaders/vpos.vert");
-		m_pShaderReg->RegisterShader(
-			"vert_vpos_indexedtransform", GL_VERTEX_SHADER,
-			"resources/shaders/vpos_indexedtransform.vert");
-		m_pShaderReg->RegisterShader(
-			"vert_vpos_vnorm_indexedtransform", GL_VERTEX_SHADER,
-			"resources/shaders/vpos_vnorm_indexedtransform.vert");
-		m_pShaderReg->RegisterShader(
-			"vert_vpos_uv", GL_VERTEX_SHADER,   
-			"resources/shaders/vpos_uv.vert");
-
-		m_pShaderReg->RegisterShader(
-			"frag_textured", GL_FRAGMENT_SHADER,
-			"resources/shaders/textured.frag");
-		m_pShaderReg->RegisterShader(
-			"frag_textured_uint", GL_FRAGMENT_SHADER,
-			"resources/shaders/textured_uint.frag");
-		m_pShaderReg->RegisterShader(
-			"frag_textured_uint8", GL_FRAGMENT_SHADER,
-			"resources/shaders/textured_uint8.frag");
-		m_pShaderReg->RegisterShader(
-			"frag_textured_uint_diff", GL_FRAGMENT_SHADER,
-			"resources/shaders/textured_uint_diff.frag");
-		m_pShaderReg->RegisterShader(
-			"frag_depthtexture", GL_FRAGMENT_SHADER,
-			"resources/shaders/depthtexture.frag");
-		m_pShaderReg->RegisterShader(
-			"frag_solid_green", GL_FRAGMENT_SHADER,
-			"resources/shaders/solid_green.frag");
-		m_pShaderReg->RegisterShader(
-			"frag_solid_blue", GL_FRAGMENT_SHADER,
-			"resources/shaders/solid_blue.frag");
-		m_pShaderReg->RegisterShader(
-			"frag_solid_colored", GL_FRAGMENT_SHADER,
-			"resources/shaders/solid_colored.frag");
-		m_pShaderReg->RegisterShader(
-			"frag_shaded_colored", GL_FRAGMENT_SHADER,
-			"resources/shaders/shaded_colored.frag");
-
-		m_pShaderReg->RegisterShader(
-			"indexed_viewport", GL_GEOMETRY_SHADER,
-			"resources/shaders/indexed_viewport.geom");
-
-		m_pShaderReg->RegisterShader(
-			"reduction_x", GL_COMPUTE_SHADER,
-			"resources/shaders/reduction_x.comp");
-		m_pShaderReg->RegisterShader(
-			"reduction_y", GL_COMPUTE_SHADER,
-			"resources/shaders/reduction_y.comp");
-		m_pShaderReg->RegisterShader(
-			"difference_score", GL_COMPUTE_SHADER,
-			"resources/shaders/difference_score.comp");
-		m_pShaderReg->RegisterShader(
-			"generate_transforms", GL_COMPUTE_SHADER,
-			"resources/shaders/generate_transforms.comp");
-
-		std::vector<std::string> vec_shaders;
-		vec_shaders.push_back("vert_vpos_uv");		
-		vec_shaders.push_back("frag_textured");		
-		m_pShaderReg->RegisterProgram("textured", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos_uv");		
-		vec_shaders.push_back("frag_textured_uint");		
-		m_pShaderReg->RegisterProgram("textured_uint", vec_shaders);
-	
-		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos_uv");		
-		vec_shaders.push_back("frag_textured_uint8");		
-		m_pShaderReg->RegisterProgram("textured_uint8", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos_uv");		
-		vec_shaders.push_back("frag_textured_uint_diff");		
-		m_pShaderReg->RegisterProgram("textured_uint_diff", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos");
-		vec_shaders.push_back("frag_solid_green");		
-		m_pShaderReg->RegisterProgram("vpos_green", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos");
-		vec_shaders.push_back("frag_solid_blue");		
-		m_pShaderReg->RegisterProgram("vpos_blue", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos");
-		vec_shaders.push_back("frag_solid_colored");		
-		m_pShaderReg->RegisterProgram("vpos_colored", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos_indexedtransform");
-		vec_shaders.push_back("frag_solid_colored");
-		vec_shaders.push_back("indexed_viewport");		
-		m_pShaderReg->RegisterProgram("indexedtransform", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos_vnorm_indexedtransform");
-		vec_shaders.push_back("frag_shaded_colored");
-//		vec_shaders.push_back("indexed_viewport");		
-		m_pShaderReg->RegisterProgram("shaded_indexedtransform", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("difference_score");
-		m_pShaderReg->RegisterProgram("difference_score", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("reduction_x");
-		m_pShaderReg->RegisterProgram("reduction_x", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("reduction_y");
-		m_pShaderReg->RegisterProgram("reduction_y", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("generate_transforms");
-		m_pShaderReg->RegisterProgram("generate_transforms", vec_shaders);
-
-		return true;
 	}
 
 	bool RHaPSODemo::CreateScene() {

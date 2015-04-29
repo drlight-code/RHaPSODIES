@@ -5,6 +5,7 @@
 #include <VistaBase/VistaTimeUtils.h>
 
 #include <RHaPSODIES.hpp>
+#include <HandTracker.hpp>
 
 #include "RHaPSODaemon.hpp"
 
@@ -21,7 +22,8 @@ namespace {
 }
 
 namespace rhapsodies {
-	RHaPSODaemon::RHaPSODaemon() {
+	RHaPSODaemon::RHaPSODaemon() :
+		m_pTracker(NULL) {
 		
 	}
 
@@ -30,6 +32,7 @@ namespace rhapsodies {
 
 		success &= InitGlut();
 		success &= InitDeviceDriver();
+		success &= InitHandTracker();
 
 		return success;
 	}
@@ -68,6 +71,8 @@ namespace rhapsodies {
 	}
 
 	bool RHaPSODaemon::InitHandTracker() {
+		RHaPSODIES::Initialize();
+		m_pTracker = new HandTracker();
 
 		return true;
 	}

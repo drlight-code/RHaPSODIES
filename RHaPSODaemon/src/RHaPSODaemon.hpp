@@ -2,6 +2,8 @@
 #define _RHAPSODIES_RHAPSODAEMON
 
 namespace rhapsodies {
+	class HandTracker;
+
 	class RHaPSODaemon {
     public:
 		RHaPSODaemon();
@@ -13,6 +15,8 @@ namespace rhapsodies {
 		bool InitGlut();
 		bool InitDeviceDriver();
 		bool InitHandTracker();
+
+		HandTracker *m_pTracker;
 	};
 }
 

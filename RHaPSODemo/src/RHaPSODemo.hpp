@@ -87,7 +87,6 @@ namespace rhapsodies {
 		bool m_bFrameRecording;
 		
 		bool InitTracker();
-		bool RegisterShaders();
 		bool CreateScene();
 
 		void ReadConfig();
