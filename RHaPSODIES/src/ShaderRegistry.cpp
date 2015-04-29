@@ -3,6 +3,8 @@
 
 #include <GL/glew.h>
 
+#include <VistaBase/VistaStreamUtils.h>
+
 #include "ShaderRegistry.hpp"
 
 namespace {
@@ -27,6 +29,8 @@ namespace rhapsodies {
 										  GLenum type,
 										  std::string path) {
 
+		vstr::debug() << "Registering shader: " << name << std::endl;
+		
 		// create gl shader object
 		GLuint shader = glCreateShader(type);
 
@@ -37,6 +41,9 @@ namespace rhapsodies {
 		const char* strShaderData = sShader.c_str();
 		glShaderSource(shader, 1, &strShaderData, NULL);
 
+		vstr::debug() << "Shader source:" << std::endl
+					  << strShaderData << std::endl << std::endl;
+		
 		glCompileShader(shader);
 
 		GLint status;
@@ -70,6 +77,9 @@ namespace rhapsodies {
 
 	GLuint ShaderRegistry::RegisterProgram(std::string name,
 										   std::vector<std::string> shader_names) {
+		
+		vstr::debug() << "Registering program: " << name << std::endl;
+		
 		GLuint program = glCreateProgram();
 
 		for(size_t iLoop = 0; iLoop < shader_names.size(); iLoop++)

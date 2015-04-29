@@ -12,7 +12,6 @@ namespace rhapsodies {
 	class RHaPSODIES {
     public:
 		static const std::string sRDIniFile;
-		static const std::string sAppSectionName;
 		static const std::string sCameraSectionName;
 		static const std::string sTrackerSectionName;
 

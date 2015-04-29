@@ -97,6 +97,9 @@ namespace {
 			p = NULL;
 		}
 	}
+
+	const std::string sRHaPSODemoIniFile  = "configfiles/rhapsodemo.ini";
+	const std::string sAppSectionName     = "APPLICATION";
 }
 
 namespace rhapsodies {
@@ -213,27 +216,19 @@ namespace rhapsodies {
 	
 	void RHaPSODemo::ReadConfig() {
 		VistaIniFileParser oIniParser(true);
-		oIniParser.ReadFile(RHaPSODIES::sRDIniFile);
+		oIniParser.ReadFile(sRHaPSODemoIniFile);
 
 		const VistaPropertyList &oConfig = oIniParser.GetPropertyList();
 
-		if(!oConfig.HasProperty(RHaPSODIES::sAppSectionName)) {
+		if(!oConfig.HasProperty(sAppSectionName)) {
 			throw std::runtime_error(
 				std::string() + "Config section ["
-				+ RHaPSODIES::sAppSectionName
-				+ "] not found!");
-		}
-		if(!oConfig.HasProperty(RHaPSODIES::sCameraSectionName)) {
-			throw std::runtime_error(
-				std::string() + "Config section ["
-				+ RHaPSODIES::sCameraSectionName
+				+ sAppSectionName
 				+ "] not found!");
 		}
 		
 		const VistaPropertyList &oApplicationSection =
-			oConfig.GetSubListConstRef( RHaPSODIES::sAppSectionName );
-		const VistaPropertyList &oCameraSection =
-			oConfig.GetSubListConstRef( RHaPSODIES::sCameraSectionName );
+			oConfig.GetSubListConstRef(sAppSectionName);
 
 		// read the ini file names from rhapsodemo ini
 		m_pSystem->SetIniFile(
@@ -249,11 +244,8 @@ namespace rhapsodies {
 			oApplicationSection.GetValueOrDefault<std::string>("INTERACTIONINI",
 															   "vista.ini"));
 
-		// read camera parameters
-		m_camWidth  = oCameraSection.GetValueOrDefault("RESOLUTION_X", 320);
-		m_camHeight = oCameraSection.GetValueOrDefault("RESOLUTION_Y", 240);
-
-		m_bFrameRecording = oCameraSection.GetValueOrDefault("FRAME_RECORDING", false);
+		m_bFrameRecording =
+			oApplicationSection.GetValueOrDefault("FRAME_RECORDING", false);
 	}
 
 	bool RHaPSODemo::InitTracker() {

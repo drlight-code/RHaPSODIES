@@ -50,6 +50,24 @@ namespace rhapsodies {
 	class HistogramUpdater;
 
 	class RHaPSODemo : public VistaEventHandler {
+	public:
+		RHaPSODemo();
+		~RHaPSODemo();
+
+		bool Initialize(int argc, char** argv);
+		bool Run();
+
+		// VistaEventHandler interface
+		virtual void HandleEvent(VistaEvent *pEvent);
+
+	private:
+		bool InitTracker();
+		bool CreateScene();
+
+		void ReadConfig();
+		bool CheckForConfigSection(const VistaPropertyList &oPropList,
+								   const std::string &sSectionName);
+
 		int m_camWidth, m_camHeight;
 
 		VistaSystem *m_pSystem;
@@ -84,24 +102,7 @@ namespace rhapsodies {
 		
 		DepthHistogramHandler *m_pDepthHistogramHandler;
 
-		bool m_bFrameRecording;
-		
-		bool InitTracker();
-		bool CreateScene();
-
-		void ReadConfig();
-		bool CheckForConfigSection(const VistaPropertyList &oPropList,
-								   const std::string &sSectionName);
-
-	public:
-		RHaPSODemo();
-		~RHaPSODemo();
-
-		bool Initialize(int argc, char** argv);
-		bool Run();
-
-		// VistaEventHandler interface
-		virtual void HandleEvent(VistaEvent *pEvent);
+		bool m_bFrameRecording;	   
 	};
 }
 
