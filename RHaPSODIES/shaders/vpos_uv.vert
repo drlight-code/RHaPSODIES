@@ -1,4 +1,4 @@
-#version 330 compatibility
+#version 430 core
 
 uniform mat4 gl_ModelViewProjectionMatrix;
 //mat4 mvp = mat4(1);

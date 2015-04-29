@@ -16,7 +16,7 @@ namespace rhapsodies {
 		static const std::string sTrackerSectionName;
 
 		static bool Initialize();
-		static ShaderRegistry &GetShaderRegistry();
+		static ShaderRegistry *GetShaderRegistry();
 		
 	private:
 		static bool RegisterShaders();

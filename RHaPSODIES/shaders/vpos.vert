@@ -1,4 +1,4 @@
-#version 410 compatibility
+#version 430 core
 
 uniform mat4 gl_ModelViewProjectionMatrix;
 uniform mat4 model_transform;

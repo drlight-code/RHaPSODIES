@@ -241,7 +241,7 @@ namespace rhapsodies {
 		m_pParticleBest(NULL),
 		m_pSwarm(NULL) {
 
-		m_pShaderReg = &RHaPSODIES::GetShaderRegistry();
+		m_pShaderReg = RHaPSODIES::GetShaderRegistry();
 
 		m_pHandGeometry = new HandGeometry;
 		m_pHandRenderer = new HandRenderer(m_pShaderReg);
@@ -801,7 +801,9 @@ namespace rhapsodies {
 		vViewportData.push_back(320);
 		vViewportData.push_back(240);
 
+		m_pHandRenderer->PreDraw();
 		m_pHandRenderer->PerformDraw(true, 0, 1, &vViewportData[0]);
+		m_pHandRenderer->PostDraw();
 
 		ReduceDepthMaps();
 
@@ -856,7 +858,6 @@ namespace rhapsodies {
 		// upload hand models into SSBO
 		UploadHandModels();
 
-		m_pHandRenderer->PreDraw();
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// generate transform buffer in parallel 8*8*2
 			tStart = oTimer.GetMicroTime();
@@ -866,6 +867,7 @@ namespace rhapsodies {
 			// FBO rendering of tiled zbuffers
 			tStart = oTimer.GetMicroTime();
 			glClear(GL_DEPTH_BUFFER_BIT);
+			m_pHandRenderer->PreDraw();
 			for(int row = 0 ; row < 8 ; row++) {
 				for(int col = 0 ; col < 8 ; col++) {
 					size_t index = row*8 + col;
@@ -880,7 +882,8 @@ namespace rhapsodies {
 					}
 				}
 			}
-//			glFinish();
+			m_pHandRenderer->PostDraw();
+			glFinish();
 			tRendering += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
@@ -890,8 +893,8 @@ namespace rhapsodies {
 			
 			tStart = oTimer.GetMicroTime();
 //			GpuPSOStep();
-			// UpdateScores();
-			// m_pSwarm->Evolve();
+			UpdateScores();
+			m_pSwarm->Evolve();
 			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 
 			// keep the best match over all generations, not just the last one
@@ -901,7 +904,6 @@ namespace rhapsodies {
 				*m_pParticleBest = oParticleGenerationBest;
 			}
 		}
-		m_pHandRenderer->PostDraw();
 
 		WriteDebug(IDebugView::TRANSFORM_TIME,
 				   ProfilerString("Transform time: ",

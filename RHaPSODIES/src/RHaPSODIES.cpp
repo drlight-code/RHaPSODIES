@@ -33,15 +33,14 @@ namespace rhapsodies {
 	ShaderRegistry *RHaPSODIES::S_pShaderRegistry = NULL;
 
 	bool RHaPSODIES::Initialize() {
-		S_pShaderRegistry = new ShaderRegistry();
-
 		glewInit();
 		
+		S_pShaderRegistry = new ShaderRegistry();
    		return RegisterShaders();
 	}
 	
-	ShaderRegistry &RHaPSODIES::GetShaderRegistry() {
-		return *S_pShaderRegistry;
+	ShaderRegistry *RHaPSODIES::GetShaderRegistry() {
+		return S_pShaderRegistry;
 	}
 
 	bool RHaPSODIES::RegisterShaders() {
@@ -125,16 +124,6 @@ namespace rhapsodies {
 		vec_shaders.push_back("vert_vpos_uv");		
 		vec_shaders.push_back("frag_textured_uint_diff");		
 		S_pShaderRegistry->RegisterProgram("textured_uint_diff", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos");
-		vec_shaders.push_back("frag_solid_green");		
-		S_pShaderRegistry->RegisterProgram("vpos_green", vec_shaders);
-
-		vec_shaders.clear();
-		vec_shaders.push_back("vert_vpos");
-		vec_shaders.push_back("frag_solid_blue");		
-		S_pShaderRegistry->RegisterProgram("vpos_blue", vec_shaders);
 
 		vec_shaders.clear();
 		vec_shaders.push_back("vert_vpos");

@@ -1,4 +1,4 @@
-#version 430
+#version 430 core
 
 layout (local_size_x = 320, local_size_y = 3) in;
 

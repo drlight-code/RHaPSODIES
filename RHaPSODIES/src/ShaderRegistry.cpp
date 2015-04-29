@@ -116,7 +116,15 @@ namespace rhapsodies {
 	}
 
 	GLuint ShaderRegistry::GetProgram(std::string name) {
-		return m_mapProgram[name];
+		std::map<std::string, GLuint>::iterator it = m_mapProgram.find(name);
+
+		if(it == m_mapProgram.end()) {
+			vstr::err() << "Program " << name << " not found in ShaderRegistry!"
+						<< std::endl;
+			return ~0;
+		}
+		
+		return it->second;
 	}
 
 	GLuint ShaderRegistry::GetUniform(std::string program_name,

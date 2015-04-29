@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 uniform vec3 color_in;
 out vec3 color;

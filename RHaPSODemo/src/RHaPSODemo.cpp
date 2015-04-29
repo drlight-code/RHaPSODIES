@@ -136,7 +136,6 @@ namespace rhapsodies {
 		m_bFrameRecording(false) {
 
 		m_pSystem = new VistaSystem;
-		m_pShaderReg = new ShaderRegistry;
 	}
 
 	RHaPSODemo::~RHaPSODemo() {
@@ -162,7 +161,6 @@ namespace rhapsodies {
 		CondDelete(m_pAxes);
 
 		CondDelete(m_pHandTracker);
-		CondDelete(m_pShaderReg);
 		CondDelete(m_pSystem);
 	}
 
@@ -193,7 +191,7 @@ namespace rhapsodies {
 		// V2dGlobalConfig::GetInstance()
 		// 	->SetDefaultFont("FreeSans.ttf");
 
-		success &= InitTracker();	
+		success &= InitTracker();
 		success &= CreateScene();
 
 		// register port and functor access for pointer types. this
@@ -252,6 +250,7 @@ namespace rhapsodies {
 		bool success = true;
 
 		RHaPSODIES::Initialize();
+		m_pShaderReg   = RHaPSODIES::GetShaderRegistry();
 		m_pHandTracker = new HandTracker();
 
 		m_pTextOverlay = new VistaSimpleTextOverlay(m_pSystem->GetDisplayManager());
