@@ -6,13 +6,13 @@
 
 #include <RHaPSODIES.hpp>
 #include <HandTracker.hpp>
+#include <DebugViewConsole.hpp>
 
 #include "RHaPSODaemon.hpp"
 
 namespace {
 	void DisplayUpdate()
 	{
-
 		glutPostRedisplay();
 	}
 
@@ -24,9 +24,21 @@ namespace {
 namespace rhapsodies {
 	RHaPSODaemon::RHaPSODaemon() :
 		m_pTracker(NULL) {
-		
+
+		m_pFakeColorBuffer = new unsigned char[320*240*3];
+		m_pFakeDepthBuffer = new unsigned short[320*240];
+		m_pFakeUVMapBuffer = new float[320*240*2];
 	}
 
+	RHaPSODaemon::~RHaPSODaemon() {
+		delete [] m_pFakeUVMapBuffer;
+		delete [] m_pFakeDepthBuffer;
+		delete [] m_pFakeColorBuffer;
+		
+		delete m_pDebugView;
+		delete m_pTracker;
+	}
+	
 	bool RHaPSODaemon::Initialize() {
 		bool success = true;
 
@@ -40,9 +52,14 @@ namespace rhapsodies {
 	bool RHaPSODaemon::Run() {
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
 		VistaType::microtime tStart = oTimer.GetMicroTime();
-				
+
+		m_pTracker->StartTracking();
+		
 		while(oTimer.GetMicroTime() - tStart < 3) {
-			
+			m_pTracker->FrameUpdate(
+				m_pFakeColorBuffer,
+				m_pFakeDepthBuffer,
+				m_pFakeUVMapBuffer);
 		}
 	}
 
@@ -76,6 +93,10 @@ namespace rhapsodies {
 		RHaPSODIES::Initialize();
 
 		m_pTracker = new HandTracker();
+		m_pDebugView = new DebugViewConsole();
+
+		m_pTracker->SetDebugView(m_pDebugView);
+		
 		return m_pTracker->Initialize();
 	}
 

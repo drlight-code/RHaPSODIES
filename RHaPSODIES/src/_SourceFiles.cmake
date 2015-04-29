@@ -13,6 +13,7 @@ set( DirFiles
 	HandTracker.cpp
 	CameraFramePlayer.cpp
 	CameraFrameRecorder.cpp
+	DebugViewConsole.cpp
 	_SourceFiles.cmake
 )
 set( DirFiles_SourceGroup "${RelativeSourceGroup}" )
