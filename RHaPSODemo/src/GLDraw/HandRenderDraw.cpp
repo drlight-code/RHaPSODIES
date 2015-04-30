@@ -4,6 +4,7 @@
 
 #include <VistaMath/VistaBoundingBox.h>
 
+#include <RHaPSODIES.hpp>
 #include <ShaderRegistry.hpp>
 #include <HandRenderer.hpp>
 
@@ -12,12 +13,17 @@
 namespace rhapsodies {
 	HandRenderDraw::HandRenderDraw(HandModel *pModelLeft,
 								   HandModel *pModelRight,
-								   HandGeometry *pGeometry,
-								   GLint idProgram) :
+								   HandGeometry *pGeometry) :
 		m_pModelLeft(pModelLeft),
 		m_pModelRight(pModelRight),
 		m_pGeometry(pGeometry),
-		m_pRenderer(new HandRenderer(idProgram, true, 10)) {
+		m_pRenderer(NULL) {
+
+		GLint idProgram =
+			RHaPSODIES::GetShaderRegistry()
+			->GetProgram("shaded_indexedtransform");
+		
+		m_pRenderer = new HandRenderer(idProgram, true, 10);
 	}
 
 	HandRenderDraw::~HandRenderDraw() {

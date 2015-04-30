@@ -12,8 +12,7 @@ namespace rhapsodies {
 	public:
 		HandRenderDraw(HandModel *pModelLeft,
 					   HandModel *pModelRight,
-					   HandGeometry *pModelRep,
-					   GLint idProgram);
+					   HandGeometry *pModelRep);
 		
 		~HandRenderDraw();
 		

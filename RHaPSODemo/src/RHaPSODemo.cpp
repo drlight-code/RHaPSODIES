@@ -99,6 +99,7 @@ namespace {
 	}
 
 	const std::string sRHaPSODemoIniFile  = "configfiles/rhapsodemo.ini";
+	const std::string sShaderPath         = "resources/shaders";
 	const std::string sAppSectionName     = "APPLICATION";
 }
 
@@ -136,6 +137,7 @@ namespace rhapsodies {
 		m_bFrameRecording(false) {
 
 		m_pSystem = new VistaSystem;
+		m_pShaderReg = new ShaderRegistry();
 	}
 
 	RHaPSODemo::~RHaPSODemo() {
@@ -161,6 +163,7 @@ namespace rhapsodies {
 		CondDelete(m_pAxes);
 
 		CondDelete(m_pHandTracker);
+		CondDelete(m_pShaderReg);
 		CondDelete(m_pSystem);
 	}
 
@@ -192,6 +195,7 @@ namespace rhapsodies {
 		// 	->SetDefaultFont("FreeSans.ttf");
 
 		success &= InitTracker();
+		success &= RegisterShaders();
 		success &= CreateScene();
 
 		// register port and functor access for pointer types. this
@@ -250,7 +254,6 @@ namespace rhapsodies {
 		bool success = true;
 
 		RHaPSODIES::Initialize();
-		m_pShaderReg   = RHaPSODIES::GetShaderRegistry();
 		m_pHandTracker = new HandTracker();
 
 		m_pTextOverlay = new VistaSimpleTextOverlay(m_pSystem->GetDisplayManager());
@@ -269,6 +272,30 @@ namespace rhapsodies {
 		return success;
 	}
 
+	bool RHaPSODemo::RegisterShaders() {
+		m_pShaderReg->RegisterShader(
+			"vert_vpos_uv", GL_VERTEX_SHADER,   
+			sShaderPath + "/vpos_uv.vert");
+		m_pShaderReg->RegisterShader(
+			"frag_textured", GL_FRAGMENT_SHADER,
+			sShaderPath + "/textured.frag");
+		m_pShaderReg->RegisterShader(
+			"frag_textured_uint_diff", GL_FRAGMENT_SHADER,
+			sShaderPath + "/textured_uint_diff.frag");
+
+		std::vector<std::string> vec_shaders;
+		vec_shaders.push_back("vert_vpos_uv");		
+		vec_shaders.push_back("frag_textured");		
+		m_pShaderReg->RegisterProgram("textured", vec_shaders);
+
+		vec_shaders.clear();
+		vec_shaders.push_back("vert_vpos_uv");		
+		vec_shaders.push_back("frag_textured_uint_diff");		
+		m_pShaderReg->RegisterProgram("textured_uint_diff", vec_shaders);
+		
+		return true;
+	}
+
 	bool RHaPSODemo::CreateScene() {
 		VistaGraphicsManager *pGraphicsMgr = m_pSystem->GetGraphicsManager();
 		VistaSceneGraph *pSG = pGraphicsMgr->GetSceneGraph();
@@ -283,9 +310,7 @@ namespace rhapsodies {
 		m_pHandRenderDraw = new HandRenderDraw(
 			m_pHandTracker->GetHandModelLeft(),
 			m_pHandTracker->GetHandModelRight(),
-			m_pHandTracker->GetHandGeometry(),
-			RHaPSODIES::GetShaderRegistry()
-			->GetProgram("shaded_indexedtransform"));
+			m_pHandTracker->GetHandGeometry());
 		
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
 		m_pHandModelTransform->SetTranslation(0,0,3);

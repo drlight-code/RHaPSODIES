@@ -62,6 +62,7 @@ namespace rhapsodies {
 
 	private:
 		bool InitTracker();
+		bool RegisterShaders();
 		bool CreateScene();
 
 		void ReadConfig();
