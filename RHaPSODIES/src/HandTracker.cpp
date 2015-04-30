@@ -856,10 +856,10 @@ namespace rhapsodies {
 		m_pSwarm->InitializeAround(*m_pParticleBest);
 		m_pParticleBest->ResetPenalty();
 
-		// upload hand models into SSBO
-		UploadHandModels();
-
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
+			// upload hand models into SSBO
+			UploadHandModels();
+
 			// generate transform buffer in parallel 8*8*2
 			tStart = oTimer.GetMicroTime();
 			GenerateTransforms();
