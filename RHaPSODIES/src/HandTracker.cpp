@@ -244,7 +244,8 @@ namespace rhapsodies {
 		m_pShaderReg = RHaPSODIES::GetShaderRegistry();
 
 		m_pHandGeometry = new HandGeometry;
-		m_pHandRenderer = new HandRenderer(m_pShaderReg);
+		m_pHandRenderer =
+			new HandRenderer(m_pShaderReg->GetProgram("indexedtransform"));
 
 		m_pFrameRecorder = new CameraFrameRecorder;
 		m_pFramePlayer   = new CameraFramePlayer;

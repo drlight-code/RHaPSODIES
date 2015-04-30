@@ -13,11 +13,11 @@ namespace rhapsodies {
 	HandRenderDraw::HandRenderDraw(HandModel *pModelLeft,
 								   HandModel *pModelRight,
 								   HandGeometry *pGeometry,
-								   ShaderRegistry *pReg) :
+								   GLint idProgram) :
 		m_pModelLeft(pModelLeft),
 		m_pModelRight(pModelRight),
 		m_pGeometry(pGeometry),
-		m_pRenderer(new HandRenderer(pReg, true, 10)) {
+		m_pRenderer(new HandRenderer(idProgram, true, 10)) {
 	}
 
 	HandRenderDraw::~HandRenderDraw() {

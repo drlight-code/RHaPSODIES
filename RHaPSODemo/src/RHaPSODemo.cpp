@@ -284,7 +284,8 @@ namespace rhapsodies {
 			m_pHandTracker->GetHandModelLeft(),
 			m_pHandTracker->GetHandModelRight(),
 			m_pHandTracker->GetHandGeometry(),
-			m_pShaderReg);
+			RHaPSODIES::GetShaderRegistry()
+			->GetProgram("shaded_indexedtransform"));
 		
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
 		m_pHandModelTransform->SetTranslation(0,0,3);

@@ -20,10 +20,11 @@ namespace {
 }
 
 namespace rhapsodies {
-	HandRenderer::HandRenderer(ShaderRegistry *pReg,
+	HandRenderer::HandRenderer(GLint idProgram,
 							   bool bDrawNormals,
 							   int iSegments) :
-		m_pShaderReg(pReg),
+		m_idProgram(idProgram),
+		m_idTransformBlock(0),
 		m_bDrawNormals(bDrawNormals),
 		m_szSphereData(0),
 		m_szCylinderData(0) {
@@ -78,11 +79,6 @@ namespace rhapsodies {
 		m_szCylinderData = vIndices.size();
 
 		PrepareBufferObjects();
-
-		if(m_bDrawNormals)
-			m_idProgram = m_pShaderReg->GetProgram("shaded_indexedtransform");
-		else
-			m_idProgram = m_pShaderReg->GetProgram("indexedtransform");
 
 		m_idTransformBlock =
 			glGetProgramResourceIndex(m_idProgram,

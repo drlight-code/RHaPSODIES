@@ -13,8 +13,8 @@ namespace rhapsodies {
 		HandRenderDraw(HandModel *pModelLeft,
 					   HandModel *pModelRight,
 					   HandGeometry *pModelRep,
-					   ShaderRegistry *pReg);
-
+					   GLint idProgram);
+		
 		~HandRenderDraw();
 		
 		virtual bool Do();

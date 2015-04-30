@@ -15,7 +15,7 @@ namespace rhapsodies {
 	
 	class HandRenderer {
 	public:
-		HandRenderer(ShaderRegistry *pReg,
+		HandRenderer(GLint idProgram,
 					 bool bDrawNormals = false,
 					 int iSegments = 4);
 		void DrawHand(HandModel *pModel,
@@ -48,12 +48,13 @@ namespace rhapsodies {
 							   float fAng3, float fLen3,
 							   bool bThumb);
 
-		ShaderRegistry *m_pShaderReg;
+		GLint m_idProgram;
+		GLint m_idTransformBlock;
 		bool m_bDrawNormals;
 		
 		size_t m_szSphereData;
 		size_t m_szCylinderData;
-
+		
 		std::vector<float> m_vVertexData;
 		std::vector<float> m_vNormalData;
 		std::vector<VistaTransformMatrix> m_vSphereTransforms;
@@ -68,9 +69,6 @@ namespace rhapsodies {
 		GLuint m_idSSBOSphereTransforms;
 		GLuint m_idSSBOCylinderTransforms;
 
-		GLint m_idProgram;
-		GLint m_idTransformBlock;
-		
 		GLint m_locInstancesPerViewportUniform;
 	};
 }
