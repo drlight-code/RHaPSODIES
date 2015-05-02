@@ -151,6 +151,8 @@ namespace rhapsodies {
 
 		void FilterSkinAreas();
 
+		void ResourcesBind();
+		void ResourcesUnbind();
 		
 		void UploadCameraDepthMap();
 		void SetupProjection();

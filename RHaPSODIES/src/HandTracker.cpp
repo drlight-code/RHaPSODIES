@@ -217,6 +217,18 @@ namespace rhapsodies {
 
 	const std::string sViewportBatchName = "VIEWPORT_BATCH";
 
+	const int iSSBOHandModelsLocation         = 0;
+	const int iSSBOHandGeometryLocation       = 1;
+	const int iSSBOSphereTransformsLocation   = 2;
+	const int iSSBOCylinderTransformsLocation = 3;
+
+	const int iImageTextureUnitResult       = 0;
+	const int iImageTextureUnitDifference   = 1;
+	const int iImageTextureUnitUnion        = 2;
+	const int iImageTextureUnitIntersection = 3;
+	const int iImageTextureUnitFinalResult  = 4;
+
+	
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
@@ -688,10 +700,10 @@ namespace rhapsodies {
 				   ProfilerString("Camera processing time: ",
 								  tProcessFrames));
 
+		ResourcesBind();
+		
 		UploadCameraDepthMap();
 		SetupProjection();
-
-		glBindFramebuffer(GL_FRAMEBUFFER, m_idRenderedTextureFBO);	
 
 		if(m_bTrackingEnabled) {
 			tStart = oTimer.GetMicroTime();		   
@@ -711,11 +723,48 @@ namespace rhapsodies {
 			PerformStartPoseMatch();
 		}
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		ResourcesUnbind();
 
 		return true;
 	}
 
+	void HandTracker::ResourcesBind() {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_idRenderedTextureFBO);	
+
+		// bind result image texture
+		glBindImageTexture(iImageTextureUnitResult,
+						   m_idResultTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		glBindImageTexture(iImageTextureUnitDifference,
+						   m_idDifferenceTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		glBindImageTexture(iImageTextureUnitUnion,
+						   m_idUnionTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+		glBindImageTexture(iImageTextureUnitIntersection,
+						   m_idIntersectionTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+		glBindImageTexture(iImageTextureUnitFinalResult,
+						   m_idFinalResultTexture,
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+	}
+
+	void HandTracker::ResourcesUnbind() {
+		// unbind result image textures
+		glBindImageTexture(iImageTextureUnitFinalResult,
+						   0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		glBindImageTexture(iImageTextureUnitIntersection,
+						   0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+		glBindImageTexture(iImageTextureUnitUnion,
+						   0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+		glBindImageTexture(iImageTextureUnitDifference,
+						   0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		glBindImageTexture(iImageTextureUnitResult,
+						   0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+	
 	void HandTracker::UploadCameraDepthMap() {
  		// upload camera image to tiled texture
  		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
@@ -983,16 +1032,6 @@ namespace rhapsodies {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
 
-		// bind result image texture
-		glBindImageTexture(0, m_idResultTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glBindImageTexture(1, m_idDifferenceTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glBindImageTexture(2, m_idUnionTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
-		glBindImageTexture(3, m_idIntersectionTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
-
 		// reduction in x direction
 		glUseProgram(m_idReductionXProgram);
 		glDispatchCompute(8, 240*8/3, 1);
@@ -1006,22 +1045,12 @@ namespace rhapsodies {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		glBindImageTexture(4, m_idFinalResultTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-
 		// reduction in y direction
 		glUseProgram(m_idReductionYProgram);
 		glDispatchCompute(8, 8, 1);
 
 		// make sure all image stores are visible
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-		// unbind result image textures
-		glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glBindImageTexture(1, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glBindImageTexture(2, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
-		glBindImageTexture(3, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
-		glBindImageTexture(4, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
 	}
 
 	float HandTracker::Penalty(HandModel& oModelLeft,
