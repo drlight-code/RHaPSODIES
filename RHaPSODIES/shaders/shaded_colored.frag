@@ -1,4 +1,4 @@
-#version 430 core
+#version 430 compatibility
 
 uniform vec3 color_in;
 
