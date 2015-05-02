@@ -415,8 +415,9 @@ namespace rhapsodies {
 			iViewPortCount;
 		int iDrawCount = iSpheresPerViewport * iViewPortCount;
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOSphereTransforms);
 		if(bTransformTransfer) {
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER,
+						 m_idSSBOSphereTransforms);
 			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
 							sizeSSBO,
 							&m_vSphereTransforms[0]);
@@ -443,8 +444,9 @@ namespace rhapsodies {
 			iViewPortCount;
 		iDrawCount = iCylindersPerViewport * iViewPortCount;
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOCylinderTransforms);
 		if(bTransformTransfer) {
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER,
+						 m_idSSBOCylinderTransforms);
 			glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
 							 sizeSSBO,
 							 &m_vCylinderTransforms[0]);
