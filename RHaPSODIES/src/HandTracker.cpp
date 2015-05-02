@@ -999,21 +999,25 @@ namespace rhapsodies {
 		glUseProgram(m_idGenerateTransformsProgram);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0,
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandModelsLocation,
 						 m_idSSBOHandModels);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandGeometry);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1,
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandGeometryLocation,
 						 m_idSSBOHandGeometry);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
 					 m_pHandRenderer->GetSSBOSphereTransformsId());
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2,
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOSphereTransformsLocation,
 						 m_pHandRenderer->GetSSBOSphereTransformsId());
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER,
 					 m_pHandRenderer->GetSSBOCylinderTransformsId());
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3,
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOCylinderTransformsLocation,
 						 m_pHandRenderer->GetSSBOCylinderTransformsId());
 
    		glDispatchCompute(64, 2, 1);
