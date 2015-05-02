@@ -41,8 +41,8 @@ namespace rhapsodies {
 		const char* strShaderData = sShader.c_str();
 		glShaderSource(shader, 1, &strShaderData, NULL);
 
-		vstr::debug() << "Shader source:" << std::endl
-					  << strShaderData << std::endl << std::endl;
+		// vstr::debug() << "Shader source:" << std::endl
+		// 			  << strShaderData << std::endl << std::endl;
 		
 		glCompileShader(shader);
 
