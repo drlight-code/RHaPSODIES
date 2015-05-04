@@ -161,6 +161,7 @@ namespace rhapsodies {
 		void GenerateTransforms();
 
 		void ReduceDepthMaps();
+		void GpuPSOStep();
 		void UpdateScores();
 		
 		float Penalty(HandModel& oModelLeft,
@@ -232,6 +233,7 @@ namespace rhapsodies {
 		unsigned int *m_pResultBuffer;
 
 		GLuint m_idSSBOHandModels;
+		GLuint m_idSSBOHandModelsIBest;
 		GLuint m_idSSBOHandGeometry;
 		
 		GLint  m_locColorUniform;

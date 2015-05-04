@@ -221,6 +221,7 @@ namespace rhapsodies {
 	const int iSSBOHandGeometryLocation       = 1;
 	const int iSSBOSphereTransformsLocation   = 2;
 	const int iSSBOCylinderTransformsLocation = 3;
+	const int iSSBOHandModelsIBestLocation    = 4;
 
 	const int iImageTextureUnitResult       = 0;
 	const int iImageTextureUnitDifference   = 1;
@@ -508,12 +509,20 @@ namespace rhapsodies {
 	}
 
 	bool HandTracker::InitGpuPSO() {
+		// hand models SSBO
 		glGenBuffers(1, &m_idSSBOHandModels);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
 		// 32 instead of 27 for padding
 		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*32*sizeof(float),
 					 NULL, GL_DYNAMIC_DRAW);
 
+		// hand models ibest SSBO
+		glGenBuffers(1, &m_idSSBOHandModelsIBest);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*32*sizeof(float),
+					 NULL, GL_DYNAMIC_DRAW);
+
+		// hand geometry SSBO
 		glGenBuffers(1, &m_idSSBOHandGeometry);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandGeometry);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, 19*sizeof(float),
@@ -905,9 +914,10 @@ namespace rhapsodies {
 		m_pSwarm->InitializeAround(*m_pParticleBest);
 		m_pParticleBest->ResetPenalty();
 
+		// upload hand models into SSBO
+		UploadHandModels();
+
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
-			// upload hand models into SSBO
-			UploadHandModels();
 
 			// generate transform buffer in parallel 8*8*2
 			tStart = oTimer.GetMicroTime();
@@ -942,9 +952,7 @@ namespace rhapsodies {
 			tReduction += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
-//			GpuPSOStep();
-			UpdateScores();
-			m_pSwarm->Evolve();
+			GpuPSOStep();
 			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 
 			// keep the best match over all generations, not just the last one
@@ -1049,6 +1057,11 @@ namespace rhapsodies {
 
 		// make sure all image stores are visible
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	}
+
+	void HandTracker::GpuPSOStep() {
+		UpdateScores();
+		m_pSwarm->Evolve();
 	}
 
 	float HandTracker::Penalty(HandModel& oModelLeft,

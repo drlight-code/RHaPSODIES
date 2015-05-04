@@ -138,10 +138,14 @@ namespace rhapsodies {
 	void Particle::ParticleToStateArray(Particle &oParticle, float *aState) {
 		HandModel::HandModelToStateArray(oParticle.m_oModelLeft,  aState);
 		HandModel::HandModelToStateArray(oParticle.m_oModelRight, aState+32);
+
+		aState[31] = oParticle.m_fIBestPenalty;
 	}
 
 	void Particle::StateArrayToParticle(Particle &oParticle, float *aState) {
 		HandModel::StateArrayToHandModel(oParticle.m_oModelLeft,  aState);
 		HandModel::StateArrayToHandModel(oParticle.m_oModelRight, aState+32);
+
+		oParticle.m_fIBestPenalty = aState[31];
 	}
 }

@@ -101,7 +101,7 @@ namespace rhapsodies {
 		// static constriction coefficient and behavioral parameters for now
 		for(size_t particle = 0; particle < m_vecParticles.size(); ++particle) {
 			m_vecParticles[particle].Imitate(oParticleBest, 2.8f, 1.3f);
-		}		
+		}
 	}
 
 	Particle ParticleSwarm::GetBestMatch() {
