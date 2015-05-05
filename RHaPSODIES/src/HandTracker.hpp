@@ -27,8 +27,6 @@
 #include <list>
 #include <map>
 
-#include <GL/glcorearb.h>
-
 #include <VistaAspects/VistaPropertyList.h>
 
 #include "DebugView.hpp"
