@@ -261,6 +261,7 @@ namespace rhapsodies {
 		m_pHandTracker->SetDebugView(m_pDebugView);
 
 		success &= m_pHandTracker->Initialize();
+		m_pHandTracker->StartTracking();
 
 		// register frame update handler
 		m_pSystem->GetEventManager()->AddEventHandler(
