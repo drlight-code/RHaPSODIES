@@ -2,10 +2,10 @@
 #include <VistaKernel/DisplayManager/VistaSimpleTextOverlay.h>
 #include <VistaKernel/DisplayManager/VistaTextEntity.h>
 
-#include "TextOverlayDebugView.hpp"
+#include "DebugViewTextOverlay.hpp"
 
 namespace rhapsodies {
-	TextOverlayDebugView::TextOverlayDebugView(
+	DebugViewTextOverlay::DebugViewTextOverlay(
 		VistaDisplayManager *pDispMgr,
 		VistaSimpleTextOverlay *pOverlay) :
 		m_pOverlay(pOverlay) {
@@ -25,7 +25,7 @@ namespace rhapsodies {
 
 	}
 
-	void TextOverlayDebugView::Write(Slot slot, std::string sText) {
+	void DebugViewTextOverlay::Write(Slot slot, std::string sText) {
 		m_mapSlotEntity[slot]->SetText(sText);
 	}
 }

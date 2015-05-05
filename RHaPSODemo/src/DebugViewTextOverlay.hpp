@@ -10,9 +10,9 @@ class VistaSimpleTextOverlay;
 class IVistaTextEntity;
 
 namespace rhapsodies {
-	class TextOverlayDebugView : public IDebugView {
+	class DebugViewTextOverlay : public IDebugView {
     public:
-		TextOverlayDebugView(
+		DebugViewTextOverlay(
 			VistaDisplayManager *pDispMgr,
 			VistaSimpleTextOverlay *pOverlay);
 		

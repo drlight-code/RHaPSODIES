@@ -7,7 +7,7 @@ set( SubDirs GLDraw )
 set( DirFiles
 	main.cpp
 	RHaPSODemo.cpp
-  	TextOverlayDebugView.cpp
+  	DebugViewTextOverlay.cpp
 	HandTrackingNode.cpp
 #	DepthHistogramHandler.cpp
 #	HistogramUpdater.cpp

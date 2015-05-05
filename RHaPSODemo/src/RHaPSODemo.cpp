@@ -66,7 +66,7 @@
 #include <GLDraw/ImagePBOOpenGLDraw.hpp>
 #include <GLDraw/HandRenderDraw.hpp>
 
-#include <TextOverlayDebugView.hpp>
+#include <DebugViewTextOverlay.hpp>
 
 #include <DepthHistogramHandler.hpp>
 #include <HistogramUpdater.hpp>
@@ -257,7 +257,7 @@ namespace rhapsodies {
 		m_pHandTracker = new HandTracker();
 
 		m_pTextOverlay = new VistaSimpleTextOverlay(m_pSystem->GetDisplayManager());
-		m_pDebugView = new TextOverlayDebugView(
+		m_pDebugView = new DebugViewTextOverlay(
 			m_pSystem->GetDisplayManager(), m_pTextOverlay);
 		
 		m_pHandTracker->SetDebugView(m_pDebugView);
