@@ -7,8 +7,17 @@
 namespace rhapsodies {
 	DebugViewTextOverlay::DebugViewTextOverlay(
 		VistaDisplayManager *pDispMgr,
-		VistaSimpleTextOverlay *pOverlay) :
-		m_pOverlay(pOverlay) {
+		std::vector<std::string> vViewportNames) {
+
+		for(auto &sViewportName : vViewportNames) {
+			VistaViewport *pViewport = 
+				pDispMgr->GetViewportByName(sViewportName);
+
+			if(pViewport) {
+				m_vOverlays.push_back(
+					new VistaSimpleTextOverlay(pViewport));
+			}
+		}
 
 		IVistaTextEntity *pText;
 		for(int slot = 0; slot < SLOT_LAST; ++slot) {
@@ -20,9 +29,17 @@ namespace rhapsodies {
 			pText->SetYPos(slot+1);
 			pText->SetEnabled(true);
 
-			m_pOverlay->AddText(pText, true);
+			for(auto &pOverlay : m_vOverlays) {
+				pOverlay->AddText(pText, true);
+			}
 		}
 
+	}
+
+	DebugViewTextOverlay::~DebugViewTextOverlay() {
+		for(auto &pOverlay : m_vOverlays) {
+			delete pOverlay;
+		}
 	}
 
 	void DebugViewTextOverlay::Write(Slot slot, std::string sText) {

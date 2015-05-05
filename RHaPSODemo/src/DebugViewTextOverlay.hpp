@@ -1,5 +1,5 @@
-#ifndef _RHAPSODIES_TEXTOVERLAYDEBUGVIEW
-#define _RHAPSODIES_TEXTOVERLAYDEBUGVIEW
+#ifndef _RHAPSODIES_DEBUGVIEWTEXTOVERLAY
+#define _RHAPSODIES_DEBUGVIEWTEXTOVERLAY
 
 #include <map>
 
@@ -14,14 +14,15 @@ namespace rhapsodies {
     public:
 		DebugViewTextOverlay(
 			VistaDisplayManager *pDispMgr,
-			VistaSimpleTextOverlay *pOverlay);
+			std::vector<std::string> vViewportNames);
+		virtual ~DebugViewTextOverlay();
 		
 		void Write(Slot slot, std::string sText);
 		
     private:
-		VistaSimpleTextOverlay *m_pOverlay;
+		std::vector<VistaSimpleTextOverlay*> m_vOverlays;
 		std::map<int, IVistaTextEntity*> m_mapSlotEntity;
 	};
 }
 
-#endif // _RHAPSODIES_TEXTOVERLAYDEBUGVIEW
+#endif // _RHAPSODIES_DEBUGVIEWTEXTOVERLAY

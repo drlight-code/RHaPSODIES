@@ -23,6 +23,8 @@
 
 #include <GL/glew.h>
 
+#include <VistaAspects/VistaConversion.h>
+
 #include <VistaTools/VistaIniFileParser.h>
 
 #include <VistaDataFlowNet/VdfnPortFactory.h>
@@ -100,7 +102,7 @@ namespace {
 
 	const std::string sRHaPSODemoIniFile  = "configfiles/rhapsodemo.ini";
 	const std::string sShaderPath         = "resources/shaders";
-	const std::string sAppSectionName     = "APPLICATION";
+	const std::string sAppSectionName     = "RHAPSODEMO";
 }
 
 namespace rhapsodies {
@@ -108,7 +110,6 @@ namespace rhapsodies {
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
 	RHaPSODemo::RHaPSODemo() :
-		m_camWidth(320), m_camHeight(240),
 		m_pSystem(NULL),
 		m_pShaderReg(NULL),
 		m_pHandRenderDraw(NULL),
@@ -131,7 +132,6 @@ namespace rhapsodies {
 		m_pDifferenceTextureDraw(NULL),
 		m_pUnionTextureDraw(NULL),
 		m_pIntersectionTextureDraw(NULL),
-		m_pTextOverlay(NULL),
 		m_pDebugView(NULL),
 		m_pDepthHistogramHandler(NULL),
 		m_bFrameRecording(false) {
@@ -144,7 +144,6 @@ namespace rhapsodies {
 		CondDelete(m_pDepthHistogramHandler);
 
 		CondDelete(m_pDebugView);
-		CondDelete(m_pTextOverlay);
 		
 		CondDelete(m_pColorDraw);
 		CondDelete(m_pColorSegDraw);
@@ -229,37 +228,36 @@ namespace rhapsodies {
 				+ "] not found!");
 		}
 		
-		const VistaPropertyList &oApplicationSection =
-			oConfig.GetSubListConstRef(sAppSectionName);
+		m_oConfig = oConfig.GetSubListConstRef(sAppSectionName);
 
 		// read the ini file names from rhapsodemo ini
 		m_pSystem->SetIniFile(
-			oApplicationSection.GetValueOrDefault<std::string>("MAININI",
-															   "vista.ini"));
+			m_oConfig.GetValueOrDefault<std::string>("MAININI",
+													 "vista.ini"));
 		m_pSystem->SetDisplayIniFile(
-			oApplicationSection.GetValueOrDefault<std::string>("DISPLAYINI",
-															   "vista.ini"));
+			m_oConfig.GetValueOrDefault<std::string>("DISPLAYINI",
+													 "vista.ini"));
 		m_pSystem->SetClusterIniFile(
-			oApplicationSection.GetValueOrDefault<std::string>("CLUSTERINI",
-															   "vista.ini"));
+			m_oConfig.GetValueOrDefault<std::string>("CLUSTERINI",
+													 "vista.ini"));
 		m_pSystem->SetInteractionIniFile(
-			oApplicationSection.GetValueOrDefault<std::string>("INTERACTIONINI",
-															   "vista.ini"));
-
+			m_oConfig.GetValueOrDefault<std::string>("INTERACTIONINI",
+													 "vista.ini"));
 		m_bFrameRecording =
-			oApplicationSection.GetValueOrDefault("FRAME_RECORDING", false);
+			m_oConfig.GetValueOrDefault("FRAME_RECORDING", false);
 	}
 
 	bool RHaPSODemo::InitTracker() {
 		bool success = true;
 
-		RHaPSODIES::Initialize();
-		m_pHandTracker = new HandTracker();
-
-		m_pTextOverlay = new VistaSimpleTextOverlay(m_pSystem->GetDisplayManager());
+		// create debug view from viewport names
+		std::vector<std::string> vViewportNames;
+		m_oConfig.GetValue("DEBUG_VIEWPORTS", vViewportNames);
 		m_pDebugView = new DebugViewTextOverlay(
-			m_pSystem->GetDisplayManager(), m_pTextOverlay);
-		
+			m_pSystem->GetDisplayManager(), vViewportNames);
+
+		RHaPSODIES::Initialize();
+		m_pHandTracker = new HandTracker();		
 		m_pHandTracker->SetDebugView(m_pDebugView);
 
 		success &= m_pHandTracker->Initialize();
@@ -323,7 +321,7 @@ namespace rhapsodies {
 								
 		// ImageDraw: color image
 		// ImagePBOOpenGLDraw *pPBODraw = 
-		// 	new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		// 	new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
 		// m_pHandTracker->SetViewPBODraw(HandTracker::COLOR, pPBODraw); 
 
 		// m_pColorDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
@@ -331,7 +329,7 @@ namespace rhapsodies {
 
 		// ImageDraw: depth image
 		ImagePBOOpenGLDraw *pPBODraw;
-		//= new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		//= new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
 		// m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH, pPBODraw); 
 
 		// m_pDepthDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
@@ -339,7 +337,7 @@ namespace rhapsodies {
 //		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
 
 		// ImageDraw: UV map
-		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		pPBODraw = new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
 		m_pHandTracker->SetViewPBODraw(HandTracker::UVMAP, pPBODraw); 
 
 		m_pUVMapDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
@@ -347,21 +345,21 @@ namespace rhapsodies {
 		
 
 		// ImageDraw: segmented color image
-		// pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		// pPBODraw = new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
 		// m_pHandTracker->SetViewPBODraw(HandTracker::COLOR_SEGMENTED, pPBODraw); 
 
 		// m_pColorSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		// m_pColorSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,-1,0));
 
 		// ImageDraw: segmented depth image
-		pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		pPBODraw = new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
 		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_SEGMENTED, pPBODraw); 
 
 		m_pDepthSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
 		m_pDepthSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,2,0));
 
 		// ImageDraw: segmented UV map
-		// pPBODraw = new ImagePBOOpenGLDraw(m_camWidth, m_camHeight, m_pShaderReg);
+		// pPBODraw = new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
 		// m_pHandTracker->SetViewPBODraw(HandTracker::UVMAP_SEGMENTED, pPBODraw); 
 
 		// m_pUVMapSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);

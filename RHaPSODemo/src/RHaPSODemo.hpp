@@ -25,6 +25,7 @@
 #ifndef _RHAPSODIES_RHAPSODEMO
 #define _RHAPSODIES_RHAPSODEMO
 
+#include <VistaAspects/VistaPropertyList.h>
 #include <VistaKernel/EventManager/VistaEventHandler.h>
 
 class VistaPropertyList;
@@ -33,7 +34,6 @@ class VistaSystem;
 class VistaTransformNode;
 class VistaOpenGLNode;
 class VistaAxes;
-class VistaSimpleTextOverlay;
 
 class DepthHistogramHandler;
 
@@ -69,8 +69,8 @@ namespace rhapsodies {
 		bool CheckForConfigSection(const VistaPropertyList &oPropList,
 								   const std::string &sSectionName);
 
-		int m_camWidth, m_camHeight;
-
+		VistaPropertyList m_oConfig;
+		
 		VistaSystem *m_pSystem;
 		ShaderRegistry *m_pShaderReg;
 
@@ -98,7 +98,6 @@ namespace rhapsodies {
 		ImageDraw *m_pUnionTextureDraw;
 		ImageDraw *m_pIntersectionTextureDraw;
 
-		VistaSimpleTextOverlay *m_pTextOverlay;
 		IDebugView *m_pDebugView;
 		
 		DepthHistogramHandler *m_pDepthHistogramHandler;
