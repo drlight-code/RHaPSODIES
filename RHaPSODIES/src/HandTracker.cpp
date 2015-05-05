@@ -1028,10 +1028,6 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::ReduceDepthMaps() {
-		if(!GLEW_ARB_shader_image_load_store || !GLEW_ARB_compute_shader) {
-			return;
-		}
-		
 		// bind input textures
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
