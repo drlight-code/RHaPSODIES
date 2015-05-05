@@ -4,6 +4,7 @@ RHaPSODemo/RHaPSODemo
 RHaPSODemo/RHaPSODemoD
 RHaPSODemo/*.trace
 RHaPSODemo/resources/recordings
+RHaPSODemo/configfiles/rhapsodemo.ini
 RHaPSODaemon/RHaPSODaemon
 RHaPSODaemon/RHaPSODaemonD
 RHaPSODaemon/*.trace
