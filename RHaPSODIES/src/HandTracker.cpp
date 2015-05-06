@@ -765,11 +765,37 @@ namespace rhapsodies {
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
 
+		// bind pixel pack/unpack PBOs
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, m_idResultPBO);
+
+		// bind transform SSBOs
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandModelsLocation,
+						 m_idSSBOHandModels);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandGeometryLocation,
+						 m_idSSBOHandGeometry);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOSphereTransformsLocation,
+						 m_pHandRenderer->GetSSBOSphereTransformsId());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOCylinderTransformsLocation,
+						 m_pHandRenderer->GetSSBOCylinderTransformsId());
 	}
 
 	void HandTracker::ResourcesUnbind() {
+		// unbind transform SSBOs
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandModelsLocation, 0);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandGeometryLocation, 0);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOSphereTransformsLocation, 0);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOCylinderTransformsLocation, 0);
+
+		// unbind pixel pack/unpack PBOs
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
@@ -960,6 +986,12 @@ namespace rhapsodies {
 			}
 			m_pHandRenderer->PostDraw();
 			glFinish();
+			// rebind binding point 0 since it's overwritten in
+			// PerformDraw. @todo make consistent and get rid of this,
+			// postponed for now.
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+							 iSSBOHandModelsLocation,
+							 m_idSSBOHandModels);			
 			tRendering += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
@@ -1021,25 +1053,7 @@ namespace rhapsodies {
 
 	void HandTracker::GenerateTransforms() {
 		glUseProgram(m_idGenerateTransformsProgram);
-
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
-						 iSSBOHandModelsLocation,
-						 m_idSSBOHandModels);
-
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
-						 iSSBOHandGeometryLocation,
-						 m_idSSBOHandGeometry);
-
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
-						 iSSBOSphereTransformsLocation,
-						 m_pHandRenderer->GetSSBOSphereTransformsId());
-
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
-						 iSSBOCylinderTransformsLocation,
-						 m_pHandRenderer->GetSSBOCylinderTransformsId());
-
    		glDispatchCompute(64, 2, 1);
-
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 	
