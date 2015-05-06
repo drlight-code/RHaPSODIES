@@ -764,9 +764,13 @@ namespace rhapsodies {
 		glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
+
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
 	}
 
 	void HandTracker::ResourcesUnbind() {
+ 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
 		// unbind input textures
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -791,8 +795,6 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::UploadCameraDepthMap() {
- 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
-
 		// upload camera image to tiled texture
  		m_pCameraTexturePBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
  										  GL_WRITE_ONLY);		
@@ -808,7 +810,6 @@ namespace rhapsodies {
 								GL_INT, NULL);
 			}
 		}
- 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 	}
 
 	void HandTracker::SetupProjection() {
