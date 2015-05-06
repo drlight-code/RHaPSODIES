@@ -756,9 +756,25 @@ namespace rhapsodies {
 		glBindImageTexture(iImageTextureUnitFinalResult,
 						   m_idFinalResultTexture,
 						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+
+		// bind input textures
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
 	}
 
 	void HandTracker::ResourcesUnbind() {
+		// unbind input textures
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
 		// unbind result image textures
 		glBindImageTexture(iImageTextureUnitFinalResult,
 						   0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
@@ -775,15 +791,15 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::UploadCameraDepthMap() {
- 		// upload camera image to tiled texture
- 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
 
+		// upload camera image to tiled texture
  		m_pCameraTexturePBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
  										  GL_WRITE_ONLY);		
 		memcpy(m_pCameraTexturePBO, m_pDepthBufferUInt, 320*240*4);
 		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 
+		glActiveTexture(GL_TEXTURE0);
 		for(int row = 0 ; row < 8 ; row++) {
 			for(int col = 0 ; col < 8 ; col++) {
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 
@@ -793,7 +809,6 @@ namespace rhapsodies {
 			}
 		}
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
- 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	void HandTracker::SetupProjection() {
@@ -868,8 +883,7 @@ namespace rhapsodies {
 
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 		
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
+		glActiveTexture(GL_TEXTURE2);
 
 		unsigned int result_data[8*8*3];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
@@ -914,11 +928,10 @@ namespace rhapsodies {
 		m_pSwarm->InitializeAround(*m_pParticleBest);
 		m_pParticleBest->ResetPenalty();
 
-		// upload hand models into SSBO
-		UploadHandModels();
-
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
-
+			// upload hand models into SSBO
+			UploadHandModels();
+			
 			// generate transform buffer in parallel 8*8*2
 			tStart = oTimer.GetMicroTime();
 			GenerateTransforms();
@@ -1028,24 +1041,12 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::ReduceDepthMaps() {
-		// bind input textures
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
-
 		// reduction in x direction
 		glUseProgram(m_idReductionXProgram);
 		glDispatchCompute(8, 240*8/3, 1);
 
 		// make sure all image stores are visible
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-		// unbind input textures
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, 0);
 
 		// reduction in y direction
 		glUseProgram(m_idReductionYProgram);
@@ -1058,6 +1059,9 @@ namespace rhapsodies {
 	void HandTracker::GpuPSOStep() {
 		UpdateScores();
 		m_pSwarm->Evolve();
+
+		// update scores via compute shader 8*8
+		
 	}
 
 	float HandTracker::Penalty(HandModel& oModelLeft,
@@ -1114,8 +1118,7 @@ namespace rhapsodies {
 	void HandTracker::UpdateScores() {
 		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
+		glActiveTexture(GL_TEXTURE2);
 
 		//const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
 		//VistaType::microtime tS = oTimer.GetMicroTime();
@@ -1152,7 +1155,6 @@ namespace rhapsodies {
 		}
 		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 		//vstr::out() << "loop:        " << oTimer.GetMicroTime()-tS << std::endl;
-
 	}
 
 	void HandTracker::ProcessCameraFrames(
