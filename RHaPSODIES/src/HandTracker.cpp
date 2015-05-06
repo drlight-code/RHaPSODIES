@@ -766,9 +766,11 @@ namespace rhapsodies {
 		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
 
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, m_idResultPBO);
 	}
 
 	void HandTracker::ResourcesUnbind() {
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 		// unbind input textures
@@ -882,16 +884,16 @@ namespace rhapsodies {
 
 		ReduceDepthMaps();
 
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-		
 		glActiveTexture(GL_TEXTURE2);
-
-		unsigned int result_data[8*8*3];
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, result_data);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+		unsigned int *result_data = (unsigned int*)(glMapBuffer(GL_PIXEL_PACK_BUFFER,
+																GL_READ_ONLY));
 
 		float difference_result   = result_data[0] / float(0x7fff);
 		float union_result        = result_data[1];
 		float intersection_result = result_data[2];
+
+		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 
 		float fPenalty = Penalty(m_pParticleBest->GetHandModelLeft(),
 								 m_pParticleBest->GetHandModelRight(),
@@ -1119,8 +1121,6 @@ namespace rhapsodies {
 	void HandTracker::UpdateScores() {
 		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
 
-		glActiveTexture(GL_TEXTURE2);
-
 		//const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
 		//VistaType::microtime tS = oTimer.GetMicroTime();
 
@@ -1128,9 +1128,8 @@ namespace rhapsodies {
 		// 3.73 PSO fps at 40 generations
 		// 3.88 using PBO for pixel transfer :/
 
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, m_idResultPBO);
+		glActiveTexture(GL_TEXTURE2);
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
-
 		unsigned int *result_data = (unsigned int*)(glMapBuffer(GL_PIXEL_PACK_BUFFER,
 																GL_READ_ONLY));
 
