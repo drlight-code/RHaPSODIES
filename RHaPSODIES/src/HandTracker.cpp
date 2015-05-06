@@ -274,6 +274,8 @@ namespace rhapsodies {
 		m_idReductionXProgram = m_pShaderReg->GetProgram("reduction_x");
 		m_idReductionYProgram = m_pShaderReg->GetProgram("reduction_y");
 
+		m_idUpdateScoresProgram = m_pShaderReg->GetProgram("update_scores");
+
 		m_idColorFragProgram =
 			m_pShaderReg->GetProgram("shaded_indexedtransform");
 		m_locColorUniform =
@@ -782,6 +784,9 @@ namespace rhapsodies {
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBOCylinderTransformsLocation,
 						 m_pHandRenderer->GetSSBOCylinderTransformsId());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandModelsIBestLocation,
+						 m_idSSBOHandModelsIBest);
 	}
 
 	void HandTracker::ResourcesUnbind() {
@@ -794,6 +799,8 @@ namespace rhapsodies {
 						 iSSBOSphereTransformsLocation, 0);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBOCylinderTransformsLocation, 0);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandModelsIBestLocation, 0);
 
 		// unbind pixel pack/unpack PBOs
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -1074,11 +1081,13 @@ namespace rhapsodies {
 	}
 
 	void HandTracker::GpuPSOStep() {
-		UpdateScores();
-		m_pSwarm->Evolve();
+		// UpdateScores();
+		// m_pSwarm->Evolve();
 
 		// update scores via compute shader 8*8
-		
+		glUseProgram(m_idUpdateScoresProgram);
+   		glDispatchCompute(1, 1, 1);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 
 	float HandTracker::Penalty(HandModel& oModelLeft,

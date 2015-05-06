@@ -74,6 +74,9 @@ namespace rhapsodies {
 		S_pShaderRegistry->RegisterShader(
 			"generate_transforms", GL_COMPUTE_SHADER,
 			sShaderPath + "/generate_transforms.comp");
+		S_pShaderRegistry->RegisterShader(
+			"update_scores", GL_COMPUTE_SHADER,
+			sShaderPath + "/update_scores.comp");
 
 		std::vector<std::string> vec_shaders;
 
@@ -100,7 +103,10 @@ namespace rhapsodies {
 		vec_shaders.push_back("generate_transforms");
 		S_pShaderRegistry->RegisterProgram("generate_transforms", vec_shaders);
 
+		vec_shaders.clear();
+		vec_shaders.push_back("update_scores");
+		S_pShaderRegistry->RegisterProgram("update_scores", vec_shaders);
+
 		return true;
 	}
-
 }
