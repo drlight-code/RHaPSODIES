@@ -221,6 +221,7 @@ namespace rhapsodies {
 		GLuint m_idReductionXProgram;
 		GLuint m_idReductionYProgram;
 		GLuint m_idUpdateScoresProgram;
+		GLuint m_idUpdateGBestProgram;
 
 		GLuint m_idResultTexture;
 		GLuint m_idFinalResultTexture;
@@ -233,6 +234,7 @@ namespace rhapsodies {
 
 		GLuint m_idSSBOHandModels;
 		GLuint m_idSSBOHandModelsIBest;
+		GLuint m_idSSBOHandModelsGBest;
 		GLuint m_idSSBOHandGeometry;
 		
 		GLint  m_locColorUniform;

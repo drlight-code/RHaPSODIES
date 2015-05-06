@@ -222,6 +222,7 @@ namespace rhapsodies {
 	const int iSSBOSphereTransformsLocation   = 2;
 	const int iSSBOCylinderTransformsLocation = 3;
 	const int iSSBOHandModelsIBestLocation    = 4;
+	const int iSSBOHandModelsGBestLocation    = 5;
 
 	const int iImageTextureUnitResult       = 0;
 	const int iImageTextureUnitDifference   = 1;
@@ -275,6 +276,7 @@ namespace rhapsodies {
 		m_idReductionYProgram = m_pShaderReg->GetProgram("reduction_y");
 
 		m_idUpdateScoresProgram = m_pShaderReg->GetProgram("update_scores");
+		m_idUpdateGBestProgram = m_pShaderReg->GetProgram("update_gbest");
 
 		m_idColorFragProgram =
 			m_pShaderReg->GetProgram("shaded_indexedtransform");
@@ -522,6 +524,12 @@ namespace rhapsodies {
 		glGenBuffers(1, &m_idSSBOHandModelsIBest);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*32*sizeof(float),
+					 NULL, GL_DYNAMIC_DRAW);
+
+		// hand models gbest SSBO
+		glGenBuffers(1, &m_idSSBOHandModelsGBest);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 2*32*sizeof(float),
 					 NULL, GL_DYNAMIC_DRAW);
 
 		// hand geometry SSBO
@@ -787,6 +795,9 @@ namespace rhapsodies {
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBOHandModelsIBestLocation,
 						 m_idSSBOHandModelsIBest);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandModelsGBestLocation,
+						 m_idSSBOHandModelsGBest);
 	}
 
 	void HandTracker::ResourcesUnbind() {
@@ -801,6 +812,8 @@ namespace rhapsodies {
 						 iSSBOCylinderTransformsLocation, 0);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBOHandModelsIBestLocation, 0);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandModelsGBestLocation, 0);
 
 		// unbind pixel pack/unpack PBOs
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -964,10 +977,10 @@ namespace rhapsodies {
 		m_pSwarm->InitializeAround(*m_pParticleBest);
 		m_pParticleBest->ResetPenalty();
 
-		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
-			// upload hand models into SSBO
-			UploadHandModels();
+		// upload hand models into SSBO
+		UploadHandModels();
 			
+		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// generate transform buffer in parallel 8*8*2
 			tStart = oTimer.GetMicroTime();
 			GenerateTransforms();
@@ -1088,6 +1101,14 @@ namespace rhapsodies {
 		glUseProgram(m_idUpdateScoresProgram);
    		glDispatchCompute(1, 1, 1);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+		// find gbest particle
+		glUseProgram(m_idUpdateGBestProgram);
+   		glDispatchCompute(1, 1, 1);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		
+		// evolve particle swarm
+		
 	}
 
 	float HandTracker::Penalty(HandModel& oModelLeft,
