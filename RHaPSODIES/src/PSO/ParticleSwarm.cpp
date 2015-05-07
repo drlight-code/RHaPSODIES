@@ -40,16 +40,16 @@ namespace rhapsodies {
 		float fMaxPosOffset = 0.02f;
 		float fMaxOriOffset = 0.03f;
 
-		Particle oCenterReset = oCenter;
-		oCenterReset.ResetPenalty();
-		oCenterReset.ResetVelocity();
+		// Particle oCenterReset = oCenter;
+		// oCenterReset.ResetPenalty();
+		// oCenterReset.ResetVelocity();
 		
-		m_vecParticles[0] = oCenterReset;
+		m_vecParticles[0] = oCenter;
 		
 		// we start with 1 so the first particle is the unmodified
 		// center position.
 		for(size_t particle = 1; particle < m_vecParticles.size(); ++particle) {
-			Particle p = oCenterReset;
+			Particle p = oCenter;
 
 			// randomize angular dofs
 			for(int dof = 0 ; dof < HandModel::JOINTDOF_LAST ; ++dof) {

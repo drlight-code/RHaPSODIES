@@ -75,7 +75,9 @@ namespace rhapsodies {
 	}
 
 	void Particle::ResetPenalty() {
-		m_fIBestPenalty = std::numeric_limits<float>::max();
+//		m_fIBestPenalty = std::numeric_limits<float>::max();
+//		m_fIBestPenalty = 1.0f / 0.0f;
+		m_fIBestPenalty = 1e20;
 	}
 
 	void Particle::ResetVelocity() {

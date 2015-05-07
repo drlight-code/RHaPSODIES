@@ -55,7 +55,7 @@ float Penalty(float fDiff,
 			  float fIntersection) {
 	float fLambdaK = 2.0;
 	unsigned int model_index_base =
-		(gl_LocalInvocationID.y * 8 +
+		(gl_LocalInvocationID.y*8 +
 		 gl_LocalInvocationID.x) * 2;
 		
 	float fPenalty =
@@ -94,19 +94,19 @@ float PenaltyPrior(unsigned int model_index) {
 
 void UpdateIBest(float fPenalty) {
 	unsigned int model_index =
-		(gl_LocalInvocationID.y * 8 +
+		(gl_LocalInvocationID.y*8 +
 		 gl_LocalInvocationID.x) * 2;
 
-	float fIBestPenalty = HandModels.models[model_index].modelstate[31];
+	float fIBestPenalty =
+		HandModelsIBest.models[model_index].modelstate[31];
 	
 	if(fPenalty <= fIBestPenalty) {
-		HandModels.models[model_index].modelstate[31] = fPenalty;
-
-		for(int i = 0; i < 32; ++i) {
+		for(int i = 0; i < 28; ++i) {
 			HandModelsIBest.models[model_index].modelstate[i] =
 				HandModels.models[model_index].modelstate[i];
 			HandModelsIBest.models[model_index+1].modelstate[i] =
 				HandModels.models[model_index+1].modelstate[i];
 		}
+		HandModelsIBest.models[model_index].modelstate[31] = fPenalty;
 	}
 }
