@@ -6,25 +6,25 @@ struct HandModel {
 	float modelstate[32];
 };
 
-layout(std430, binding = 0) buffer HandModelBuffer
+layout(std140, binding = 0) buffer HandModelBuffer
 {
 	HandModel models[128];
 } HandModels;
 
-layout(std430, binding = 4) buffer HandModelIBestBuffer
+layout(std140, binding = 4) buffer HandModelIBestBuffer
 {
 	HandModel models[128];
 } HandModelsIBest;
 
-layout(std430, binding = 5) buffer HandModelGBestBuffer
+layout(std140, binding = 5) buffer HandModelGBestBuffer
 {
 	HandModel models[2];
 } HandModelsGBest;
 
-layout(std430, binding = 6) buffer HandModelFrameBestBuffer
+layout(std140, binding = 6) buffer HandModelFBestBuffer
 {
 	HandModel models[2];
-} HandModelsFrameBest;
+} HandModelsFBest;
 
 //const float infinity = 1.0 / 0.0;
 
@@ -40,15 +40,15 @@ void main() {
 		}
 	}
 
-	bool bUpdateFrameBest =
-		fPenaltyMin < HandModelsFrameBest.models[0].modelstate[31];
+	bool bUpdateFBest =
+		fPenaltyMin < HandModelsFBest.models[0].modelstate[31];
 	
 	// update gbest and framebest models
 	for(int i = 0; i < 32; ++i) {
-		if(bUpdateFrameBest) {
-			HandModelsFrameBest.models[0].modelstate[i] =
+		if(bUpdateFBest) {
+			HandModelsFBest.models[0].modelstate[i] =
 				HandModelsIBest.models[iMinIndex].modelstate[i];
-			HandModelsFrameBest.models[1].modelstate[i] =
+			HandModelsFBest.models[1].modelstate[i] =
 				HandModelsIBest.models[iMinIndex+1].modelstate[i];
 		}
 		

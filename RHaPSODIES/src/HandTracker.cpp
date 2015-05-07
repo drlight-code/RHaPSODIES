@@ -176,6 +176,30 @@ namespace {
 
 		glGetIntegerv(GL_MAX_VIEWPORTS, values);
 		vstr::out() << "GL_MAX_VIEWPORTS:                   " << values[0] << std::endl;
+
+		glGetIntegerv(GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS, values);
+		vstr::out() << "GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS: "
+					<< values[0] << std::endl;
+
+		glGetIntegerv(GL_MAX_COMBINED_SHADER_STORAGE_BLOCKS, values);
+		vstr::out() << "GL_MAX_COMBINED_SHADER_STORAGE_BLOCKS: "
+					<< values[0] << std::endl;
+		
+		glGetIntegerv(GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, values);
+		vstr::out() << "GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS: "
+					<< values[0] << std::endl;
+		
+		glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, values);
+		vstr::out() << "GL_MAX_SHADER_STORAGE_BLOCK_SIZE: "
+					<< values[0] << std::endl;
+
+		glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, values);
+		vstr::out() << "GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT: "
+					<< values[0] << std::endl;
+
+		glGetIntegerv(GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES, values);
+		vstr::out() << "GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES: "
+					<< values[0] << std::endl;
 	}
 
 	template<typename T> std::string ProfilerString(
@@ -1036,7 +1060,7 @@ namespace rhapsodies {
 			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 		}
 
-		UpdateBestMatch();
+		//UpdateBestMatch();
 
 		WriteDebug(IDebugView::TRANSFORM_TIME,
 				   ProfilerString("Transform time: ",
@@ -1137,14 +1161,30 @@ namespace rhapsodies {
 		float *aStateModels = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
 												   GL_READ_ONLY));	
 		for(int i = 0; i < 64; ++i) {
-			vstr::out() << aStateModels[64*i+31] << std::endl;
+			vstr::out() << "ibest " << i << ": "
+						<< aStateModels[64*i+31] << std::endl;
 		}
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		// find gbest particle
-		// glUseProgram(m_idUpdateGBestProgram);
-   		// glDispatchCompute(1, 1, 1);
-		// glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		// // find gbest particle
+		glUseProgram(m_idUpdateGBestProgram);
+   		glDispatchCompute(1, 1, 1);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+		// DEBUG: print gbest particle score
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
+		float *aStateGBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+												  GL_READ_ONLY));	
+		vstr::out() << "gbest: " << aStateGBest[31] << std::endl;
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+		// DEBUG: print fbest particle score
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsFBest);
+		float *aStateFBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+												  GL_READ_ONLY));	
+		vstr::out() << "fbest: " << aStateFBest[31] << std::endl;
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		
 		
 		// evolve particle swarm
 		// glUseProgram(m_idUpdateGBestProgram);
@@ -1243,15 +1283,15 @@ namespace rhapsodies {
 	}
 
 	void HandTracker::UpdateBestMatch() {
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsFBest);
-		float *aStateFBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
-												  GL_READ_ONLY));	
+		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsFBest);
+		// float *aStateFBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+		// 										  GL_READ_ONLY));	
 
-		Particle::StateArrayToParticle(*m_pParticleBest, aStateFBest);
+		// Particle::StateArrayToParticle(*m_pParticleBest, aStateFBest);
 
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 		
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
 	void HandTracker::ProcessCameraFrames(
