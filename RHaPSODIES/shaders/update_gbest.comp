@@ -18,13 +18,13 @@ layout(std430, binding = 4) buffer HandModelIBestBuffer
 
 layout(std430, binding = 5) buffer HandModelGBestBuffer
 {
-	HandModel model;
+	HandModel models[2];
 } HandModelsGBest;
 
-layout(std430, binding = 6) buffer HandModelFBestBuffer
-{
-	HandModel model;
-} HandModelsFBest;
+// layout(std430, binding = 6) buffer HandModelFBestBuffer
+// {
+// 	HandModel model;
+// } HandModelsFBest;
 
 //const float infinity = 1.0 / 0.0;
 
@@ -41,16 +41,17 @@ void main() {
 	}
 
 	bool bUpdateFBest =
-		fPenaltyMin < HandModelsFBest.model.modelstate[31];
+		fPenaltyMin < HandModelsGBest.models[1].modelstate[31];
 	
 	// update gbest and framebest models
 	for(int i = 0; i < 64; ++i) {
 		if(bUpdateFBest) {
-			HandModelsFBest.model.modelstate[i] =
-				HandModelsIBest.models[iMinIndex].modelstate[i];
+			HandModelsGBest.models[1].modelstate[i] = 1;
+			// HandModelsGBest.models[1].modelstate[i] =
+			// 	HandModelsIBest.models[iMinIndex].modelstate[i];
 		}
 		
-		HandModelsGBest.model.modelstate[i] =
+		HandModelsGBest.models[0].modelstate[i] =
 			HandModelsIBest.models[iMinIndex].modelstate[i];
 	}
 }

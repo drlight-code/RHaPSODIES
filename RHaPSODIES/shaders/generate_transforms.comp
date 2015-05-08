@@ -86,6 +86,7 @@ void main() {
 	iSphereCount   = 0;
 	iCylinderCount = 0;
 	fLRFactor = (gl_WorkGroupID.y == 0) ? -1.0f : 1.0f;
+//	fLRFactor = 2*gl_WorkGroupID.y - 1;
 
 	DrawHand();
 }

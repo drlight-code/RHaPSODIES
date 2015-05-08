@@ -18,7 +18,7 @@ layout(std430, binding = 4) buffer HandModelIBestBuffer
 
 layout(std430, binding = 5) buffer HandModelGBestBuffer
 {
-	HandModel model;
+	HandModel models[2];
 } HandModelsGBest;
 
 layout(std430, binding = 7) buffer HandModelVelocityBuffer
@@ -50,15 +50,21 @@ void Imitate(float phi_cognitive, float phi_social) {
 		if(dim%32 >= 28)
 			continue;
 			
-		float r1 = Random.numbers[gl_LocalInvocationID.x*64*2 + dim*2 + 0];
-		float r2 = Random.numbers[gl_LocalInvocationID.x*64*2 + dim*2 + 1];
+		float r1 = Random.numbers[gl_LocalInvocationID.x*64*2 + 2*dim + 0];
+		float r2 = Random.numbers[gl_LocalInvocationID.x*64*2 + 2*dim + 1];
 
-		HandModelsVelocity.models[idx].modelstate[dim] =
+		float newVelocity =
 			w*(HandModelsVelocity.models[idx].modelstate[dim] +
 			   phi_cognitive*r1*(HandModelsIBest.models[idx].modelstate[dim] -
 								 HandModels.models[idx].modelstate[dim]) +
-			   phi_social*r2*(HandModelsGBest.model.modelstate[dim] -
+			   phi_social*r2*(HandModelsGBest.models[0].modelstate[dim] -
 							  HandModels.models[idx].modelstate[dim]));
+
+		groupMemoryBarrier();
+		
+		HandModelsVelocity.models[idx].modelstate[dim] = newVelocity;
+
+		groupMemoryBarrier();
 
 		if((dim%32 >= 0  && dim%32 < 20)) {
 			float fMinAngle = 0;
@@ -76,10 +82,14 @@ void Imitate(float phi_cognitive, float phi_social) {
 			}
 		}
 
+		groupMemoryBarrier();
+		
 		HandModels.models[idx].modelstate[dim] +=
-			HandModelsVelocity.models[idx].modelstate[dim];				
+			HandModelsVelocity.models[idx].modelstate[dim];
 	}
 
+	groupMemoryBarrier();
+	
 	// normalize quaternions
 	vec4 qOri = normalize(vec4(HandModels.models[idx].modelstate[24],
 							   HandModels.models[idx].modelstate[25],
