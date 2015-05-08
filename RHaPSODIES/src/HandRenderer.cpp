@@ -373,6 +373,13 @@ namespace rhapsodies {
 			pModel->GetJointAngle(HandModel::T_IP),
 			pGeometry->GetExtent(HandGeometry::T_DP),
 			true);
+
+		matModel = VistaTransformMatrix(
+			0,0,0,0,
+			0,0,0,0,
+			0,0,0,0,
+			0,0,0,0);
+		DrawCylinder(matModel);
 	}
 
 	void HandRenderer::PreDraw() {
