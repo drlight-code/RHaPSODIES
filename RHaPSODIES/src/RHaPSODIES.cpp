@@ -80,6 +80,9 @@ namespace rhapsodies {
 		S_pShaderRegistry->RegisterShader(
 			"update_gbest", GL_COMPUTE_SHADER,
 			sShaderPath + "/update_gbest.comp");
+		S_pShaderRegistry->RegisterShader(
+			"update_swarm", GL_COMPUTE_SHADER,
+			sShaderPath + "/update_swarm.comp");
 
 		std::vector<std::string> vec_shaders;
 
@@ -109,10 +112,12 @@ namespace rhapsodies {
 		vec_shaders.clear();
 		vec_shaders.push_back("update_scores");
 		S_pShaderRegistry->RegisterProgram("update_scores", vec_shaders);
-
 		vec_shaders.clear();
 		vec_shaders.push_back("update_gbest");
 		S_pShaderRegistry->RegisterProgram("update_gbest", vec_shaders);
+		vec_shaders.clear();
+		vec_shaders.push_back("update_swarm");
+		S_pShaderRegistry->RegisterProgram("update_swarm", vec_shaders);
 
 		return true;
 	}

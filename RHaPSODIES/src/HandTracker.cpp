@@ -248,6 +248,9 @@ namespace rhapsodies {
 	const int iSSBOHandModelsIBestLocation    = 4;
 	const int iSSBOHandModelsGBestLocation    = 5;
 	const int iSSBOHandModelsFBestLocation    = 6;
+	const int iSSBOHandModelsVelocityLocation = 7;
+	const int iSSBORandomLocation             = 8;
+
 
 	const int iImageTextureUnitResult       = 0;
 	const int iImageTextureUnitDifference   = 1;
@@ -278,7 +281,8 @@ namespace rhapsodies {
 		m_pFramePlayer(NULL),
 		m_bTrackingEnabled(false),
 		m_pParticleBest(NULL),
-		m_pSwarm(NULL) {
+		m_pSwarm(NULL),
+		m_pRNG(NULL) {
 
 		m_pShaderReg = RHaPSODIES::GetShaderRegistry();
 
@@ -294,6 +298,8 @@ namespace rhapsodies {
 		m_pDepthBufferUInt = new unsigned int[320*240];
 		m_pUVMapBuffer     = new float[320*240*2];
 
+		m_pRNG = VistaRandomNumberGenerator::GetStandardRNG();
+
 		m_idGenerateTransformsProgram =
 			m_pShaderReg->GetProgram("generate_transforms");
 
@@ -302,6 +308,7 @@ namespace rhapsodies {
 
 		m_idUpdateScoresProgram = m_pShaderReg->GetProgram("update_scores");
 		m_idUpdateGBestProgram  = m_pShaderReg->GetProgram("update_gbest");
+		m_idUpdateSwarmProgram  = m_pShaderReg->GetProgram("update_swarm");
 
 		m_idColorFragProgram =
 			m_pShaderReg->GetProgram("shaded_indexedtransform");
@@ -551,6 +558,12 @@ namespace rhapsodies {
 		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*32*sizeof(float),
 					 NULL, GL_DYNAMIC_DRAW);
 
+		// hand models velocity SSBO
+		glGenBuffers(1, &m_idSSBOHandModelsVelocity);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsVelocity);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*32*sizeof(float),
+					 NULL, GL_DYNAMIC_DRAW);
+
 		// hand models gbest SSBO
 		glGenBuffers(1, &m_idSSBOHandModelsGBest);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
@@ -568,6 +581,12 @@ namespace rhapsodies {
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandGeometry);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, 19*sizeof(float),
 					 &m_pHandGeometry->GetExtents()[0], GL_DYNAMIC_DRAW);
+
+		// random number SSBO
+		glGenBuffers(1, &m_idSSBORandom);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBORandom);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*64*2*sizeof(float),
+					 NULL, GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
@@ -832,6 +851,9 @@ namespace rhapsodies {
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBOHandModelsFBestLocation,
 						 m_idSSBOHandModelsFBest);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandModelsVelocityLocation,
+						 m_idSSBOHandModelsVelocity);
 	}
 
 	void HandTracker::ResourcesUnbind() {
@@ -850,6 +872,8 @@ namespace rhapsodies {
 						 iSSBOHandModelsGBestLocation, 0);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBOHandModelsFBestLocation, 0);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+						 iSSBOHandModelsVelocityLocation, 0);
 
 		// unbind pixel pack/unpack PBOs
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -1122,10 +1146,14 @@ namespace rhapsodies {
 						0, 64*sizeof(float),
 						aState);
 
-		// @todo: reset velocities
+		// reset velocities
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsVelocity);
+		void *pVelocity = glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+									  GL_WRITE_ONLY);
+		memset(pVelocity, 0, 64*64*sizeof(float));
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);		
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-		glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
 	}
 
 	void HandTracker::GenerateTransforms() {
@@ -1189,15 +1217,24 @@ namespace rhapsodies {
 		// vstr::out() << "fbest: " << aStateFBest[31] << std::endl;
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		if(fbest != gbest) {
+//		if(fbest != gbest) {
 			vstr::out() << "gbest: " << gbest << std::endl;
 			vstr::out() << "fbest: " << fbest << std::endl;
-		}			
-		
+//		}			
+
+		// fill random number SSBO
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBORandom);
+		float *aRandom = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+											  GL_WRITE_ONLY));
+		for(int i = 0; i < 64*64*2; ++i) {
+			aRandom[i] = m_pRNG->GenerateFloat2();
+		}
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+				
 		// evolve particle swarm
-		// glUseProgram(m_idUpdateGBestProgram);
-   		// glDispatchCompute(1, 1, 1);
-		// glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		glUseProgram(m_idUpdateSwarmProgram);
+   		glDispatchCompute(1, 1, 1);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 
 	float HandTracker::Penalty(HandModel& oModelLeft,

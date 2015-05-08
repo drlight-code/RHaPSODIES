@@ -31,6 +31,8 @@
 
 #include "DebugView.hpp"
 
+class VistaRandomNumberGenerator;
+
 namespace rhapsodies {
 	class ImagePBOOpenGLDraw;
 	class SkinClassifier;
@@ -223,6 +225,7 @@ namespace rhapsodies {
 		GLuint m_idReductionYProgram;
 		GLuint m_idUpdateScoresProgram;
 		GLuint m_idUpdateGBestProgram;
+		GLuint m_idUpdateSwarmProgram;
 
 		GLuint m_idResultTexture;
 		GLuint m_idFinalResultTexture;
@@ -237,7 +240,9 @@ namespace rhapsodies {
 		GLuint m_idSSBOHandModelsIBest;
 		GLuint m_idSSBOHandModelsGBest;
 		GLuint m_idSSBOHandModelsFBest;
+		GLuint m_idSSBOHandModelsVelocity;
 		GLuint m_idSSBOHandGeometry;
+		GLuint m_idSSBORandom;
 		
 		GLint  m_locColorUniform;
 		GLuint m_idColorFragProgram;
@@ -250,6 +255,8 @@ namespace rhapsodies {
 		bool m_bTrackingEnabled;
 		Particle *m_pParticleBest;
 		ParticleSwarm *m_pSwarm;
+
+		VistaRandomNumberGenerator *m_pRNG;
 	};
 }
 
