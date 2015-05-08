@@ -4,17 +4,17 @@ layout (local_size_x = 8, local_size_y = 8) in;
 layout (binding = 4, r32ui) uniform restrict uimage2D imgFinalResult;
 
 struct HandModel {
-	float modelstate[32];
+	float modelstate[64];
 };
 
 layout(std430, binding = 0) buffer HandModelBuffer
 {
-	HandModel models[128];
+	HandModel models[64];
 } HandModels;
 
 layout(std430, binding = 4) buffer HandModelIBestBuffer
 {
-	HandModel models[128];
+	HandModel models[64];
 } HandModelsIBest;
 
 const float Pi = 3.14159265358979323846f;
@@ -54,14 +54,10 @@ float Penalty(float fDiff,
 			  float fUnion,
 			  float fIntersection) {
 	float fLambdaK = 2.0;
-	unsigned int model_index_base =
-		(gl_LocalInvocationID.y*8 +
-		 gl_LocalInvocationID.x) * 2;
-		
 	float fPenalty =
 		PenaltyFromReduction(fDiff, fUnion, fIntersection) +
-		fLambdaK * (PenaltyPrior(model_index_base) +
-					PenaltyPrior(model_index_base+1));
+		fLambdaK * (PenaltyPrior(0) +
+					PenaltyPrior(32));
 		
 	return fPenalty;
 }
@@ -77,13 +73,17 @@ float PenaltyFromReduction(float fDiff,
 	return fPenalty;
 }
 
-float PenaltyPrior(unsigned int model_index) {
+float PenaltyPrior(unsigned int model_offset) {
 	float fPenaltySum = 0;
 	
+	unsigned int model_index =
+		(gl_LocalInvocationID.y*8 +
+		 gl_LocalInvocationID.x);
+		
 	for(int dof = 5; dof < 17; dof += 4) {
 		fPenaltySum +=
-			min(HandModels.models[model_index].modelstate[dof] -
-				HandModels.models[model_index].modelstate[dof+4],
+			min(HandModels.models[model_index].modelstate[model_offset + dof] -
+				HandModels.models[model_index].modelstate[model_offset + dof+4],
 				0.0f);
 	}
 
@@ -95,7 +95,7 @@ float PenaltyPrior(unsigned int model_index) {
 void UpdateIBest(float fPenalty) {
 	unsigned int model_index =
 		(gl_LocalInvocationID.y*8 +
-		 gl_LocalInvocationID.x) * 2;
+		 gl_LocalInvocationID.x);
 
 	float fIBestPenalty =
 		HandModelsIBest.models[model_index].modelstate[31];
@@ -104,8 +104,8 @@ void UpdateIBest(float fPenalty) {
 		for(int i = 0; i < 28; ++i) {
 			HandModelsIBest.models[model_index].modelstate[i] =
 				HandModels.models[model_index].modelstate[i];
-			HandModelsIBest.models[model_index+1].modelstate[i] =
-				HandModels.models[model_index+1].modelstate[i];
+			HandModelsIBest.models[model_index].modelstate[32+i] =
+				HandModels.models[model_index].modelstate[32+i];
 		}
 		HandModelsIBest.models[model_index].modelstate[31] = fPenalty;
 	}

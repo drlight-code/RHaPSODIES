@@ -50,12 +50,12 @@ struct HandModel {
 	// vec4 vPos;
 	// vec4 qOri;
 	// vec4 vPad;
-	float modelstate[32];
+	float modelstate[64];
 };
 
 layout(std430, binding = 0) buffer HandModelBuffer
 {
-	HandModel models[128];
+	HandModel models[64];
 } HandModels;
 
 layout(std430, binding = 1) buffer HandGeometryBuffer
@@ -197,23 +197,23 @@ float GetExtent(int extent) {
 }
 
 float GetAngle(int dof) {
-	return HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[dof];
+	return HandModels.models[gl_WorkGroupID.x].modelstate[32*gl_WorkGroupID.y + dof];
 }
 
 vec3 GetPosition() {
 	return vec3(
-		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[20],
-		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[21],
-		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[22]
+		HandModels.models[gl_WorkGroupID.x].modelstate[32*gl_WorkGroupID.y + 20],
+		HandModels.models[gl_WorkGroupID.x].modelstate[32*gl_WorkGroupID.y + 21],
+		HandModels.models[gl_WorkGroupID.x].modelstate[32*gl_WorkGroupID.y + 22]
 		);
 }
 
 vec4 GetOrientation() {
 	return vec4(
-		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[24],
-		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[25],
-		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[26],
-		HandModels.models[2*gl_WorkGroupID.x + gl_WorkGroupID.y].modelstate[27]
+		HandModels.models[gl_WorkGroupID.x].modelstate[32*gl_WorkGroupID.y + 24],
+		HandModels.models[gl_WorkGroupID.x].modelstate[32*gl_WorkGroupID.y + 25],
+		HandModels.models[gl_WorkGroupID.x].modelstate[32*gl_WorkGroupID.y + 26],
+		HandModels.models[gl_WorkGroupID.x].modelstate[32*gl_WorkGroupID.y + 27]
 		);
 }
 

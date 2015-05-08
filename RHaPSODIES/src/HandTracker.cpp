@@ -1157,34 +1157,42 @@ namespace rhapsodies {
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 		// DEBUG: print all particle scores
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
-		float *aStateModels = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
-												   GL_READ_ONLY));	
-		for(int i = 0; i < 64; ++i) {
-			vstr::out() << "ibest " << i << ": "
-						<< aStateModels[64*i+31] << std::endl;
-		}
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
+		// float *aStateModels = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+		// 										   GL_READ_ONLY));	
+		// for(int i = 0; i < 64; ++i) {
+		// 	vstr::out() << "ibest " << i << ": "
+		// 				<< aStateModels[64*i+31] << std::endl;
+		// }
+		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		// // find gbest particle
+		// find gbest particle
 		glUseProgram(m_idUpdateGBestProgram);
    		glDispatchCompute(1, 1, 1);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
+		float fbest, gbest;
+		
 		// DEBUG: print gbest particle score
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
 		float *aStateGBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
 												  GL_READ_ONLY));	
-		vstr::out() << "gbest: " << aStateGBest[31] << std::endl;
+		// vstr::out() << "gbest: " << aStateGBest[31] << std::endl;
+		gbest = aStateGBest[31];
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
 		// DEBUG: print fbest particle score
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsFBest);
 		float *aStateFBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
 												  GL_READ_ONLY));	
-		vstr::out() << "fbest: " << aStateFBest[31] << std::endl;
+		fbest = aStateFBest[31];
+		// vstr::out() << "fbest: " << aStateFBest[31] << std::endl;
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-		
+
+		if(fbest != gbest) {
+			vstr::out() << "gbest: " << gbest << std::endl;
+			vstr::out() << "fbest: " << fbest << std::endl;
+		}			
 		
 		// evolve particle swarm
 		// glUseProgram(m_idUpdateGBestProgram);

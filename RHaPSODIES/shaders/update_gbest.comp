@@ -3,27 +3,27 @@
 layout (local_size_x = 1, local_size_y = 1) in;
 
 struct HandModel {
-	float modelstate[32];
+	float modelstate[64];
 };
 
-layout(std140, binding = 0) buffer HandModelBuffer
+layout(std430, binding = 0) buffer HandModelBuffer
 {
-	HandModel models[128];
+	HandModel models[64];
 } HandModels;
 
-layout(std140, binding = 4) buffer HandModelIBestBuffer
+layout(std430, binding = 4) buffer HandModelIBestBuffer
 {
-	HandModel models[128];
+	HandModel models[64];
 } HandModelsIBest;
 
-layout(std140, binding = 5) buffer HandModelGBestBuffer
+layout(std430, binding = 5) buffer HandModelGBestBuffer
 {
-	HandModel models[2];
+	HandModel model;
 } HandModelsGBest;
 
-layout(std140, binding = 6) buffer HandModelFBestBuffer
+layout(std430, binding = 6) buffer HandModelFBestBuffer
 {
-	HandModel models[2];
+	HandModel model;
 } HandModelsFBest;
 
 //const float infinity = 1.0 / 0.0;
@@ -33,7 +33,7 @@ void main() {
 	int iMinIndex = 0;
 
 	// find min ibest (gbest) penalty
-	for(int i = 0; i < 128; i+=2) {
+	for(int i = 0; i < 64; i++) {
 		if(HandModelsIBest.models[i].modelstate[31] < fPenaltyMin) {
 			fPenaltyMin = HandModelsIBest.models[i].modelstate[31];
 			iMinIndex = i;
@@ -41,20 +41,16 @@ void main() {
 	}
 
 	bool bUpdateFBest =
-		fPenaltyMin < HandModelsFBest.models[0].modelstate[31];
+		fPenaltyMin < HandModelsFBest.model.modelstate[31];
 	
 	// update gbest and framebest models
-	for(int i = 0; i < 32; ++i) {
+	for(int i = 0; i < 64; ++i) {
 		if(bUpdateFBest) {
-			HandModelsFBest.models[0].modelstate[i] =
+			HandModelsFBest.model.modelstate[i] =
 				HandModelsIBest.models[iMinIndex].modelstate[i];
-			HandModelsFBest.models[1].modelstate[i] =
-				HandModelsIBest.models[iMinIndex+1].modelstate[i];
 		}
 		
-		HandModelsGBest.models[0].modelstate[i] =
+		HandModelsGBest.model.modelstate[i] =
 			HandModelsIBest.models[iMinIndex].modelstate[i];
-		HandModelsGBest.models[1].modelstate[i] =
-			HandModelsIBest.models[iMinIndex+1].modelstate[i];
 	}
 }
