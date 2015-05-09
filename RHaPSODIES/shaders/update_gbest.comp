@@ -46,9 +46,8 @@ void main() {
 	// update gbest and framebest models
 	for(int i = 0; i < 64; ++i) {
 		if(bUpdateFBest) {
-			HandModelsGBest.models[1].modelstate[i] = 1;
-			// HandModelsGBest.models[1].modelstate[i] =
-			// 	HandModelsIBest.models[iMinIndex].modelstate[i];
+			HandModelsGBest.models[1].modelstate[i] =
+				HandModelsIBest.models[iMinIndex].modelstate[i];
 		}
 		
 		HandModelsGBest.models[0].modelstate[i] =

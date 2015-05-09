@@ -60,11 +60,7 @@ void Imitate(float phi_cognitive, float phi_social) {
 			   phi_social*r2*(HandModelsGBest.models[0].modelstate[dim] -
 							  HandModels.models[idx].modelstate[dim]));
 
-		groupMemoryBarrier();
-		
 		HandModelsVelocity.models[idx].modelstate[dim] = newVelocity;
-
-		groupMemoryBarrier();
 
 		if((dim%32 >= 0  && dim%32 < 20)) {
 			float fMinAngle = 0;
@@ -82,14 +78,10 @@ void Imitate(float phi_cognitive, float phi_social) {
 			}
 		}
 
-		groupMemoryBarrier();
-		
 		HandModels.models[idx].modelstate[dim] +=
 			HandModelsVelocity.models[idx].modelstate[dim];
 	}
 
-	groupMemoryBarrier();
-	
 	// normalize quaternions
 	vec4 qOri = normalize(vec4(HandModels.models[idx].modelstate[24],
 							   HandModels.models[idx].modelstate[25],
