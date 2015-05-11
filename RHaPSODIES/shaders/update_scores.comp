@@ -76,14 +76,14 @@ float PenaltyFromReduction(float fDiff,
 float PenaltyPrior(unsigned int model_offset) {
 	float fPenaltySum = 0;
 	
-	unsigned int model_index =
+	unsigned int idx =
 		(gl_LocalInvocationID.y*8 +
 		 gl_LocalInvocationID.x);
 		
 	for(int dof = 5; dof < 17; dof += 4) {
 		fPenaltySum +=
-			min(HandModels.models[model_index].modelstate[model_offset + dof] -
-				HandModels.models[model_index].modelstate[model_offset + dof+4],
+			min(HandModels.models[idx].modelstate[model_offset + dof] -
+				HandModels.models[idx].modelstate[model_offset + dof+4],
 				0.0f);
 	}
 
@@ -93,20 +93,20 @@ float PenaltyPrior(unsigned int model_offset) {
 }
 
 void UpdateIBest(float fPenalty) {
-	unsigned int model_index =
+	unsigned int idx =
 		(gl_LocalInvocationID.y*8 +
 		 gl_LocalInvocationID.x);
 
 	float fIBestPenalty =
-		HandModelsIBest.models[model_index].modelstate[31];
+		HandModelsIBest.models[idx].modelstate[31];
 	
 	if(fPenalty <= fIBestPenalty) {
 		for(int i = 0; i < 28; ++i) {
-			HandModelsIBest.models[model_index].modelstate[i] =
-				HandModels.models[model_index].modelstate[i];
-			HandModelsIBest.models[model_index].modelstate[32+i] =
-				HandModels.models[model_index].modelstate[32+i];
+			HandModelsIBest.models[idx].modelstate[i] =
+				HandModels.models[idx].modelstate[i];
+			HandModelsIBest.models[idx].modelstate[32+i] =
+				HandModels.models[idx].modelstate[32+i];
 		}
-		HandModelsIBest.models[model_index].modelstate[31] = fPenalty;
+		HandModelsIBest.models[idx].modelstate[31] = fPenalty;
 	}
 }
