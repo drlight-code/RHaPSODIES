@@ -55,9 +55,9 @@ float Penalty(float fDiff,
 			  float fIntersection) {
 	float fLambdaK = 2.0;
 	float fPenalty =
-		PenaltyFromReduction(fDiff, fUnion, fIntersection) +
-		fLambdaK * (PenaltyPrior(0) +
-					PenaltyPrior(32));
+		PenaltyFromReduction(fDiff, fUnion, fIntersection);// +
+		// fLambdaK * (PenaltyPrior(0) +
+		// 			PenaltyPrior(32));
 		
 	return fPenalty;
 }

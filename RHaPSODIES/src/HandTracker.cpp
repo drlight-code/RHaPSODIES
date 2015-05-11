@@ -249,6 +249,7 @@ namespace rhapsodies {
 	const int iSSBOHandModelsGBestLocation    = 5;
 	const int iSSBOHandModelsVelocityLocation = 6;
 	const int iSSBORandomLocation             = 7;
+	const int iSSBODebugLocation             = 8;
 
 	const int iImageTextureUnitResult       = 0;
 	const int iImageTextureUnitDifference   = 1;
@@ -565,7 +566,7 @@ namespace rhapsodies {
 		// hand models gbest SSBO
 		glGenBuffers(1, &m_idSSBOHandModelsGBest);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, 2*64*sizeof(float),
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*sizeof(float),
 					 NULL, GL_DYNAMIC_DRAW);
 
 		// hand geometry SSBO
@@ -578,6 +579,12 @@ namespace rhapsodies {
 		glGenBuffers(1, &m_idSSBORandom);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBORandom);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*64*2*sizeof(float),
+					 NULL, GL_DYNAMIC_DRAW);
+
+		// debug SSBO
+		glGenBuffers(1, &m_idSSBODebug);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBODebug);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 256*sizeof(float),
 					 NULL, GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -1057,18 +1064,12 @@ namespace rhapsodies {
 				}
 			}
 			m_pHandRenderer->PostDraw();
-			//glFinish();
+			glFinish();
 			glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
-			
-			// rebind binding point 0 since it's overwritten in
-			// PerformDraw. @todo make consistent and get rid of this,
-			// postponed for now.
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
-							 iSSBOHandModelsLocation,
-							 m_idSSBOHandModels);
 			tRendering += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
+			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); // needed?
 			ReduceDepthMaps();
 			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 			tReduction += oTimer.GetMicroTime() - tStart;
@@ -1078,9 +1079,9 @@ namespace rhapsodies {
 			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 		}
 
-//		UpdateBestMatch();
+		UpdateBestMatch();
 
-		vstr::out() << "********************************************" << std::endl;
+//		vstr::out() << "********************************************" << std::endl;
 		
 		WriteDebug(IDebugView::TRANSFORM_TIME,
 				   ProfilerString("Transform time: ",
@@ -1135,13 +1136,6 @@ namespace rhapsodies {
 			}
 		}
 
-		// upload center particle to fbest model
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
-		Particle::ParticleToStateArray(vecParticles[0], aState);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER,
-						64*sizeof(float), 64*sizeof(float),
-						aState);
-
 		// reset velocities
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsVelocity);
 		void *pVelocity = glMapBuffer(GL_SHADER_STORAGE_BUFFER,
@@ -1180,33 +1174,28 @@ namespace rhapsodies {
    		glDispatchCompute(1, 1, 1);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-		// DEBUG: print all particle scores
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
-		float *aStateModels = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
-												   GL_READ_ONLY));	
-		for(int i = 0; i < 64; ++i) {
-			vstr::out() << "ibest " << i << ": "
-						<< aStateModels[64*i+31] << std::endl;
-		}
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		// // DEBUG: print all particle scores
+		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
+		// float *aStateModels = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+		// 										   GL_READ_ONLY));
+		// for(int i = 0; i < 64; ++i) {
+		// 	vstr::out() << "ibest " << i << ": "
+		// 				<< aStateModels[64*i+31] << std::endl;
+		// }
+		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
 		// find gbest particle
 		glUseProgram(m_idUpdateGBestProgram);
    		glDispatchCompute(1, 1, 1);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-		float fbest, gbest;
-		
-		// DEBUG: print gbest particle score
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
-		float *aStateGBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
-												  GL_READ_ONLY));	
-		gbest = aStateGBest[31];
-		fbest = aStateGBest[64+31];
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
-		vstr::out() << "gbest: " << gbest << std::endl;
-		vstr::out() << "fbest: " << fbest << std::endl;
+		// // DEBUG: print gbest particle score
+		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
+		// float *aStateGBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+		// 										  GL_READ_ONLY));	
+		// float gbest = aStateGBest[31];
+		// vstr::out() << "gbest: " << gbest << std::endl;
+		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
 		// fill random number UBO
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBORandom);
@@ -1218,9 +1207,9 @@ namespace rhapsodies {
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 				
 		// evolve particle swarm
-		// glUseProgram(m_idUpdateSwarmProgram);
-   		// glDispatchCompute(1, 1, 1);
-		// glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		glUseProgram(m_idUpdateSwarmProgram);
+   		glDispatchCompute(1, 1, 1);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 		// // DEBUG: print velocities
 		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsVelocity);
@@ -1338,7 +1327,7 @@ namespace rhapsodies {
 		float *aStateGBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
 												  GL_READ_ONLY));	
 
-		Particle::StateArrayToParticle(*m_pParticleBest, aStateGBest+64);
+		Particle::StateArrayToParticle(*m_pParticleBest, aStateGBest);
 
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 		

@@ -46,10 +46,6 @@
 layout (local_size_x = 1, local_size_y = 1) in;
 
 struct HandModel {
-	// float afJoints[20];
-	// vec4 vPos;
-	// vec4 qOri;
-	// vec4 vPad;
 	float modelstate[64];
 };
 

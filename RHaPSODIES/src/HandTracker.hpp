@@ -242,6 +242,7 @@ namespace rhapsodies {
 		GLuint m_idSSBOHandModelsVelocity;
 		GLuint m_idSSBOHandGeometry;
 		GLuint m_idSSBORandom;
+		GLuint m_idSSBODebug;
 		
 		GLint  m_locColorUniform;
 		GLuint m_idColorFragProgram;

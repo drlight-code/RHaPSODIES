@@ -429,7 +429,7 @@ namespace rhapsodies {
 							sizeSSBO,
 							&m_vSphereTransforms[0]);
 		}
-		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
+		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 10,
 						  m_idSSBOSphereTransforms,
 						  iBaseViewport/iViewPortCount*sizeSSBO,
 						  sizeSSBO);
@@ -458,7 +458,7 @@ namespace rhapsodies {
 							 sizeSSBO,
 							 &m_vCylinderTransforms[0]);
 		}
-		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
+		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 10,
 						  m_idSSBOCylinderTransforms,
 						  iBaseViewport/iViewPortCount*sizeSSBO,
 						  sizeSSBO);
