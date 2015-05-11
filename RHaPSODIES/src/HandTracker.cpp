@@ -1064,12 +1064,10 @@ namespace rhapsodies {
 				}
 			}
 			m_pHandRenderer->PostDraw();
-			glFinish();
 			glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
 			tRendering += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
-			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); // needed?
 			ReduceDepthMaps();
 			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 			tReduction += oTimer.GetMicroTime() - tStart;
@@ -1177,7 +1175,7 @@ namespace rhapsodies {
 		// // DEBUG: print all particle scores
 		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
 		// float *aStateModels = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
-		// 										   GL_READ_ONLY));
+		// 										   GL_READ_ONLY));	
 		// for(int i = 0; i < 64; ++i) {
 		// 	vstr::out() << "ibest " << i << ": "
 		// 				<< aStateModels[64*i+31] << std::endl;
@@ -1192,7 +1190,7 @@ namespace rhapsodies {
 		// // DEBUG: print gbest particle score
 		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
 		// float *aStateGBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
-		// 										  GL_READ_ONLY));	
+		// 										  GL_READ_ONLY));
 		// float gbest = aStateGBest[31];
 		// vstr::out() << "gbest: " << gbest << std::endl;
 		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
