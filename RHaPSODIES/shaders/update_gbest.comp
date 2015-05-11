@@ -21,13 +21,6 @@ layout(std430, binding = 5) buffer HandModelGBestBuffer
 	HandModel models[2];
 } HandModelsGBest;
 
-// layout(std430, binding = 6) buffer HandModelFBestBuffer
-// {
-// 	HandModel model;
-// } HandModelsFBest;
-
-//const float infinity = 1.0 / 0.0;
-
 void main() {
 	float fPenaltyMin = 1e20;
 	int iMinIndex = 0;

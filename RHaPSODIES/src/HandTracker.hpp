@@ -239,7 +239,6 @@ namespace rhapsodies {
 		GLuint m_idSSBOHandModels;
 		GLuint m_idSSBOHandModelsIBest;
 		GLuint m_idSSBOHandModelsGBest;
-		GLuint m_idSSBOHandModelsFBest;
 		GLuint m_idSSBOHandModelsVelocity;
 		GLuint m_idSSBOHandGeometry;
 		GLuint m_idSSBORandom;

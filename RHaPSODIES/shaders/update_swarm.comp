@@ -21,12 +21,12 @@ layout(std430, binding = 5) buffer HandModelGBestBuffer
 	HandModel models[2];
 } HandModelsGBest;
 
-layout(std430, binding = 7) buffer HandModelVelocityBuffer
+layout(std430, binding = 6) buffer HandModelVelocityBuffer
 {
 	HandModel models[64];
 } HandModelsVelocity;
 
-layout(std430, binding = 8) buffer RandomBuffer
+layout(std430, binding = 7) buffer RandomBuffer
 {
 	float numbers[64*64*2];
 } Random;
@@ -52,7 +52,7 @@ void Imitate(float phi_cognitive, float phi_social) {
 			
 		float r1 = Random.numbers[gl_LocalInvocationID.x*64*2 + 2*dim + 0];
 		float r2 = Random.numbers[gl_LocalInvocationID.x*64*2 + 2*dim + 1];
-
+		
 		float newVelocity =
 			w*(HandModelsVelocity.models[idx].modelstate[dim] +
 			   phi_cognitive*r1*(HandModelsIBest.models[idx].modelstate[dim] -
