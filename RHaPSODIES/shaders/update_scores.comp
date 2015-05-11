@@ -73,7 +73,7 @@ float PenaltyFromReduction(float fDiff,
 	return fPenalty;
 }
 
-float PenaltyPrior(unsigned int model_offset) {
+float PenaltyPrior(unsigned int offset) {
 	float fPenaltySum = 0;
 	
 	unsigned int idx =
@@ -82,14 +82,12 @@ float PenaltyPrior(unsigned int model_offset) {
 		
 	for(int dof = 5; dof < 17; dof += 4) {
 		fPenaltySum +=
-			min(HandModels.models[idx].modelstate[model_offset + dof] -
-				HandModels.models[idx].modelstate[model_offset + dof+4],
-				0.0f);
+			-min(HandModels.models[idx].modelstate[offset + dof] -
+				 HandModels.models[idx].modelstate[offset + dof+4],
+				 0.0f);
 	}
 
-	fPenaltySum = DegToRad(fPenaltySum);
-
-	return fPenaltySum;
+	return DegToRad(fPenaltySum);
 }
 
 void UpdateIBest(float fPenalty) {
