@@ -249,7 +249,7 @@ namespace rhapsodies {
 	const int iSSBOHandModelsGBestLocation    = 5;
 	const int iSSBOHandModelsVelocityLocation = 6;
 	const int iSSBORandomLocation             = 7;
-	const int iSSBODebugLocation             = 8;
+	const int iSSBODebugLocation              = 8;
 
 	const int iImageTextureUnitResult       = 0;
 	const int iImageTextureUnitDifference   = 1;
@@ -1195,7 +1195,7 @@ namespace rhapsodies {
 		// vstr::out() << "gbest: " << gbest << std::endl;
 		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		// fill random number UBO
+		// fill random number SSBO
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBORandom);
 		float *aRandom = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
 											  GL_WRITE_ONLY));

@@ -44,7 +44,7 @@ namespace rhapsodies {
 
 		m_pTracker->StartTracking();
 		
-		while(oTimer.GetMicroTime() - tStart < 1) {
+		while(oTimer.GetMicroTime() - tStart < 2) {
 			m_pTracker->FrameUpdate(
 				m_pFakeColorBuffer,
 				m_pFakeDepthBuffer,
