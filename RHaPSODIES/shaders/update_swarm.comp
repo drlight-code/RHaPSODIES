@@ -28,7 +28,7 @@ layout(std430, binding = 6) buffer HandModelVelocityBuffer
 
 layout(std430, binding = 7) buffer RandomBuffer
 {
-	float numbers[64*64*2];
+	float numbers[64*64*8];
 } Random;
 
 // layout(std430, binding = 8) buffer DebugBuffer
@@ -36,7 +36,11 @@ layout(std430, binding = 7) buffer RandomBuffer
 // 	float values[256];
 // } Debug;
 
+uniform unsigned int iRandomOffset;
+
 const float w = 0.72984f;
+const uint rbuffer_size = 64*64*8;
+
 
 void Imitate(float phi_cognitive, float phi_social);
 void GetBoundsByJointIndex(int index,
@@ -53,9 +57,16 @@ void Imitate(float phi_cognitive, float phi_social) {
 	for(int dim = 0; dim < 64; ++dim) {
 		if(dim%32 >= 28)
 			continue;
-			
-		float r1 = Random.numbers[gl_LocalInvocationID.x*64*2 + 2*dim + 0];
-		float r2 = Random.numbers[gl_LocalInvocationID.x*64*2 + 2*dim + 1];
+
+		uint r1_idx = (iRandomOffset +
+					   gl_LocalInvocationID.x*64*2 +
+					   2*dim + 0) % rbuffer_size;
+		uint r2_idx = (iRandomOffset +
+					   gl_LocalInvocationID.x*64*2 +
+					   2*dim + 1) % rbuffer_size;
+		
+		float r1 = Random.numbers[r1_idx];
+		float r2 = Random.numbers[r2_idx];
 		
 		HandModelsVelocity.models[idx].modelstate[dim] =
 			w*(HandModelsVelocity.models[idx].modelstate[dim] +

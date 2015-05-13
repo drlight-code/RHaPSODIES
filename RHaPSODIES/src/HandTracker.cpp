@@ -307,6 +307,9 @@ namespace rhapsodies {
 
 		glUseProgram(m_idColorFragProgram);
 		glUniform3f(m_locColorUniform, 1.0f, 0.0f, 0.0f);
+
+		m_locRandomOffsetUniform =
+			glGetUniformLocation(m_idUpdateSwarmProgram, "iRandomOffset");
 	}
 
 	HandTracker::~HandTracker() {
@@ -569,15 +572,21 @@ namespace rhapsodies {
 		// random number SSBO
 		glGenBuffers(1, &m_idSSBORandom);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBORandom);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*64*2*sizeof(float),
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*64*8*sizeof(float),
 					 NULL, GL_DYNAMIC_DRAW);
+		float *aRandom = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+											  GL_WRITE_ONLY));
+		for(int i = 0; i < 64*64*8; ++i) {
+			aRandom[i] = m_pRNG->GenerateFloat2();
+		}
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
 		// debug SSBO
 		glGenBuffers(1, &m_idSSBODebug);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBODebug);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, 256*sizeof(float),
 					 NULL, GL_DYNAMIC_DRAW);
-
+		
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 		return true;
@@ -1060,7 +1069,6 @@ namespace rhapsodies {
 			
 			tStart = oTimer.GetMicroTime();
 			ReduceDepthMaps();
-			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 			tReduction += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
@@ -1186,17 +1194,14 @@ namespace rhapsodies {
 		// vstr::out() << "gbest: " << gbest << std::endl;
 		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		// fill random number SSBO
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBORandom);
-		float *aRandom = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
-											  GL_WRITE_ONLY));
-		for(int i = 0; i < 64*64*2; ++i) {
-			aRandom[i] = m_pRNG->GenerateFloat2();
-		}
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-				
 		// evolve particle swarm
 		glUseProgram(m_idUpdateSwarmProgram);
+
+		// set uniform for random SSBO offset
+		glUniform1ui(
+			m_locRandomOffsetUniform,
+			VistaRandomNumberGenerator::GetStandardRNG()->GenerateInt32());
+		
    		glDispatchCompute(1, 1, 1);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 

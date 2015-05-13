@@ -257,6 +257,7 @@ namespace rhapsodies {
 		ParticleSwarm *m_pSwarm;
 
 		VistaRandomNumberGenerator *m_pRNG;
+		GLint m_locRandomOffsetUniform;
 	};
 }
 
