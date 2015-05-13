@@ -59,15 +59,11 @@ layout(std430, binding = 1) buffer HandGeometryBuffer
 	float extents[19];
 } HandGeometry;
 
-layout(std430, binding = 2) buffer SphereTransformBuffer
+layout(std430, binding = 2) buffer TransformBuffer
 {
-	mat4 transforms[64*2*22];
-} SphereTransforms;
+	mat4 transforms[64*2*(22+16)];
+} Transforms;
 
-layout(std430, binding = 3) buffer CylinderTransformBuffer
-{
-	mat4 transforms[64*2*16];
-} CylinderTransforms;
 
 const float Pi = 3.14159265358979323846f;
 const float Epsilon = 1.19209e-07;
@@ -215,14 +211,15 @@ vec4 GetOrientation() {
 }
 
 void DrawSphere(mat4 matModel) {
-	SphereTransforms.transforms[
+	Transforms.transforms[
 		2*22*gl_WorkGroupID.x +
 		22*gl_WorkGroupID.y +
 		iSphereCount++] = matModel;
 }
 
 void DrawCylinder(mat4 matModel) {
-	CylinderTransforms.transforms[
+	Transforms.transforms[
+		2*22*64 +
 		2*16*gl_WorkGroupID.x +
 		16*gl_WorkGroupID.y +
 		iCylinderCount++] = matModel;

@@ -2,9 +2,11 @@
 
 out int instance_id;
 
-const int ARRAY_SIZE = 2816; // 64*2*22
+uniform uint transform_offset;
 
-layout(std430, binding = 10) buffer TransformBlock {
+const int ARRAY_SIZE = 4864; // 64*2*(22+16)
+
+layout(std430, binding = 2) buffer TransformBlock {
   mat4 model_transform[ARRAY_SIZE];
 };
 
@@ -20,5 +22,6 @@ void main(){
 
 	instance_id = gl_InstanceID;
 	gl_Position = gl_ModelViewProjectionMatrix *
-		model_transform[gl_InstanceID] * vec4(vertexPosition_modelspace,1);
+		model_transform[gl_InstanceID + transform_offset] *
+		vec4(vertexPosition_modelspace,1);
 }

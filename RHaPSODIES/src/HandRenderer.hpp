@@ -18,6 +18,7 @@ namespace rhapsodies {
 		HandRenderer(GLint idProgram,
 					 bool bDrawNormals = false,
 					 int iSegments = 4);
+
 		void DrawHand(HandModel *pModel,
 					  HandGeometry *pModelGeometry);
 
@@ -28,8 +29,7 @@ namespace rhapsodies {
 						 float *pViewPortData);
 		void PostDraw();
 
-		GLuint GetSSBOSphereTransformsId();
-		GLuint GetSSBOCylinderTransformsId();
+		GLuint GetSSBOTransformsId();
 		
 	private:
 		enum BufferObjectId {
@@ -63,10 +63,10 @@ namespace rhapsodies {
 		GLuint m_idVertexArrayObject;
 		GLuint m_idVertexBufferObject;
 
-		GLuint m_idSSBOSphereTransforms;
-		GLuint m_idSSBOCylinderTransforms;
+		GLuint m_idSSBOTransforms;
 
 		GLint m_locInstancesPerViewportUniform;
+		GLint m_locTransformOffset;
 	};
 }
 

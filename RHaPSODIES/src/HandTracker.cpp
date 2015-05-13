@@ -234,8 +234,7 @@ namespace rhapsodies {
 
 	const int iSSBOHandModelsLocation         = 0;
 	const int iSSBOHandGeometryLocation       = 1;
-	const int iSSBOSphereTransformsLocation   = 2;
-	const int iSSBOCylinderTransformsLocation = 3;
+	const int iSSBOTransformsLocation         = 2;
 	const int iSSBOHandModelsIBestLocation    = 4;
 	const int iSSBOHandModelsGBestLocation    = 5;
 	const int iSSBOHandModelsVelocityLocation = 6;
@@ -836,11 +835,8 @@ namespace rhapsodies {
 						 iSSBOHandGeometryLocation,
 						 m_idSSBOHandGeometry);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
-						 iSSBOSphereTransformsLocation,
-						 m_pHandRenderer->GetSSBOSphereTransformsId());
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
-						 iSSBOCylinderTransformsLocation,
-						 m_pHandRenderer->GetSSBOCylinderTransformsId());
+						 iSSBOTransformsLocation,
+						 m_pHandRenderer->GetSSBOTransformsId());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBOHandModelsIBestLocation,
 						 m_idSSBOHandModelsIBest);
@@ -862,9 +858,7 @@ namespace rhapsodies {
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBOHandGeometryLocation, 0);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
-						 iSSBOSphereTransformsLocation, 0);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
-						 iSSBOCylinderTransformsLocation, 0);
+						 iSSBOTransformsLocation, 0);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBOHandModelsIBestLocation, 0);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,

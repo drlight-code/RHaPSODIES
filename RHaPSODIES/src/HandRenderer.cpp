@@ -86,6 +86,9 @@ namespace rhapsodies {
 
 		m_locInstancesPerViewportUniform = glGetUniformLocation(
 			m_idProgram, "instances_per_viewport");
+		m_locTransformOffset = glGetUniformLocation(
+			m_idProgram, "transform_offset");
+
 	}
 
 	void HandRenderer::PrepareBufferObjects() {
@@ -123,18 +126,18 @@ namespace rhapsodies {
 		glBindVertexArray(0);
 
 		// initialize sphere and cylinder SSBOs for transformation matrices
-		glGenBuffers(1, &m_idSSBOSphereTransforms);
-		glGenBuffers(1, &m_idSSBOCylinderTransforms);
+		glGenBuffers(1, &m_idSSBOTransforms);
+//		glGenBuffers(1, &m_idSSBOCylinderTransforms);
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOSphereTransforms);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*22*16*4,
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOTransforms);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*(22+16)*16*sizeof(float),
 					 NULL, GL_DYNAMIC_DRAW);
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOCylinderTransforms);
+		//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOCylinderTransforms);
 		// actually we have only 15 transforms per frame, but pad to
 		// 16 because of SSBO offset alignment restricitons
-		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*16*16*4,
-					 NULL, GL_DYNAMIC_DRAW);
+		// glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*16*16*sizeof(float),
+		// 			 NULL, GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -416,24 +419,34 @@ namespace rhapsodies {
 		}			
 
 		// bind and fill sphere transform SSBO
-		size_t sizeSSBO =
+		size_t sizeSSBOSph =
 			sizeof(VistaTransformMatrix) *
 			iSpheresPerViewport *
 			iViewPortCount;
-		int iDrawCount = iSpheresPerViewport * iViewPortCount;
+		size_t sizeSSBOCyl =
+			sizeof(VistaTransformMatrix) *
+			iCylindersPerViewport *
+			iViewPortCount;
 
 		if(bTransformTransfer) {
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER,
-						 m_idSSBOSphereTransforms);
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-							sizeSSBO,
+						 m_idSSBOTransforms);
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER,
+							0, sizeSSBOSph,
 							&m_vSphereTransforms[0]);
-		}
-		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 10,
-						  m_idSSBOSphereTransforms,
-						  iBaseViewport/iViewPortCount*sizeSSBO,
-						  sizeSSBO);
+			glBufferSubData( GL_SHADER_STORAGE_BUFFER,
+							 sizeof(VistaTransformMatrix) *
+							 iSpheresPerViewport * 64, sizeSSBOCyl,
+							 &m_vCylinderTransforms[0]);
 
+			m_vSphereTransforms.clear();
+			m_vCylinderTransforms.clear();
+		}
+
+		// set uniform for transform buffer offset
+		glUniform1ui(m_locTransformOffset,
+					 iSpheresPerViewport*iBaseViewport);
+		
 		// set uniform for viewport indexing
 		glUniform1i(m_locInstancesPerViewportUniform,
 					iSpheresPerViewportUniform);
@@ -441,42 +454,23 @@ namespace rhapsodies {
 		// draw all shperes
 		glDrawArraysInstanced(GL_TRIANGLES,
 							  0, m_szSphereData,
-							  iDrawCount);
+							  iSpheresPerViewport * iViewPortCount);
 
-		// bind and fill cylinder transform SSBO
-		// padded length, only 15 transforms actually
-		sizeSSBO =
-			sizeof(VistaTransformMatrix) *
-			iCylindersPerViewport *
-			iViewPortCount;
-		iDrawCount = iCylindersPerViewport * iViewPortCount;
 
-		if(bTransformTransfer) {
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER,
-						 m_idSSBOCylinderTransforms);
-			glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0,
-							 sizeSSBO,
-							 &m_vCylinderTransforms[0]);
-		}
-		glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 10,
-						  m_idSSBOCylinderTransforms,
-						  iBaseViewport/iViewPortCount*sizeSSBO,
-						  sizeSSBO);
+		// set uniform for transform buffer offset
+		glUniform1ui(m_locTransformOffset,
+					 iSpheresPerViewport * 64 +
+					 iCylindersPerViewport*iBaseViewport);
 
 		// set uniform for viewport indexing
 		glUniform1i(m_locInstancesPerViewportUniform,
 					iCylindersPerViewportUniform);
 
+
 		// draw all cylinders
 		glDrawArraysInstanced(GL_TRIANGLES,
 							  m_szSphereData, m_szCylinderData,
-							  iDrawCount);
-
-		// clear transform matrix vectors
-		if(bTransformTransfer) {
-			m_vSphereTransforms.clear();
-			m_vCylinderTransforms.clear();
-		}
+							  iCylindersPerViewport * iViewPortCount);
 	}
 
 	void HandRenderer::PostDraw() {
@@ -486,11 +480,7 @@ namespace rhapsodies {
 		glUseProgram(0);
 	}
 
-	GLuint HandRenderer::GetSSBOSphereTransformsId() {
-		return m_idSSBOSphereTransforms;
-	}
-
-	GLuint HandRenderer::GetSSBOCylinderTransformsId() {
-		return m_idSSBOCylinderTransforms;
+	GLuint HandRenderer::GetSSBOTransformsId() {
+		return m_idSSBOTransforms;
 	}
 }

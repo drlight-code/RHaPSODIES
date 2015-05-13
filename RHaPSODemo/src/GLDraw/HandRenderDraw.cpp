@@ -1,12 +1,14 @@
 #include <GL/glew.h>
 
 #include <VistaBase/VistaStreamUtils.h>
+#include <VistaBase/VistaTimeUtils.h>
 
 #include <VistaMath/VistaBoundingBox.h>
 
 #include <RHaPSODIES.hpp>
 #include <ShaderRegistry.hpp>
 #include <HandRenderer.hpp>
+#include <HandModel.hpp>
 
 #include "HandRenderDraw.hpp"
 
@@ -39,7 +41,7 @@ namespace rhapsodies {
 		m_pRenderer->PerformDraw(true, 0, 0, NULL);
 
 		m_pRenderer->PostDraw();
-		
+
 		return true;
 	}
 
