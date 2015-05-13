@@ -202,15 +202,6 @@ namespace {
 					<< values[0] << std::endl;
 	}
 
-	template<typename T> std::string ProfilerString(
-		std::string sPrefix, T value) {
-		std::ostringstream ostr;
-
-		ostr << std::setw(30) << sPrefix
-			 << std::boolalpha << std::fixed << value;
-		return ostr.str();
-	}
-
 	inline float WorldToScreenProjective(
 		float zWorld, float zNear=0.1f, float zFar=1.1f) {
 		return ((zNear + zFar - 2.0f*zNear*zFar/zWorld /
@@ -716,8 +707,8 @@ namespace rhapsodies {
 		m_itCurrentClassifier = --m_lClassifiers.end();
 
 		WriteDebug(IDebugView::SKIN_CLASSIFIER,
-				   ProfilerString("Skin classifier: ",
-								  (*m_itCurrentClassifier)->GetName()));
+				   IDebugView::FormatString("Skin classifier: ",
+											(*m_itCurrentClassifier)->GetName()));
 
 		return true;
 	}
@@ -765,8 +756,8 @@ namespace rhapsodies {
 		tProcessFrames = oTimer.GetMicroTime() - tStart;
 
 		WriteDebug(IDebugView::CAMERAFRAMES_TIME,
-				   ProfilerString("Camera processing time: ",
-								  tProcessFrames));
+				   IDebugView::FormatString("Camera processing time: ",
+											tProcessFrames));
 
 		ResourcesBind();
 		
@@ -778,14 +769,14 @@ namespace rhapsodies {
 			PerformPSOTracking();
 			tPSO = oTimer.GetMicroTime() - tStart;
 			WriteDebug(IDebugView::PSO_TIME,
-					   ProfilerString("PSO loop time: ",
-									  tPSO));
+					   IDebugView::FormatString("PSO loop time: ",
+												tPSO));
 			WriteDebug(IDebugView::LOOP_FPS,
-					   ProfilerString("Tracking loop  fps: ",
-									  1.0f/(tProcessFrames+tPSO)));
+					   IDebugView::FormatString("Tracking loop  fps: ",
+												1.0f/(tProcessFrames+tPSO)));
 			WriteDebug(IDebugView::LOOP_TIME,
-					   ProfilerString("Tracking loop time: ",
-									  tProcessFrames + tPSO));
+					   IDebugView::FormatString("Tracking loop time: ",
+												tProcessFrames + tPSO));
 		}
 		else {
 			PerformStartPoseMatch();
@@ -1018,7 +1009,7 @@ namespace rhapsodies {
 		}
 
 		WriteDebug(IDebugView::PENALTY,
-				   ProfilerString("Penalty: ", fPenalty));
+				   IDebugView::FormatString("Penalty: ", fPenalty));
 	}
 
 	void HandTracker::PerformPSOTracking() {
@@ -1082,21 +1073,21 @@ namespace rhapsodies {
 //		vstr::out() << "********************************************" << std::endl;
 		
 		WriteDebug(IDebugView::TRANSFORM_TIME,
-				   ProfilerString("Transform time: ",
-								  tTransform));
+				   IDebugView::FormatString("Transform time: ",
+											tTransform));
 		WriteDebug(IDebugView::RENDER_TIME,
-				   ProfilerString("Render time: ",
-								  tRendering));
+				   IDebugView::FormatString("Render time: ",
+											tRendering));
 		WriteDebug(IDebugView::REDUCTION_TIME,
-				   ProfilerString("Reduction time: ",
-								  tReduction));
+				   IDebugView::FormatString("Reduction time: ",
+											tReduction));
 		WriteDebug(IDebugView::SWARMUPDATE_TIME,
-				   ProfilerString("Swarm update time: ",
-								  tSwarmUpdate));
+				   IDebugView::FormatString("Swarm update time: ",
+											tSwarmUpdate));
 
 		WriteDebug(IDebugView::PENALTY,
-				   ProfilerString("Penalty: ",
-								  m_pParticleBest->GetIBestPenalty()));
+				   IDebugView::FormatString("Penalty: ",
+											m_pParticleBest->GetIBestPenalty()));
 				
 	}
 
@@ -1228,7 +1219,7 @@ namespace rhapsodies {
 		// 				<< aState[i] << std::endl;
 		// }
 		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-}
+	}
 
 	float HandTracker::Penalty(HandModel& oModelLeft,
 							   HandModel& oModelRight,
@@ -1253,9 +1244,9 @@ namespace rhapsodies {
 		float fPenalty = fLambda * fDepthTerm + fSkinTerm;
 
 		WriteDebug(IDebugView::DEPTH_TERM,
-				   ProfilerString("Depth term: ", fLambda*fDepthTerm));
+				   IDebugView::FormatString("Depth term: ", fLambda*fDepthTerm));
 		WriteDebug(IDebugView::SKIN_TERM,
-				   ProfilerString("Skin term: ", fSkinTerm));
+				   IDebugView::FormatString("Skin term: ", fSkinTerm));
 
 		return fPenalty;
 	}
@@ -1501,8 +1492,8 @@ namespace rhapsodies {
 			m_itCurrentClassifier = m_lClassifiers.begin();
 
 		WriteDebug(IDebugView::SKIN_CLASSIFIER,
-				   ProfilerString("Skin classifier: ",
-								  (*m_itCurrentClassifier)->GetName()));
+				   IDebugView::FormatString("Skin classifier: ",
+											(*m_itCurrentClassifier)->GetName()));
 	}
 
 	void HandTracker::PrevSkinClassifier() {
@@ -1511,8 +1502,8 @@ namespace rhapsodies {
 		m_itCurrentClassifier--;
 
 		WriteDebug(IDebugView::SKIN_CLASSIFIER,
-				   ProfilerString("Skin classifier: ",
-								  (*m_itCurrentClassifier)->GetName()));
+				   IDebugView::FormatString("Skin classifier: ",
+											(*m_itCurrentClassifier)->GetName()));
 	}
 
 	void HandTracker::ShowOpenCVImg() {
@@ -1593,8 +1584,8 @@ namespace rhapsodies {
 		m_bTrackingEnabled = true;
 
 		WriteDebug(IDebugView::TRACKING,
-				   ProfilerString("Tracking: ",
-								  m_bTrackingEnabled));
+				   IDebugView::FormatString("Tracking: ",
+											m_bTrackingEnabled));
 	}
 	
 	void HandTracker::StopTracking() {
@@ -1603,8 +1594,8 @@ namespace rhapsodies {
 		SetToInitialPose(*m_pParticleBest);
 
 		WriteDebug(IDebugView::TRACKING,
-				   ProfilerString("Tracking: ",
-								  m_bTrackingEnabled));
+				   IDebugView::FormatString("Tracking: ",
+											m_bTrackingEnabled));
 	}
 
 	bool HandTracker::IsTracking() {
@@ -1621,8 +1612,8 @@ namespace rhapsodies {
 			m_pFrameRecorder->StopRecording();
 		}
 		WriteDebug(IDebugView::FRAME_RECORDING,
-				   ProfilerString("Frame Recording: ",
-								  m_bFrameRecording));
+				   IDebugView::FormatString("Frame Recording: ",
+											m_bFrameRecording));
 	}
 
 	void HandTracker::ToggleFramePlayback() {
@@ -1636,8 +1627,8 @@ namespace rhapsodies {
 		}
 
 		WriteDebug(IDebugView::FRAME_PLAYBACK,
-				   ProfilerString("Frame Playback: ",
-								  m_bFramePlayback));
+				   IDebugView::FormatString("Frame Playback: ",
+											m_bFramePlayback));
 
 	}
 

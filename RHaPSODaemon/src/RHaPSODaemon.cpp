@@ -41,10 +41,14 @@ namespace rhapsodies {
 	bool RHaPSODaemon::Run() {
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
 		VistaType::microtime tStart = oTimer.GetMicroTime();
-
+		VistaType::microtime tFrameStart;
+		VistaType::microtime tFrame;
+		
 		m_pTracker->StartTracking();
 		
 		while(oTimer.GetMicroTime() - tStart < 2) {
+			tFrameStart = oTimer.GetMicroTime();
+			
 			m_pTracker->FrameUpdate(
 				m_pFakeColorBuffer,
 				m_pFakeDepthBuffer,
@@ -54,6 +58,15 @@ namespace rhapsodies {
 		
 			glutPostRedisplay();
 			glutSwapBuffers();
+
+			tFrame = oTimer.GetMicroTime() - tFrameStart;
+			m_pDebugView->Write(IDebugView::APPLICATION_LOOP_TIME,
+								IDebugView::FormatString("Application loop time: ",
+														 tFrame));
+			m_pDebugView->Write(IDebugView::APPLICATION_LOOP_FPS,
+								IDebugView::FormatString("Application loop  fps: ",
+														 1.0f/tFrame));
+			std::cout << "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*" << std::endl;
 		}
 	}
 

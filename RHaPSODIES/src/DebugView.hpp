@@ -2,6 +2,8 @@
 #define _RHAPSODIES_IDEBUGVIEW
 
 #include <string>
+#include <sstream>
+#include <iomanip>
 
 namespace rhapsodies {
 	class IDebugView {
@@ -15,6 +17,8 @@ namespace rhapsodies {
 			PSO_TIME,
 			LOOP_TIME,
 			LOOP_FPS,
+			APPLICATION_LOOP_TIME,
+			APPLICATION_LOOP_FPS,
 			PENALTY,
 			DEPTH_TERM,
 			SKIN_TERM,
@@ -27,9 +31,21 @@ namespace rhapsodies {
 
 		virtual ~IDebugView() {};
 		virtual void Write(Slot slot, std::string sText) = 0;
+		
+		template<typename T> static
+		std::string	FormatString(std::string sPrefix, T value);
 
     private:
 	};
+
+	template<typename T>
+	std::string	IDebugView::FormatString(std::string sPrefix, T value) {
+		std::ostringstream ostr;
+
+		ostr << std::setw(30) << sPrefix
+			 << std::boolalpha << std::fixed << value;
+		return ostr.str();
+	}
 }
 
 #endif // _RHAPSODIES_IDEBUGVIEW
