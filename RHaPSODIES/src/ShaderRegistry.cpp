@@ -27,16 +27,20 @@ namespace {
 namespace rhapsodies {
 	GLuint ShaderRegistry::RegisterShader(std::string name,
 										  GLenum type,
-										  std::string path) {
+										  std::vector<std::string> paths) {
 
 		vstr::debug() << "Registering shader: " << name << std::endl;
 		
 		// create gl shader object
 		GLuint shader = glCreateShader(type);
 
-		// read data from path
 		std::string sShader;
-		readFileIntoString(path, sShader);
+		std::string sShaderCombined;
+		for(std::string &path: paths) {
+			// read data from path
+			readFileIntoString(path, sShader);
+			sShaderCombined += sShader;
+		}
 
 		const char* strShaderData = sShader.c_str();
 		glShaderSource(shader, 1, &strShaderData, NULL);

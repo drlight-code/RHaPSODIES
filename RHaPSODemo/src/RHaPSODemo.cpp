@@ -274,13 +274,13 @@ namespace rhapsodies {
 	bool RHaPSODemo::RegisterShaders() {
 		m_pShaderReg->RegisterShader(
 			"vert_vpos_uv", GL_VERTEX_SHADER,   
-			sShaderPath + "/vpos_uv.vert");
+			{sShaderPath + "/vpos_uv.vert"});
 		m_pShaderReg->RegisterShader(
 			"frag_textured", GL_FRAGMENT_SHADER,
-			sShaderPath + "/textured.frag");
+			{sShaderPath + "/textured.frag"});
 		m_pShaderReg->RegisterShader(
 			"frag_textured_uint_diff", GL_FRAGMENT_SHADER,
-			sShaderPath + "/textured_uint_diff.frag");
+			{sShaderPath + "/textured_uint_diff.frag"});
 
 		std::vector<std::string> vec_shaders;
 		vec_shaders.push_back("vert_vpos_uv");		

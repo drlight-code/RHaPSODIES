@@ -49,40 +49,40 @@ namespace rhapsodies {
 		
 		S_pShaderRegistry->RegisterShader(
 			"vert_vpos_indexedtransform", GL_VERTEX_SHADER,
-			sShaderPath + "/vpos_indexedtransform.vert");
+			{sShaderPath + "/vpos_indexedtransform.vert"});
 		S_pShaderRegistry->RegisterShader(
 			"vert_vpos_vnorm_indexedtransform", GL_VERTEX_SHADER,
-			sShaderPath + "/vpos_vnorm_indexedtransform.vert");
+			{sShaderPath + "/vpos_vnorm_indexedtransform.vert"});
 
 		S_pShaderRegistry->RegisterShader(
 			"frag_solid_colored", GL_FRAGMENT_SHADER,
-			sShaderPath + "/solid_colored.frag");
+			{sShaderPath + "/solid_colored.frag"});
 		S_pShaderRegistry->RegisterShader(
 			"frag_shaded_colored", GL_FRAGMENT_SHADER,
-			sShaderPath + "/shaded_colored.frag");
+			{sShaderPath + "/shaded_colored.frag"});
 
 		S_pShaderRegistry->RegisterShader(
 			"indexed_viewport", GL_GEOMETRY_SHADER,
-			sShaderPath + "/indexed_viewport.geom");
+			{sShaderPath + "/indexed_viewport.geom"});
 
 		S_pShaderRegistry->RegisterShader(
 			"reduction_x", GL_COMPUTE_SHADER,
-			sShaderPath + "/reduction_x.comp");
+			{sShaderPath + "/reduction_x.comp"});
 		S_pShaderRegistry->RegisterShader(
 			"reduction_y", GL_COMPUTE_SHADER,
-			sShaderPath + "/reduction_y.comp");
+			{sShaderPath + "/reduction_y.comp"});
 		S_pShaderRegistry->RegisterShader(
 			"generate_transforms", GL_COMPUTE_SHADER,
-			sShaderPath + "/generate_transforms.comp");
+			{sShaderPath + "/generate_transforms.comp"});
 		S_pShaderRegistry->RegisterShader(
 			"update_scores", GL_COMPUTE_SHADER,
-			sShaderPath + "/update_scores.comp");
+			{sShaderPath + "/update_scores.comp"});
 		S_pShaderRegistry->RegisterShader(
 			"update_gbest", GL_COMPUTE_SHADER,
-			sShaderPath + "/update_gbest.comp");
+			{sShaderPath + "/update_gbest.comp"});
 		S_pShaderRegistry->RegisterShader(
 			"update_swarm", GL_COMPUTE_SHADER,
-			sShaderPath + "/update_swarm.comp");
+			{sShaderPath + "/update_swarm.comp"});
 
 		std::vector<std::string> vec_shaders;
 

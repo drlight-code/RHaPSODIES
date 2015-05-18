@@ -16,7 +16,7 @@ namespace rhapsodies {
 	public:
 		GLuint RegisterShader(std::string name,
 							  GLenum type,
-							  std::string path);
+							  std::vector<std::string> paths);
 
 		GLuint RegisterProgram(std::string name,
 							   std::vector<std::string> shader_names);
