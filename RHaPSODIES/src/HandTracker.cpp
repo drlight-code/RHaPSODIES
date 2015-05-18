@@ -298,9 +298,9 @@ namespace rhapsodies {
 
 		m_idPrepareReductionTexturesProgram =
 			m_pShaderReg->GetProgram("prepare_reduction_textures");
-
-		m_idReductionXProgram = m_pShaderReg->GetProgram("reduction_x");
-		m_idReductionYProgram = m_pShaderReg->GetProgram("reduction_y");
+		m_idReduction0Program = m_pShaderReg->GetProgram("reduction0");
+		m_idReduction1Program = m_pShaderReg->GetProgram("reduction1");
+		m_idReduction2Program = m_pShaderReg->GetProgram("reduction2");
 
 		m_idUpdateScoresProgram = m_pShaderReg->GetProgram("update_scores");
 		m_idUpdateGBestProgram  = m_pShaderReg->GetProgram("update_gbest");
@@ -676,8 +676,9 @@ namespace rhapsodies {
 		// 			 8*8*3*4, 0, GL_DYNAMIC_READ);
 		// glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-		ValidateComputeShader(m_idReductionXProgram);
-		ValidateComputeShader(m_idReductionYProgram);
+		ValidateComputeShader(m_idReduction0Program);
+		ValidateComputeShader(m_idReduction1Program);
+		ValidateComputeShader(m_idReduction2Program);
 		
 		return true;
 	}
@@ -1134,19 +1135,20 @@ namespace rhapsodies {
 	void HandTracker::ReduceDepthMaps() {
 		glUseProgram(m_idPrepareReductionTexturesProgram);
 		glDispatchCompute(320, 256, 1);
-		
-		// reduction in x direction
-		// glUseProgram(m_idReductionXProgram);
-		// glDispatchCompute(8, 240*8/3, 1);
 
-		// make sure all image stores are visible
-		// glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		// first reduction: 320x256 -> 40x32
+		glUseProgram(m_idReduction0Program);
+		glDispatchCompute(320, 256, 1);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-		// reduction in y direction
-		// glUseProgram(m_idReductionYProgram);
-		// glDispatchCompute(8, 8, 1);
+		// second reduction: 40x32 -> 5x4
+		glUseProgram(m_idReduction1Program);
+		glDispatchCompute(40, 32, 1);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-		// make sure all image stores are visible
+		// third reduction: 5x4 -> 1x1
+		glUseProgram(m_idReduction2Program);
+		glDispatchCompute(8, 8, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	}
 

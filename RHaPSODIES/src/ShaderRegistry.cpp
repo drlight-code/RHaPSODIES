@@ -42,11 +42,11 @@ namespace rhapsodies {
 			sShaderCombined += sShader;
 		}
 
-		const char* strShaderData = sShader.c_str();
+		const char* strShaderData = sShaderCombined.c_str();
 		glShaderSource(shader, 1, &strShaderData, NULL);
 
-		// vstr::debug() << "Shader source:" << std::endl
-		// 			  << strShaderData << std::endl << std::endl;
+		// vstr::out() << "Shader source:" << std::endl
+		// 			<< strShaderData << std::endl << std::endl;
 		
 		glCompileShader(shader);
 

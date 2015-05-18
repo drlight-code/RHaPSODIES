@@ -65,12 +65,25 @@ namespace rhapsodies {
 			"indexed_viewport", GL_GEOMETRY_SHADER,
 			{sShaderPath + "/indexed_viewport.geom"});
 
+		// S_pShaderRegistry->RegisterShader(
+		// 	"reduction_x", GL_COMPUTE_SHADER,
+		// 	{sShaderPath + "/reduction_x.comp"});
+		// S_pShaderRegistry->RegisterShader(
+		// 	"reduction_y", GL_COMPUTE_SHADER,
+		// 	{sShaderPath + "/reduction_y.comp"});
 		S_pShaderRegistry->RegisterShader(
-			"reduction_x", GL_COMPUTE_SHADER,
-			{sShaderPath + "/reduction_x.comp"});
+			"reduction0", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header0.part",
+			 sShaderPath + "/reduction.comp"});
 		S_pShaderRegistry->RegisterShader(
-			"reduction_y", GL_COMPUTE_SHADER,
-			{sShaderPath + "/reduction_y.comp"});
+			"reduction1", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header1.part",
+			 sShaderPath + "/reduction.comp"});
+		S_pShaderRegistry->RegisterShader(
+			"reduction2", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header2.part",
+			 sShaderPath + "/reduction.comp"});
+
 		S_pShaderRegistry->RegisterShader(
 			"prepare_reduction_textures", GL_COMPUTE_SHADER,
 			{sShaderPath + "/prepare_reduction_textures.comp"});
@@ -100,17 +113,25 @@ namespace rhapsodies {
 		vec_shaders.push_back("frag_shaded_colored");
 		S_pShaderRegistry->RegisterProgram("shaded_indexedtransform", vec_shaders);
 
-		vec_shaders.clear();
-		vec_shaders.push_back("reduction_x");
-		S_pShaderRegistry->RegisterProgram("reduction_x", vec_shaders);
+		// vec_shaders.clear();
+		// vec_shaders.push_back("reduction_x");
+		// S_pShaderRegistry->RegisterProgram("reduction_x", vec_shaders);
 
 		vec_shaders.clear();
 		vec_shaders.push_back("prepare_reduction_textures");
 		S_pShaderRegistry->RegisterProgram("prepare_reduction_textures", vec_shaders);
 
 		vec_shaders.clear();
-		vec_shaders.push_back("reduction_y");
-		S_pShaderRegistry->RegisterProgram("reduction_y", vec_shaders);
+		vec_shaders.push_back("reduction0");
+		S_pShaderRegistry->RegisterProgram("reduction0", vec_shaders);
+
+		vec_shaders.clear();
+		vec_shaders.push_back("reduction1");
+		S_pShaderRegistry->RegisterProgram("reduction1", vec_shaders);
+
+		vec_shaders.clear();
+		vec_shaders.push_back("reduction2");
+		S_pShaderRegistry->RegisterProgram("reduction2", vec_shaders);
 
 		vec_shaders.clear();
 		vec_shaders.push_back("generate_transforms");
