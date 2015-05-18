@@ -200,6 +200,10 @@ namespace {
 		glGetIntegerv(GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES, values);
 		vstr::out() << "GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES: "
 					<< values[0] << std::endl;
+
+		glGetIntegerv(GL_MAX_IMAGE_UNITS, values);
+		vstr::out() << "GL_MAX_IMAGE_UNITS: "
+					<< values[0] << std::endl;
 	}
 
 	inline float WorldToScreenProjective(
