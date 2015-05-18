@@ -245,11 +245,11 @@ namespace rhapsodies {
 	const int iSSBORandomLocation             = 7;
 	const int iSSBODebugLocation              = 8;
 
-	const int iImageTextureUnitResult       = 0;
-	const int iImageTextureUnitDifference   = 1;
-	const int iImageTextureUnitUnion        = 2;
-	const int iImageTextureUnitIntersection = 3;
-	const int iImageTextureUnitFinalResult  = 4;
+	// const int iImageTextureUnitResult       = 0;
+	// const int iImageTextureUnitDifference   = 1;
+	// const int iImageTextureUnitUnion        = 2;
+	// const int iImageTextureUnitIntersection = 3;
+	// const int iImageTextureUnitFinalResult  = 4;
 
 	
 /*============================================================================*/
@@ -295,6 +295,9 @@ namespace rhapsodies {
 
 		m_idGenerateTransformsProgram =
 			m_pShaderReg->GetProgram("generate_transforms");
+
+		m_idPrepareReductionTexturesProgram =
+			m_pShaderReg->GetProgram("prepare_reduction_textures");
 
 		m_idReductionXProgram = m_pShaderReg->GetProgram("reduction_x");
 		m_idReductionYProgram = m_pShaderReg->GetProgram("reduction_y");
@@ -368,21 +371,21 @@ namespace rhapsodies {
 		return m_idCameraTexture;
 	}
 
-	GLuint HandTracker::GetResultTextureId() {
-		return m_idResultTexture;
-	}
+	// GLuint HandTracker::GetResultTextureId() {
+	// 	return m_idResultTexture;
+	// }
 
 	GLuint HandTracker::GetDifferenceTextureId() {
 		return m_idDifferenceTexture;
 	}
 
-	GLuint HandTracker::GetUnionTextureId() {
-		return m_idUnionTexture;
-	}
+	// GLuint HandTracker::GetUnionTextureId() {
+	// 	return m_idUnionTexture;
+	// }
 
-	GLuint HandTracker::GetIntersectionTextureId() {
-		return m_idIntersectionTexture;
-	}
+	// GLuint HandTracker::GetIntersectionTextureId() {
+	// 	return m_idIntersectionTexture;
+	// }
 
 	void HandTracker::ReadConfig() {
 		VistaIniFileParser oIniParser(true);
@@ -598,50 +601,64 @@ namespace rhapsodies {
 	bool HandTracker::InitReduction() {
 		glActiveTexture(GL_TEXTURE0);
 
-		// prepare result texture
-		glGenTextures(1, &m_idResultTexture);
-
-		unsigned int *data = new unsigned int[3*240*8*8];
-		for(int i = 0; i < 3*240*8*8; ++i) {
+		// prepare reduction textures
+		unsigned int *data = new unsigned int[320*256*8*8];
+		for(size_t i = 0; i < 320*256*8*8; ++i) {
 			data[i] = 0x0;
-		}		
-		
-		glBindTexture(GL_TEXTURE_2D, m_idResultTexture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		}
 
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 3*8, 8*240);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 3*8, 8*240, GL_RED_INTEGER,
-						GL_UNSIGNED_INT, data);
-		delete [] data;
+		// first step: 320x256
+		glGenTextures(3, m_idReductionTextures320x256);
+		for(size_t i = 0; i < 3; ++i) {
+			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures320x256[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glGenTextures(1, &m_idFinalResultTexture);
+			glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 320*8, 256*8);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 256*8, GL_RED_INTEGER,
+							GL_UNSIGNED_INT, data);
+		}
 
-		data = new unsigned int[3*8*8];
-		for(int i = 0; i < 3*8*8; ++i) {
-			data[i] = 0x0;
-		}		
-		
-		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		// second step: 40x32
+		glGenTextures(3, m_idReductionTextures40x32);
+		for(size_t i = 0; i < 3; ++i) {
+			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures40x32[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 3*8, 8);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 3*8, 8, GL_RED_INTEGER,
-						GL_UNSIGNED_INT, data);
-		delete [] data;
+			glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 40*8, 32*8);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 40*8, 32*8, GL_RED_INTEGER,
+							GL_UNSIGNED_INT, data);
+		}
 
-		ValidateComputeShader(m_idReductionXProgram);
-		ValidateComputeShader(m_idReductionYProgram);
+		// third step: 5x4
+		glGenTextures(3, m_idReductionTextures5x4);
+		for(size_t i = 0; i < 3; ++i) {
+			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures5x4[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 5*8, 4*8);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 5*8, 4*8, GL_RED_INTEGER,
+							GL_UNSIGNED_INT, data);
+		}
+
+		// fourth step: 1x1
+		glGenTextures(3, m_idReductionTextures1x1);
+		for(size_t i = 0; i < 3; ++i) {
+			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures1x1[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 8, 8);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 8, 8, GL_RED_INTEGER,
+							GL_UNSIGNED_INT, data);
+		}
+
 
 		// difference inspection texture
 		glGenTextures(1, &m_idDifferenceTexture);
 
-		data = new unsigned int[320*240*8*8];
-		for(int i = 0; i < 320*240*8*8; ++i) {
-			data[i] = 0x0;
-		}		
-		
 		glBindTexture(GL_TEXTURE_2D, m_idDifferenceTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -649,42 +666,18 @@ namespace rhapsodies {
 		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 320*8, 240*8);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER,
 						GL_UNSIGNED_INT, data);
+		
 		delete [] data;
 
-		// union inspection texture
-		glGenTextures(1, &m_idUnionTexture);
-
-		unsigned char *data_char = new unsigned char[320*240*8*8];
-		for(int i = 0; i < 320*240*8*8; ++i) {
-			data_char[i] = 0x0;
-		}
-		
-		glBindTexture(GL_TEXTURE_2D, m_idUnionTexture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R8UI, 320*8, 240*8);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER,
-						GL_UNSIGNED_BYTE, data_char);
-
-		// intersection inspection texture
-		glGenTextures(1, &m_idIntersectionTexture);
-
-		glBindTexture(GL_TEXTURE_2D, m_idIntersectionTexture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R8UI, 320*8, 240*8);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 240*8, GL_RED_INTEGER,
-						GL_UNSIGNED_BYTE, data_char);
-		delete [] data_char;
-
 		// result pbo
-		glGenBuffers(1, &m_idResultPBO);
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, m_idResultPBO);
-		glBufferData(GL_PIXEL_PACK_BUFFER,
-					 8*8*3*4, 0, GL_DYNAMIC_READ);
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+		// glGenBuffers(1, &m_idResultPBO);
+		// glBindBuffer(GL_PIXEL_PACK_BUFFER, m_idResultPBO);
+		// glBufferData(GL_PIXEL_PACK_BUFFER,
+		// 			 8*8*3*4, 0, GL_DYNAMIC_READ);
+		// glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+		ValidateComputeShader(m_idReductionXProgram);
+		ValidateComputeShader(m_idReductionYProgram);
 		
 		return true;
 	}
@@ -802,21 +795,28 @@ namespace rhapsodies {
 	void HandTracker::ResourcesBind() {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_idRenderedTextureFBO);	
 
-		// bind result image texture
-		glBindImageTexture(iImageTextureUnitResult,
-						   m_idResultTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glBindImageTexture(iImageTextureUnitDifference,
-						   m_idDifferenceTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glBindImageTexture(iImageTextureUnitUnion,
-						   m_idUnionTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
-		glBindImageTexture(iImageTextureUnitIntersection,
-						   m_idIntersectionTexture,
-						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
-		glBindImageTexture(iImageTextureUnitFinalResult,
-						   m_idFinalResultTexture,
+		// bind result image textures
+		for(size_t i = 0; i < 3; ++i) {
+			glBindImageTexture(0 + i,
+							   m_idReductionTextures320x256[i],
+							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		}
+		for(size_t i = 0; i < 3; ++i) {
+			glBindImageTexture(3 + i,
+							   m_idReductionTextures40x32[i],
+							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		}
+		for(size_t i = 0; i < 3; ++i) {
+			glBindImageTexture(6 + i,
+							   m_idReductionTextures5x4[i],
+							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		}
+		for(size_t i = 0; i < 3; ++i) {
+			glBindImageTexture(9 + i,
+							   m_idReductionTextures1x1[i],
+							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		}
+		glBindImageTexture(12, m_idDifferenceTexture,
 						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
 
 		// bind input textures
@@ -824,8 +824,6 @@ namespace rhapsodies {
 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, m_idFinalResultTexture);
 
 		// bind pixel pack/unpack PBOs
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
@@ -877,24 +875,16 @@ namespace rhapsodies {
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 		// unbind input textures
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, 0);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		// unbind result image textures
-		glBindImageTexture(iImageTextureUnitFinalResult,
-						   0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glBindImageTexture(iImageTextureUnitIntersection,
-						   0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
-		glBindImageTexture(iImageTextureUnitUnion,
-						   0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
-		glBindImageTexture(iImageTextureUnitDifference,
-						   0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
-		glBindImageTexture(iImageTextureUnitResult,
-						   0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		glBindImageTexture(12, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		for(size_t i = 0; i < 12; ++i) {
+			glBindImageTexture(i, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -986,34 +976,28 @@ namespace rhapsodies {
 		m_pHandRenderer->PostDraw();
 
 		ReduceDepthMaps();
+		UpdateScores();
 
-		glActiveTexture(GL_TEXTURE2);
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
-		unsigned int *result_data = (unsigned int*)(glMapBuffer(GL_PIXEL_PACK_BUFFER,
-																GL_READ_ONLY));
+		// @todo: read score from gpu-side particle state!
 
-		float difference_result   = result_data[0] / float(0x7fff);
-		float union_result        = result_data[1];
-		float intersection_result = result_data[2];
-
-		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-
-		float fPenalty = Penalty(m_pParticleBest->GetHandModelLeft(),
-								 m_pParticleBest->GetHandModelRight(),
-								 difference_result,
-								 union_result,
-								 intersection_result);
-
-		float fRed = PenaltyNormalize(fPenalty);
-		float fGreen = 1 - fRed;
+		float fPenalty = 1337.0f;
 		
-		glUseProgram(m_idColorFragProgram);
-		glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
+		// float fPenalty = Penalty(m_pParticleBest->GetHandModelLeft(),
+		// 						 m_pParticleBest->GetHandModelRight(),
+		// 						 difference_result,
+		// 						 union_result,
+		// 						 intersection_result);
 
-		if(m_oConfig.bAutoTracking && !IsTracking()) {
-			if(fPenalty < m_oConfig.fPenaltyStart)
-				StartTracking();
-		}
+		// float fRed = PenaltyNormalize(fPenalty);
+		// float fGreen = 1 - fRed;
+		
+		// glUseProgram(m_idColorFragProgram);
+		// glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
+
+		// if(m_oConfig.bAutoTracking && !IsTracking()) {
+		// 	if(fPenalty < m_oConfig.fPenaltyStart)
+		// 		StartTracking();
+		// }
 
 		WriteDebug(IDebugView::PENALTY,
 				   IDebugView::FormatString("Penalty: ", fPenalty));
@@ -1148,16 +1132,19 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::ReduceDepthMaps() {
+		glUseProgram(m_idPrepareReductionTexturesProgram);
+		glDispatchCompute(320, 256, 1);
+		
 		// reduction in x direction
-		glUseProgram(m_idReductionXProgram);
-		glDispatchCompute(8, 240*8/3, 1);
+		// glUseProgram(m_idReductionXProgram);
+		// glDispatchCompute(8, 240*8/3, 1);
 
 		// make sure all image stores are visible
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		// glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 		// reduction in y direction
-		glUseProgram(m_idReductionYProgram);
-		glDispatchCompute(8, 8, 1);
+		// glUseProgram(m_idReductionYProgram);
+		// glDispatchCompute(8, 8, 1);
 
 		// make sure all image stores are visible
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -1285,32 +1272,32 @@ namespace rhapsodies {
 		// 3.73 PSO fps at 40 generations
 		// 3.88 using PBO for pixel transfer :/
 
-		glActiveTexture(GL_TEXTURE2);
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
-		unsigned int *result_data = (unsigned int*)(glMapBuffer(GL_PIXEL_PACK_BUFFER,
-																GL_READ_ONLY));
+		// glActiveTexture(GL_TEXTURE2);
+		// glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+		// unsigned int *result_data = (unsigned int*)(glMapBuffer(GL_PIXEL_PACK_BUFFER,
+		// 														GL_READ_ONLY));
 
-		//vstr::out() << "getteximage: " << oTimer.GetMicroTime()-tS << std::endl;
-		//tS = oTimer.GetMicroTime();
+		// //vstr::out() << "getteximage: " << oTimer.GetMicroTime()-tS << std::endl;
+		// //tS = oTimer.GetMicroTime();
 		
-		for(int row = 0; row < 8; ++row) {
-			for(int col = 0; col < 8; ++col) {
-				size_t result_index = 3*8*row + 3*col;
+		// for(int row = 0; row < 8; ++row) {
+		// 	for(int col = 0; col < 8; ++col) {
+		// 		size_t result_index = 3*8*row + 3*col;
 				
-				float difference_result   = result_data[result_index + 0] / float(0x7fff);
-				float union_result        = result_data[result_index + 1];
-				float intersection_result = result_data[result_index + 2];
+		// 		float difference_result   = result_data[result_index + 0] / float(0x7fff);
+		// 		float union_result        = result_data[result_index + 1];
+		// 		float intersection_result = result_data[result_index + 2];
 
-				float fPenalty = Penalty(vecParticles[8*row + col].GetHandModelLeft(),
-										 vecParticles[8*row + col].GetHandModelRight(),
-										 difference_result,
-										 union_result,
-										 intersection_result);
+		// 		float fPenalty = Penalty(vecParticles[8*row + col].GetHandModelLeft(),
+		// 								 vecParticles[8*row + col].GetHandModelRight(),
+		// 								 difference_result,
+		// 								 union_result,
+		// 								 intersection_result);
 
-				vecParticles[8*row + col].UpdateIBest(fPenalty);
-			}
-		}
-		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+		// 		vecParticles[8*row + col].UpdateIBest(fPenalty);
+		// 	}
+		// }
+		// glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 		//vstr::out() << "loop:        " << oTimer.GetMicroTime()-tS << std::endl;
 	}
 

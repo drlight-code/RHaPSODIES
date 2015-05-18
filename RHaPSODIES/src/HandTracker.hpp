@@ -221,17 +221,31 @@ namespace rhapsodies {
 		void *m_pCameraTexturePBO;
 
 		GLuint m_idGenerateTransformsProgram;
+
+		GLuint m_idPrepareReductionTexturesProgram;
 		GLuint m_idReductionXProgram;
 		GLuint m_idReductionYProgram;
+
 		GLuint m_idUpdateScoresProgram;
 		GLuint m_idUpdateGBestProgram;
 		GLuint m_idUpdateSwarmProgram;
 
-		GLuint m_idResultTexture;
-		GLuint m_idFinalResultTexture;
+		// GLuint m_idResultTexture;
+		// GLuint m_idFinalResultTexture;
 		GLuint m_idDifferenceTexture;
-		GLuint m_idUnionTexture;
-		GLuint m_idIntersectionTexture;
+		// GLuint m_idUnionTexture;
+		// GLuint m_idIntersectionTexture;
+
+		enum TextureIndex {
+			DIFFERENCE,
+			UNION,
+			INTERSECTION
+		};
+		
+		GLuint m_idReductionTextures320x256[3];
+		GLuint m_idReductionTextures40x32[3];
+		GLuint m_idReductionTextures5x4[3];
+		GLuint m_idReductionTextures1x1[3];
 
 		GLuint m_idResultPBO;
 		unsigned int *m_pResultBuffer;

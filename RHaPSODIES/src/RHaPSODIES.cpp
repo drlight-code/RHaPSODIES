@@ -72,6 +72,9 @@ namespace rhapsodies {
 			"reduction_y", GL_COMPUTE_SHADER,
 			{sShaderPath + "/reduction_y.comp"});
 		S_pShaderRegistry->RegisterShader(
+			"prepare_reduction_textures", GL_COMPUTE_SHADER,
+			{sShaderPath + "/prepare_reduction_textures.comp"});
+		S_pShaderRegistry->RegisterShader(
 			"generate_transforms", GL_COMPUTE_SHADER,
 			{sShaderPath + "/generate_transforms.comp"});
 		S_pShaderRegistry->RegisterShader(
@@ -100,6 +103,10 @@ namespace rhapsodies {
 		vec_shaders.clear();
 		vec_shaders.push_back("reduction_x");
 		S_pShaderRegistry->RegisterProgram("reduction_x", vec_shaders);
+
+		vec_shaders.clear();
+		vec_shaders.push_back("prepare_reduction_textures");
+		S_pShaderRegistry->RegisterProgram("prepare_reduction_textures", vec_shaders);
 
 		vec_shaders.clear();
 		vec_shaders.push_back("reduction_y");
