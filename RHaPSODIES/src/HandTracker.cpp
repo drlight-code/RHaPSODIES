@@ -745,7 +745,7 @@ namespace rhapsodies {
 
 		ResourcesBind();
 		
-		UploadCameraDepthMap();
+		//UploadCameraDepthMap();
 		SetupProjection();
 
 		if(m_bTrackingEnabled) {
@@ -769,10 +769,10 @@ namespace rhapsodies {
 		ResourcesUnbind();
 
 		//m_pProfiler->PrintProfile(vstr::out());
-		vstr::out()
-			<< "Reduction time: "
-			<< m_pProfiler->GetRoot()->GetChild("Reduction")->GetLastFrameTime()
-			<< std::endl;			
+		// vstr::out()
+		// 	<< "Reduction time: "
+		// 	<< m_pProfiler->GetRoot()->GetChild("Reduction")->GetLastFrameTime()
+		// 	<< std::endl;			
 
 		return true;
 	}
@@ -811,7 +811,7 @@ namespace rhapsodies {
 		glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
 
 		// bind pixel unpack PBO
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
+		//glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
 
 		// bind transform SSBOs
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
@@ -855,7 +855,7 @@ namespace rhapsodies {
 						 iSSBORandomLocation, 0);
 
 		// unbind pixel unpack PBO
- 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+ 		//glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 		// unbind input textures
 		glActiveTexture(GL_TEXTURE1);
@@ -1053,6 +1053,9 @@ namespace rhapsodies {
 		WriteDebug(IDebugView::REDUCTION_TIME,
 				   IDebugView::FormatString("Reduction time: ",
 											tReduction));
+		WriteDebug(IDebugView::REDUCTION_TIME,
+				   IDebugView::FormatString("Reduction time: ",
+											m_pProfiler->GetRoot()->GetChild("Reduction")->GetLastFrameTime()));
 		WriteDebug(IDebugView::SWARMUPDATE_TIME,
 				   IDebugView::FormatString("Swarm update time: ",
 											tSwarmUpdate));
@@ -1114,10 +1117,23 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::ReduceDepthMaps() {
-		m_pProfiler->StartSection("Reduction");
-		
+
 		glUseProgram(m_idPrepareReductionTexturesProgram);
 		glDispatchCompute(320, 256, 1);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+		// // TESTING: initialize textures with constant 1
+		// unsigned int *data = new unsigned int[320*8*256*8];
+		// for(size_t i = 0; i < 320*8*256*8; ++i) {
+		// 	data[i] = 1;
+		// }			
+		
+		// glActiveTexture(GL_TEXTURE0);
+		// glBindTexture(GL_TEXTURE_2D, m_idReductionTextures320x256[0]);
+		// glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 256*8,
+		// 				GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+
+		m_pProfiler->StartSection("Reduction");
 
 		// first reduction: 320x256 -> 40x32
 		glUseProgram(m_idReduction0Program);
@@ -1136,19 +1152,13 @@ namespace rhapsodies {
 
 		glFinish();
 		
-		m_pProfiler->StopSection();
-				
-		// // DEBUG: print reduction results
-		// unsigned int texResult[8*8];
-
-		// glActiveTexture(GL_TEXTURE0);
 		// glBindTexture(GL_TEXTURE_2D, m_idReductionTextures1x1[0]);
-		// glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, texResult);
+		// glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+		// vstr::out() << data[0] << std::endl;
+		
+		m_pProfiler->StopSection();				
 
-		// vstr::out() << "union results:" << std::endl;
-		// for(size_t i = 0; i < 8*8; ++i) {
-		// 	vstr::out() << texResult[i] << std::endl;
-		// }		
+		// delete [] data;
 	}
 
 	void HandTracker::GpuPSOStep() {
