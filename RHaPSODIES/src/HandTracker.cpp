@@ -1117,22 +1117,26 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::ReduceDepthMaps() {
-
+		unsigned int *data;
+		bool bTesting = false;
+		
 		glUseProgram(m_idPrepareReductionTexturesProgram);
 		glDispatchCompute(320, 256, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-		// // TESTING: initialize textures with constant 1
-		// unsigned int *data = new unsigned int[320*8*256*8];
-		// for(size_t i = 0; i < 320*8*256*8; ++i) {
-		// 	data[i] = 1;
-		// }			
+		if(bTesting) {
+			// TESTING: initialize textures with constant 1
+			data = new unsigned int[320*8*256*8];
+			for(size_t i = 0; i < 320*8*256*8; ++i) {
+				data[i] = 1;
+			}			
 		
-		// glActiveTexture(GL_TEXTURE0);
-		// glBindTexture(GL_TEXTURE_2D, m_idReductionTextures320x256[0]);
-		// glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 256*8,
-		// 				GL_RED_INTEGER, GL_UNSIGNED_INT, data);
-
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures320x256[0]);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 256*8,
+							GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+		}
+			
 		m_pProfiler->StartSection("Reduction");
 
 		// first reduction: 320x256 -> 40x32
@@ -1152,13 +1156,16 @@ namespace rhapsodies {
 
 		glFinish();
 		
-		// glBindTexture(GL_TEXTURE_2D, m_idReductionTextures1x1[0]);
-		// glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
-		// vstr::out() << data[0] << std::endl;
-		
 		m_pProfiler->StopSection();				
 
-		// delete [] data;
+		if(bTesting) {
+			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures1x1[0]);
+			glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+
+			vstr::err() << data[0] << std::endl;
+
+			delete [] data;
+		}
 	}
 
 	void HandTracker::GpuPSOStep() {
