@@ -2,8 +2,10 @@
 
 layout (local_size_x = 8, local_size_y = 8) in;
 
+const uint block_length = 8*8;
+
 // work memory per 8*8 shader block
-shared uint work_memory[3][8*8];
+shared uint work_memory[3][block_length];
 
 void main() {
 	// read input textures into shared memory
@@ -24,11 +26,13 @@ void main() {
 		work_memory[2][idx] = 0;
 	}
 
-	for(uint stride = 1 ; stride < 64 ; stride *= 2) {
-		if(idx % (2*stride) == 0) {
-			work_memory[0][idx] += work_memory[0][idx + stride];
-			work_memory[1][idx] += work_memory[1][idx + stride];
-			work_memory[2][idx] += work_memory[2][idx + stride];
+	for(uint stride = 1 ; stride < block_length ; stride *= 2) {
+		uint base_idx = 2*stride*idx;
+		
+		if(base_idx < 64) {
+			work_memory[0][base_idx] += work_memory[0][base_idx + stride];
+			work_memory[1][base_idx] += work_memory[1][base_idx + stride];
+			work_memory[2][base_idx] += work_memory[2][base_idx + stride];
 		}
 		barrier(); // sync writes to shared memory
 	}
