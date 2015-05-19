@@ -36,6 +36,7 @@
 
 #include <VistaTools/VistaIniFileParser.h>
 #include <VistaTools/VistaRandomNumberGenerator.h>
+#include <VistaTools/VistaBasicProfiler.h>
 
 #include <VistaKernel/DisplayManager/VistaSimpleTextOverlay.h>
 
@@ -268,7 +269,8 @@ namespace rhapsodies {
 		m_bTrackingEnabled(false),
 		m_pParticleBest(NULL),
 		m_pSwarm(NULL),
-		m_pRNG(NULL) {
+		m_pRNG(NULL),
+		m_pProfiler(new VistaBasicProfiler) {
 
 		m_pShaderReg = RHaPSODIES::GetShaderRegistry();
 
@@ -726,6 +728,8 @@ namespace rhapsodies {
 								  const unsigned short *depthFrame,
 								  const float          *uvMapFrame) {
 
+		m_pProfiler->NewFrame();
+		
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
 		VistaType::microtime tStart;
 		VistaType::microtime tProcessFrames;
@@ -763,6 +767,12 @@ namespace rhapsodies {
 		}
 
 		ResourcesUnbind();
+
+		//m_pProfiler->PrintProfile(vstr::out());
+		vstr::out()
+			<< "Reduction time: "
+			<< m_pProfiler->GetRoot()->GetChild("Reduction")->GetLastFrameTime()
+			<< std::endl;			
 
 		return true;
 	}
@@ -1104,6 +1114,8 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::ReduceDepthMaps() {
+		m_pProfiler->StartSection("Reduction");
+		
 		glUseProgram(m_idPrepareReductionTexturesProgram);
 		glDispatchCompute(320, 256, 1);
 
@@ -1122,6 +1134,10 @@ namespace rhapsodies {
 		glDispatchCompute(8, 8, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
+		glFinish();
+		
+		m_pProfiler->StopSection();
+				
 		// // DEBUG: print reduction results
 		// unsigned int texResult[8*8];
 

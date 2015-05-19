@@ -32,6 +32,7 @@
 #include "DebugView.hpp"
 
 class VistaRandomNumberGenerator;
+class VistaBasicProfiler;
 
 namespace rhapsodies {
 	class ImagePBOOpenGLDraw;
@@ -266,6 +267,8 @@ namespace rhapsodies {
 
 		VistaRandomNumberGenerator *m_pRNG;
 		GLint m_locRandomOffsetUniform;
+
+		VistaBasicProfiler *m_pProfiler;
 	};
 }
 
