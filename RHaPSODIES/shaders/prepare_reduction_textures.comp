@@ -1,0 +1,69 @@
+#version 430 core
+
+layout (local_size_x = 8, local_size_y = 8) in;
+
+// input: rendered and camera depth maps
+layout (binding = 0) uniform sampler2D texCameraDepth;
+layout (binding = 1) uniform sampler2D texRenderedDepth;
+
+// work memory per 8*8 shader block
+shared uint work_memory_d[8*8]; // difference
+
+layout (binding = 0, r32ui) uniform restrict uimage2D imgReduceDifference;
+layout (binding = 1, r32ui) uniform restrict uimage2D imgReduceUnion;
+layout (binding = 2, r32ui) uniform restrict uimage2D imgReduceIntersection;
+
+layout (binding = 12, r32ui) uniform restrict uimage2D imgDifference;
+
+const float dM = 0.04;
+
+const float zNear = 0.1;
+const float zFar  = 1.1;
+
+float half_screen_to_world(float zScreen);
+
+void main() {
+	ivec2 posGlobal = ivec2(gl_GlobalInvocationID.xy);
+
+	uint mod256 = posGlobal.y % 256;
+	ivec2 pos240 =
+		ivec2(posGlobal.x,
+			  posGlobal.y / 256 * 240 + mod256);
+	
+	if(mod256 < 240) {
+		vec2  posScreen =
+			vec2(pos240) / vec2(320*8, 240*8);
+
+		float renderedSample = texture(texRenderedDepth, posScreen)[0];
+		float cameraSample   = texture(texCameraDepth,   posScreen)[0];
+
+		// camera samples are already in world space.
+		// map rendered samples from screen to world space for depth
+		// clamping in mm.
+		renderedSample = half_screen_to_world(renderedSample);	
+
+		uint inter_val =
+			(renderedSample < 1.0f && cameraSample < 1.0f) ? 1 : 0;
+
+		uint union_val =
+			(renderedSample < 1.0f || cameraSample < 1.0f) ? 1 : 0;
+
+		float clamped_difference = union_val > 0 ?
+			min( abs(cameraSample-renderedSample), dM) : 0;
+
+		imageStore(imgReduceDifference,
+				   posGlobal, uvec4(clamped_difference*0x7fffu, 0, 0, 0));
+		imageStore(imgReduceUnion,
+				   posGlobal, uvec4(union_val, 0, 0, 0));
+		imageStore(imgReduceIntersection,
+				   posGlobal, uvec4(inter_val, 0, 0, 0));
+
+		imageStore(imgDifference, pos240, uvec4(clamped_difference/0.04f*0xffffffffu, 0, 0, 0));
+	}
+}
+
+float half_screen_to_world(float zScreen) {
+	float zWorld = 2*zNear*zFar / (zFar + zNear - (zScreen*2.0f-1.0f) * (zFar - zNear));
+	
+	return zWorld;
+}

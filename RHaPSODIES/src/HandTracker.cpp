@@ -245,13 +245,6 @@ namespace rhapsodies {
 	const int iSSBORandomLocation             = 7;
 	const int iSSBODebugLocation              = 8;
 
-	// const int iImageTextureUnitResult       = 0;
-	// const int iImageTextureUnitDifference   = 1;
-	// const int iImageTextureUnitUnion        = 2;
-	// const int iImageTextureUnitIntersection = 3;
-	// const int iImageTextureUnitFinalResult  = 4;
-
-	
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
@@ -371,21 +364,9 @@ namespace rhapsodies {
 		return m_idCameraTexture;
 	}
 
-	// GLuint HandTracker::GetResultTextureId() {
-	// 	return m_idResultTexture;
-	// }
-
 	GLuint HandTracker::GetDifferenceTextureId() {
 		return m_idDifferenceTexture;
 	}
-
-	// GLuint HandTracker::GetUnionTextureId() {
-	// 	return m_idUnionTexture;
-	// }
-
-	// GLuint HandTracker::GetIntersectionTextureId() {
-	// 	return m_idIntersectionTexture;
-	// }
 
 	void HandTracker::ReadConfig() {
 		VistaIniFileParser oIniParser(true);
@@ -669,13 +650,6 @@ namespace rhapsodies {
 		
 		delete [] data;
 
-		// result pbo
-		// glGenBuffers(1, &m_idResultPBO);
-		// glBindBuffer(GL_PIXEL_PACK_BUFFER, m_idResultPBO);
-		// glBufferData(GL_PIXEL_PACK_BUFFER,
-		// 			 8*8*3*4, 0, GL_DYNAMIC_READ);
-		// glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-
 		ValidateComputeShader(m_idReduction0Program);
 		ValidateComputeShader(m_idReduction1Program);
 		ValidateComputeShader(m_idReduction2Program);
@@ -826,9 +800,8 @@ namespace rhapsodies {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
 
-		// bind pixel pack/unpack PBOs
+		// bind pixel unpack PBO
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, m_idResultPBO);
 
 		// bind transform SSBOs
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
@@ -871,8 +844,7 @@ namespace rhapsodies {
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBORandomLocation, 0);
 
-		// unbind pixel pack/unpack PBOs
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+		// unbind pixel unpack PBO
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 		// unbind input textures
@@ -959,6 +931,8 @@ namespace rhapsodies {
 		std::vector<float> vViewportData;
 
 		glClear(GL_DEPTH_BUFFER_BIT);
+
+		UploadHandModels();
 		
 		m_pHandRenderer->DrawHand(
 			&m_pParticleBest->GetHandModelLeft(),
@@ -979,26 +953,23 @@ namespace rhapsodies {
 		ReduceDepthMaps();
 		UpdateScores();
 
-		// @todo: read score from gpu-side particle state!
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
+		float *pModelsIBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+												   GL_READ_ONLY));
+		float fPenalty = pModelsIBest[31];
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);		
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-		float fPenalty = 1337.0f;
+		float fRed = PenaltyNormalize(fPenalty);
+		float fGreen = 1 - fRed;
 		
-		// float fPenalty = Penalty(m_pParticleBest->GetHandModelLeft(),
-		// 						 m_pParticleBest->GetHandModelRight(),
-		// 						 difference_result,
-		// 						 union_result,
-		// 						 intersection_result);
+		glUseProgram(m_idColorFragProgram);
+		glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
 
-		// float fRed = PenaltyNormalize(fPenalty);
-		// float fGreen = 1 - fRed;
-		
-		// glUseProgram(m_idColorFragProgram);
-		// glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
-
-		// if(m_oConfig.bAutoTracking && !IsTracking()) {
-		// 	if(fPenalty < m_oConfig.fPenaltyStart)
-		// 		StartTracking();
-		// }
+		if(m_oConfig.bAutoTracking && !IsTracking()) {
+			if(fPenalty < m_oConfig.fPenaltyStart)
+				StartTracking();
+		}
 
 		WriteDebug(IDebugView::PENALTY,
 				   IDebugView::FormatString("Penalty: ", fPenalty));
@@ -1055,13 +1026,13 @@ namespace rhapsodies {
 			tReduction += oTimer.GetMicroTime() - tStart;
 			
 			tStart = oTimer.GetMicroTime();
+			UpdateScores();
 			GpuPSOStep();
 			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 		}
 
 		UpdateBestMatch();
 
-//		vstr::out() << "********************************************" << std::endl;
 		
 		WriteDebug(IDebugView::TRANSFORM_TIME,
 				   IDebugView::FormatString("Transform time: ",
@@ -1150,37 +1121,21 @@ namespace rhapsodies {
 		glUseProgram(m_idReduction2Program);
 		glDispatchCompute(8, 8, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+		// // DEBUG: print reduction results
+		// unsigned int texResult[8*8];
+
+		// glActiveTexture(GL_TEXTURE0);
+		// glBindTexture(GL_TEXTURE_2D, m_idReductionTextures1x1[0]);
+		// glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, texResult);
+
+		// vstr::out() << "union results:" << std::endl;
+		// for(size_t i = 0; i < 8*8; ++i) {
+		// 	vstr::out() << texResult[i] << std::endl;
+		// }		
 	}
 
 	void HandTracker::GpuPSOStep() {
-		// update scores via compute shader 8*8
-		glUseProgram(m_idUpdateScoresProgram);
-   		glDispatchCompute(1, 1, 1);
-		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-		// // DEBUG: print all particle scores
-		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
-		// float *aStateModels = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
-		// 										   GL_READ_ONLY));	
-		// for(int i = 0; i < 64; ++i) {
-		// 	vstr::out() << "ibest " << i << ": "
-		// 				<< aStateModels[64*i+31] << std::endl;
-		// }
-		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
-		// find gbest particle
-		glUseProgram(m_idUpdateGBestProgram);
-   		glDispatchCompute(1, 1, 1);
-		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-		// // DEBUG: print gbest particle score
-		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
-		// float *aStateGBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
-		// 										  GL_READ_ONLY));
-		// float gbest = aStateGBest[31];
-		// vstr::out() << "gbest: " << gbest << std::endl;
-		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
 		// evolve particle swarm
 		glUseProgram(m_idUpdateSwarmProgram);
 
@@ -1265,42 +1220,33 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::UpdateScores() {
-		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
+		// update ibest scores via compute shader 8*8
+		glUseProgram(m_idUpdateScoresProgram);
+   		glDispatchCompute(1, 1, 1);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-		//const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
-		//VistaType::microtime tS = oTimer.GetMicroTime();
-
-		// glGetTexImage took ~4.3ms per iteration
-		// 3.73 PSO fps at 40 generations
-		// 3.88 using PBO for pixel transfer :/
-
-		// glActiveTexture(GL_TEXTURE2);
-		// glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
-		// unsigned int *result_data = (unsigned int*)(glMapBuffer(GL_PIXEL_PACK_BUFFER,
-		// 														GL_READ_ONLY));
-
-		// //vstr::out() << "getteximage: " << oTimer.GetMicroTime()-tS << std::endl;
-		// //tS = oTimer.GetMicroTime();
-		
-		// for(int row = 0; row < 8; ++row) {
-		// 	for(int col = 0; col < 8; ++col) {
-		// 		size_t result_index = 3*8*row + 3*col;
-				
-		// 		float difference_result   = result_data[result_index + 0] / float(0x7fff);
-		// 		float union_result        = result_data[result_index + 1];
-		// 		float intersection_result = result_data[result_index + 2];
-
-		// 		float fPenalty = Penalty(vecParticles[8*row + col].GetHandModelLeft(),
-		// 								 vecParticles[8*row + col].GetHandModelRight(),
-		// 								 difference_result,
-		// 								 union_result,
-		// 								 intersection_result);
-
-		// 		vecParticles[8*row + col].UpdateIBest(fPenalty);
-		// 	}
+		// // DEBUG: print all particle scores
+		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
+		// float *aStateModels = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+		// 										   GL_READ_ONLY));	
+		// for(int i = 0; i < 64; ++i) {
+		// 	vstr::out() << "ibest " << i << ": "
+		// 				<< aStateModels[64*i+31] << std::endl;
 		// }
-		// glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-		//vstr::out() << "loop:        " << oTimer.GetMicroTime()-tS << std::endl;
+		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+		// find gbest particle
+		glUseProgram(m_idUpdateGBestProgram);
+   		glDispatchCompute(1, 1, 1);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+		// // DEBUG: print gbest particle score
+		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
+		// float *aStateGBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
+		// 										  GL_READ_ONLY));
+		// float gbest = aStateGBest[31];
+		// vstr::out() << "gbest: " << gbest << std::endl;
+		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 	}
 
 	void HandTracker::UpdateBestMatch() {

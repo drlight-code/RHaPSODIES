@@ -1,0 +1,13 @@
+#version 430 core
+
+layout (binding = 3, r32ui) uniform restrict readonly uimage2D imgInDifference;
+layout (binding = 4, r32ui) uniform restrict readonly uimage2D imgInUnion;
+layout (binding = 5, r32ui) uniform restrict readonly uimage2D imgInIntersection;
+
+layout (binding = 6, r32ui) uniform restrict writeonly uimage2D imgOutDifference;
+layout (binding = 7, r32ui) uniform restrict writeonly uimage2D imgOutUnion;
+layout (binding = 8, r32ui) uniform restrict writeonly uimage2D imgOutIntersection;
+
+const uint limit_x = 8;
+const uint limit_y = 8;
+

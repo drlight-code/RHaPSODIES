@@ -231,11 +231,7 @@ namespace rhapsodies {
 		GLuint m_idUpdateGBestProgram;
 		GLuint m_idUpdateSwarmProgram;
 
-		// GLuint m_idResultTexture;
-		// GLuint m_idFinalResultTexture;
 		GLuint m_idDifferenceTexture;
-		// GLuint m_idUnionTexture;
-		// GLuint m_idIntersectionTexture;
 
 		enum TextureIndex {
 			DIFFERENCE,
@@ -247,9 +243,6 @@ namespace rhapsodies {
 		GLuint m_idReductionTextures40x32[3];
 		GLuint m_idReductionTextures5x4[3];
 		GLuint m_idReductionTextures1x1[3];
-
-		GLuint m_idResultPBO;
-		unsigned int *m_pResultBuffer;
 
 		GLuint m_idSSBOHandModels;
 		GLuint m_idSSBOHandModelsIBest;

@@ -1,0 +1,45 @@
+// needs to be combined with version and input/output binding header!
+
+layout (local_size_x = 8, local_size_y = 8) in;
+
+// work memory per 8*8 shader block
+shared uint work_memory[3][8*8];
+
+void main() {
+	// read input textures into shared memory
+	uint idx = 8 * gl_LocalInvocationID.y + gl_LocalInvocationID.x;
+
+	if(gl_LocalInvocationID.x < limit_x &&
+	   gl_LocalInvocationID.y < limit_y) {
+		ivec2 tex_position = ivec2(
+			limit_x*gl_WorkGroupID.x + gl_LocalInvocationID.x,
+			limit_y*gl_WorkGroupID.y + gl_LocalInvocationID.y);
+		work_memory[0][idx] = imageLoad(imgInDifference,   tex_position)[0];
+		work_memory[1][idx] = imageLoad(imgInUnion,        tex_position)[0];
+		work_memory[2][idx] = imageLoad(imgInIntersection, tex_position)[0];
+	}
+	else {
+		work_memory[0][idx] = 0;
+		work_memory[1][idx] = 0;
+		work_memory[2][idx] = 0;
+	}
+
+	for(uint stride = 1 ; stride < 64 ; stride *= 2) {
+		if(gl_LocalInvocationID.x % (2*stride) == 0) {
+			work_memory[0][idx] += work_memory[0][idx + stride];
+			work_memory[1][idx] += work_memory[1][idx + stride];
+			work_memory[2][idx] += work_memory[2][idx + stride];
+		}
+		barrier(); // sync writes to shared memory
+	}
+
+	// store shared memory to result texture
+	if(gl_LocalInvocationID.xy == ivec2(0,0)) {
+		imageStore(imgOutDifference, ivec2(gl_WorkGroupID.xy),
+				   uvec4(work_memory[0][0], 0, 0, 0));
+		imageStore(imgOutUnion, ivec2(gl_WorkGroupID.xy),
+				   uvec4(work_memory[1][0], 0, 0, 0));
+		imageStore(imgOutIntersection, ivec2(gl_WorkGroupID.xy),
+				   uvec4(work_memory[2][0], 0, 0, 0));
+	}
+}

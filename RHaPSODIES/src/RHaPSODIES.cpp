@@ -65,12 +65,6 @@ namespace rhapsodies {
 			"indexed_viewport", GL_GEOMETRY_SHADER,
 			{sShaderPath + "/indexed_viewport.geom"});
 
-		// S_pShaderRegistry->RegisterShader(
-		// 	"reduction_x", GL_COMPUTE_SHADER,
-		// 	{sShaderPath + "/reduction_x.comp"});
-		// S_pShaderRegistry->RegisterShader(
-		// 	"reduction_y", GL_COMPUTE_SHADER,
-		// 	{sShaderPath + "/reduction_y.comp"});
 		S_pShaderRegistry->RegisterShader(
 			"reduction0", GL_COMPUTE_SHADER,
 			{sShaderPath + "/reduction_header0.part",
@@ -112,10 +106,6 @@ namespace rhapsodies {
 		vec_shaders.push_back("vert_vpos_vnorm_indexedtransform");
 		vec_shaders.push_back("frag_shaded_colored");
 		S_pShaderRegistry->RegisterProgram("shaded_indexedtransform", vec_shaders);
-
-		// vec_shaders.clear();
-		// vec_shaders.push_back("reduction_x");
-		// S_pShaderRegistry->RegisterProgram("reduction_x", vec_shaders);
 
 		vec_shaders.clear();
 		vec_shaders.push_back("prepare_reduction_textures");
