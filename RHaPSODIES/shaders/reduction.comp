@@ -25,7 +25,7 @@ void main() {
 	}
 
 	for(uint stride = 1 ; stride < 64 ; stride *= 2) {
-		if(gl_LocalInvocationID.x % (2*stride) == 0) {
+		if(idx % (2*stride) == 0) {
 			work_memory[0][idx] += work_memory[0][idx + stride];
 			work_memory[1][idx] += work_memory[1][idx + stride];
 			work_memory[2][idx] += work_memory[2][idx + stride];
