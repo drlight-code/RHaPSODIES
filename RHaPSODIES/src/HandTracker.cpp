@@ -745,7 +745,7 @@ namespace rhapsodies {
 
 		ResourcesBind();
 		
-		//UploadCameraDepthMap();
+		UploadCameraDepthMap();
 		SetupProjection();
 
 		if(m_bTrackingEnabled) {
@@ -811,7 +811,7 @@ namespace rhapsodies {
 		glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
 
 		// bind pixel unpack PBO
-		//glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
 
 		// bind transform SSBOs
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
@@ -855,7 +855,7 @@ namespace rhapsodies {
 						 iSSBORandomLocation, 0);
 
 		// unbind pixel unpack PBO
- 		//glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+ 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 		// unbind input textures
 		glActiveTexture(GL_TEXTURE1);
@@ -1141,12 +1141,12 @@ namespace rhapsodies {
 
 		// first reduction: 320x256 -> 40x32
 		glUseProgram(m_idReduction0Program);
-		glDispatchCompute(320, 256, 1);
+		glDispatchCompute(320, 128, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 		// second reduction: 40x32 -> 5x4
 		glUseProgram(m_idReduction1Program);
-		glDispatchCompute(40, 32, 1);
+		glDispatchCompute(40, 8, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 		// third reduction: 5x4 -> 1x1
@@ -1159,9 +1159,16 @@ namespace rhapsodies {
 		m_pProfiler->StopSection();				
 
 		if(bTesting) {
+			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures40x32[0]);
+			glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+			vstr::err() << data[0] << std::endl;
+
+			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures5x4[0]);
+			glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+			vstr::err() << data[0] << std::endl;
+
 			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures1x1[0]);
 			glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
-
 			vstr::err() << data[0] << std::endl;
 
 			delete [] data;

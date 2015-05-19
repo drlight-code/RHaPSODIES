@@ -10,4 +10,5 @@ layout (binding = 5, r32ui) uniform restrict writeonly uimage2D imgOutIntersecti
 
 const uint limit_x = 8;
 const uint limit_y = 8;
+const bool reduce_on_load = true;
 
