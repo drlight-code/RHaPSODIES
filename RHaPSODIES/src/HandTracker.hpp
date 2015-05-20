@@ -162,9 +162,9 @@ namespace rhapsodies {
 		void GenerateTransforms();
 
 		void ReduceDepthMaps();
-		void GpuPSOStep();
 		void UpdateScores();
 		void UpdateBestMatch();
+		void UpdateSwarm(float fPhiCognitive, float fPhiSocial);
 		
 		float Penalty(HandModel& oModelLeft,
 					  HandModel& oModelRight,
@@ -231,6 +231,8 @@ namespace rhapsodies {
 		GLuint m_idUpdateScoresProgram;
 		GLuint m_idUpdateGBestProgram;
 		GLuint m_idUpdateSwarmProgram;
+		GLint m_locPhiCognitiveUniform;
+		GLint m_locPhiSocialUniform;
 
 		GLuint m_idDifferenceTexture;
 

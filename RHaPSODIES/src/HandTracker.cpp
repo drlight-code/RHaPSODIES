@@ -72,7 +72,7 @@
 /*============================================================================*/
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
 /*============================================================================*/
-#define PSO_TESTING 1
+//#define PSO_TESTING 1
 
 
 /*============================================================================*/
@@ -313,6 +313,10 @@ namespace rhapsodies {
 
 		m_locRandomOffsetUniform =
 			glGetUniformLocation(m_idUpdateSwarmProgram, "iRandomOffset");
+		m_locPhiCognitiveUniform =
+			glGetUniformLocation(m_idUpdateSwarmProgram, "fPhiCognitive");
+		m_locPhiSocialUniform =
+			glGetUniformLocation(m_idUpdateSwarmProgram, "fPhiSocial");
 	}
 
 	HandTracker::~HandTracker() {
@@ -1009,7 +1013,9 @@ namespace rhapsodies {
 
 		// upload hand models into SSBO
 		UploadHandModels();
-			
+		
+		float fPhiCognitive;
+		float fPhiSocial;
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
 			// generate transform buffer in parallel 8*8*2
 			tStart = oTimer.GetMicroTime();
@@ -1044,7 +1050,11 @@ namespace rhapsodies {
 			
 			tStart = oTimer.GetMicroTime();
 			UpdateScores();
-			GpuPSOStep();
+
+			fPhiCognitive = float(gen)/float(m_oConfig.iPSOGenerations-1);
+			fPhiSocial = 4.1f - fPhiCognitive;
+			
+			UpdateSwarm(fPhiCognitive, fPhiSocial);
 			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 		}
 
@@ -1185,7 +1195,7 @@ namespace rhapsodies {
 #endif
 	}
 
-	void HandTracker::GpuPSOStep() {
+	void HandTracker::UpdateSwarm(float fPhiCognitive, float fPhiSocial) {
 		// evolve particle swarm
 		glUseProgram(m_idUpdateSwarmProgram);
 
@@ -1194,7 +1204,11 @@ namespace rhapsodies {
 			m_locRandomOffsetUniform,
 			VistaRandomNumberGenerator::GetStandardRNG()->GenerateInt32());
 		
-   		glDispatchCompute(1, 1, 1);
+		// set uniforms for cognitive/social behavior
+		glUniform1f(m_locPhiCognitiveUniform, fPhiCognitive);
+		glUniform1f(m_locPhiSocialUniform, fPhiSocial);
+
+		glDispatchCompute(1, 1, 1);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 		// // DEBUG: print velocities

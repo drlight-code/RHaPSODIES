@@ -38,6 +38,9 @@ layout(std430, binding = 7) buffer RandomBuffer
 
 uniform unsigned int iRandomOffset;
 
+uniform float fPhiCognitive;
+uniform float fPhiSocial;
+
 const float w = 0.72984f;
 const uint rbuffer_size = 64*64*8;
 
@@ -48,7 +51,7 @@ void GetBoundsByJointIndex(int index,
 						   out float fMax);
 
 void main() {
-	Imitate(2.8f, 1.3f);
+	Imitate(fPhiCognitive, fPhiSocial);
 }
 
 void Imitate(float phi_cognitive, float phi_social) {
