@@ -72,7 +72,7 @@
 /*============================================================================*/
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
 /*============================================================================*/
-//#define PSO_TESTING 1
+//#define PSO_TESTING
 
 
 /*============================================================================*/
@@ -226,7 +226,9 @@ namespace rhapsodies {
 	const std::string sErosionSizeName  = "EROSION_SIZE";
 	const std::string sDilationSizeName = "DILATION_SIZE";
 
-	const std::string sPSOGenerationsName = "PSO_GENERATIONS";
+	const std::string sPSOGenerationsName    = "PSO_GENERATIONS";
+	const std::string sPhiCognitiveBeginName = "PHI_COGNITIVE_BEGIN";
+	const std::string sPhiCognitiveEndName   = "PHI_COGNITIVE_END";
 
 	const std::string sRecordingName = "RECORDING";
 	const std::string sLoopName      = "LOOP";
@@ -401,6 +403,10 @@ namespace rhapsodies {
 
 		m_oConfig.iPSOGenerations = oTrackerConfig.GetValueOrDefault(
 			sPSOGenerationsName, 45);
+		m_oConfig.fPhiCognitiveBegin = oTrackerConfig.GetValueOrDefault(
+			sPhiCognitiveBeginName, 2.8);
+		m_oConfig.fPhiCognitiveEnd = oTrackerConfig.GetValueOrDefault(
+			sPhiCognitiveEndName, 2.8);
 
 		m_oConfig.sRecordingFile = oTrackerConfig.GetValueOrDefault(
 			sRecordingName, std::string(""));
@@ -435,19 +441,23 @@ namespace rhapsodies {
 		vstr::out() << "* HandTracker configuration" << std::endl;
 		vstr::out() << "Depth Limit: " << m_oConfig.iDepthLimit
 					<< std::endl;
-		vstr::out() << "Erosion Size: " << m_oConfig.iErosionSize
+		vstr::out() << "Erosion Size:  " << m_oConfig.iErosionSize
 					<< std::endl;
 		vstr::out() << "Dilation Size: " << m_oConfig.iDilationSize
 					<< std::endl;
 
-		vstr::out() << "PSO Generations: " << m_oConfig.iPSOGenerations
+		vstr::out() << "PSO Generations:    " << m_oConfig.iPSOGenerations
+					<< std::endl;
+		vstr::out() << "PhiCognitive Begin: " << m_oConfig.fPhiCognitiveBegin
+					<< std::endl;
+		vstr::out() << "PhiCognitive End:   " << m_oConfig.fPhiCognitiveEnd
 					<< std::endl;
 
 		vstr::out() << "Recording file: " << m_oConfig.sRecordingFile
 					<< std::endl;
-		vstr::out() << "Loop: " << std::boolalpha << m_oConfig.bLoop
+		vstr::out() << "Loop:           " << std::boolalpha << m_oConfig.bLoop
 					<< std::endl;
-		vstr::out() << "Auto tracking: " << std::boolalpha
+		vstr::out() << "Auto tracking:  " << std::boolalpha
 					<< m_oConfig.bAutoTracking << std::endl;
 
 	}
@@ -1051,9 +1061,11 @@ namespace rhapsodies {
 			tStart = oTimer.GetMicroTime();
 			UpdateScores();
 
-			fPhiCognitive = float(gen)/float(m_oConfig.iPSOGenerations-1);
+			fPhiCognitive = m_oConfig.fPhiCognitiveBegin +
+				float(gen)/float(m_oConfig.iPSOGenerations-1) *
+				(m_oConfig.fPhiCognitiveEnd - m_oConfig.fPhiCognitiveBegin);
 			fPhiSocial = 4.1f - fPhiCognitive;
-			
+
 			UpdateSwarm(fPhiCognitive, fPhiSocial);
 			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 		}
@@ -1134,13 +1146,13 @@ namespace rhapsodies {
 	}
 	
 	void HandTracker::ReduceDepthMaps() {
-		unsigned int *data;
-		
 		glUseProgram(m_idPrepareReductionTexturesProgram);
 		glDispatchCompute(320, 256, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 #ifdef PSO_TESTING
+		unsigned int *data;
+		
 		// TESTING: initialize textures with constant 1
 		data = new unsigned int[320*8*256*8];
 		for(size_t i = 0; i < 320*8*256*8; ++i) {
@@ -1158,17 +1170,17 @@ namespace rhapsodies {
 		// first reduction: 320x256 -> 40x32
 		glUseProgram(m_idReduction0Program);
 		glDispatchCompute(320, 128, 1);
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+//		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 		// second reduction: 40x32 -> 5x4
 		glUseProgram(m_idReduction1Program);
 		glDispatchCompute(40, 8, 1);
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+//		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 		// third reduction: 5x4 -> 1x1
 		glUseProgram(m_idReduction2Program);
 		glDispatchCompute(8, 8, 1);
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+//		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 		glFinish();
 		

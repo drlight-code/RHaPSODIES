@@ -123,6 +123,9 @@ namespace rhapsodies {
 			float fPenaltyStart;
 
 			unsigned int iViewportBatch;
+
+			float fPhiCognitiveBegin;
+			float fPhiCognitiveEnd;
 		};
 
 		bool HasGLComputeCapabilities();

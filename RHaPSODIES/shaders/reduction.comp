@@ -51,14 +51,35 @@ void main() {
 		work_memory[2][idx] = 0;
 	}
 
-	for(uint stride = block_length/2 ; stride > 0 ; stride >>= 1) {
-		if(idx < stride) {
-			work_memory[0][idx] += work_memory[0][idx + stride];
-			work_memory[1][idx] += work_memory[1][idx + stride];
-			work_memory[2][idx] += work_memory[2][idx + stride];
-		}
-		barrier(); // sync writes to shared memory
-	}
+//	for(uint stride = block_length/2 ; stride > 0 ; stride >>= 1) {
+//		if(idx < stride) {
+	work_memory[0][idx] += work_memory[0][idx + 32];
+	work_memory[1][idx] += work_memory[1][idx + 32];
+	work_memory[2][idx] += work_memory[2][idx + 32];
+
+	work_memory[0][idx] += work_memory[0][idx + 16];
+	work_memory[1][idx] += work_memory[1][idx + 16];
+	work_memory[2][idx] += work_memory[2][idx + 16];
+
+	work_memory[0][idx] += work_memory[0][idx + 8];
+	work_memory[1][idx] += work_memory[1][idx + 8];
+	work_memory[2][idx] += work_memory[2][idx + 8];
+
+	work_memory[0][idx] += work_memory[0][idx + 4];
+	work_memory[1][idx] += work_memory[1][idx + 4];
+	work_memory[2][idx] += work_memory[2][idx + 4];
+
+	work_memory[0][idx] += work_memory[0][idx + 2];
+	work_memory[1][idx] += work_memory[1][idx + 2];
+	work_memory[2][idx] += work_memory[2][idx + 2];
+
+	work_memory[0][idx] += work_memory[0][idx + 1];
+	work_memory[1][idx] += work_memory[1][idx + 1];
+	work_memory[2][idx] += work_memory[2][idx + 1];
+
+//		}
+//		barrier(); // sync writes to shared memory
+//	}
 
 	// store shared memory to result texture
 	if(gl_LocalInvocationID.xy == ivec2(0,0)) {
