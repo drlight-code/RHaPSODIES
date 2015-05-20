@@ -72,6 +72,8 @@
 /*============================================================================*/
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
 /*============================================================================*/
+#define PSO_TESTING 1
+
 
 /*============================================================================*/
 /* LOCAL VARS AND FUNCS                                                       */
@@ -744,8 +746,10 @@ namespace rhapsodies {
 											tProcessFrames));
 
 		ResourcesBind();
-		
+
+#ifndef PSO_TESTING		
 		UploadCameraDepthMap();
+#endif
 		SetupProjection();
 
 		if(m_bTrackingEnabled) {
@@ -810,9 +814,10 @@ namespace rhapsodies {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_idRenderedTexture);
 
+#ifndef PSO_TESTING		
 		// bind pixel unpack PBO
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
-
+#endif
 		// bind transform SSBOs
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBOHandModelsLocation,
@@ -854,9 +859,11 @@ namespace rhapsodies {
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
 						 iSSBORandomLocation, 0);
 
+#ifndef PSO_TESTING		
 		// unbind pixel unpack PBO
  		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-
+#endif
+		
 		// unbind input textures
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -1118,24 +1125,23 @@ namespace rhapsodies {
 	
 	void HandTracker::ReduceDepthMaps() {
 		unsigned int *data;
-		bool bTesting = false;
 		
 		glUseProgram(m_idPrepareReductionTexturesProgram);
 		glDispatchCompute(320, 256, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-		if(bTesting) {
-			// TESTING: initialize textures with constant 1
-			data = new unsigned int[320*8*256*8];
-			for(size_t i = 0; i < 320*8*256*8; ++i) {
-				data[i] = 1;
-			}			
+#ifdef PSO_TESTING
+		// TESTING: initialize textures with constant 1
+		data = new unsigned int[320*8*256*8];
+		for(size_t i = 0; i < 320*8*256*8; ++i) {
+			data[i] = 1;
+		}			
 		
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures320x256[0]);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 256*8,
-							GL_RED_INTEGER, GL_UNSIGNED_INT, data);
-		}
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_idReductionTextures320x256[0]);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 256*8,
+						GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+#endif
 			
 		m_pProfiler->StartSection("Reduction");
 
@@ -1158,21 +1164,25 @@ namespace rhapsodies {
 		
 		m_pProfiler->StopSection();				
 
-		if(bTesting) {
-			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures40x32[0]);
-			glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
-			vstr::err() << data[0] << std::endl;
+#ifdef PSO_TESTING
+		glBindTexture(GL_TEXTURE_2D, m_idReductionTextures320x256[0]);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+		vstr::err() << data[0] << std::endl;
 
-			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures5x4[0]);
-			glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
-			vstr::err() << data[0] << std::endl;
+		glBindTexture(GL_TEXTURE_2D, m_idReductionTextures40x32[0]);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+		vstr::err() << data[0] << std::endl;
 
-			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures1x1[0]);
-			glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
-			vstr::err() << data[0] << std::endl;
+		glBindTexture(GL_TEXTURE_2D, m_idReductionTextures5x4[0]);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+		vstr::err() << data[0] << std::endl;
 
-			delete [] data;
-		}
+		glBindTexture(GL_TEXTURE_2D, m_idReductionTextures1x1[0]);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+		vstr::err() << data[0] << std::endl;
+
+		delete [] data;
+#endif
 	}
 
 	void HandTracker::GpuPSOStep() {
