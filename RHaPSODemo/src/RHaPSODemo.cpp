@@ -114,6 +114,8 @@ namespace rhapsodies {
 		m_pShaderReg(NULL),
 		m_pHandRenderDraw(NULL),
 		m_pHandTracker(NULL),
+		m_pModelLeft(NULL),
+		m_pModelRight(NULL),
 		m_pSceneTransform(NULL),
 		m_pDiagramTransform(NULL),
 		m_pHandModelTransform(NULL),
@@ -138,6 +140,9 @@ namespace rhapsodies {
 
 		m_pSystem = new VistaSystem;
 		m_pShaderReg = new ShaderRegistry();
+
+		m_pModelLeft  = new HandModel();
+		m_pModelRight = new HandModel();
 	}
 
 	RHaPSODemo::~RHaPSODemo() {
@@ -161,6 +166,9 @@ namespace rhapsodies {
 		CondDelete(m_pHandRenderDraw);
 		CondDelete(m_pAxes);
 
+		CondDelete(m_pModelLeft);
+		CondDelete(m_pModelRight);
+		
 		CondDelete(m_pHandTracker);
 		CondDelete(m_pShaderReg);
 		CondDelete(m_pSystem);
@@ -261,7 +269,8 @@ namespace rhapsodies {
 		m_pHandTracker->SetDebugView(m_pDebugView);
 
 		success &= m_pHandTracker->Initialize();
-//		m_pHandTracker->StartTracking();
+		// (*m_pModelLeft)  = *(m_pHandTracker->GetHandModelLeft());
+		// (*m_pModelRight) = *(m_pHandTracker->GetHandModelRight());
 
 		// register frame update handler
 		m_pSystem->GetEventManager()->AddEventHandler(
@@ -307,8 +316,7 @@ namespace rhapsodies {
 
 		// hand model and view
 		m_pHandRenderDraw = new HandRenderDraw(
-			m_pHandTracker->GetHandModelLeft(),
-			m_pHandTracker->GetHandModelRight(),
+			m_pModelLeft, m_pModelRight,
 			m_pHandTracker->GetHandGeometry());
 		
 		m_pHandModelTransform = pSG->NewTransformNode(m_pSceneTransform);
@@ -428,19 +436,28 @@ namespace rhapsodies {
 	void RHaPSODemo::HandleEvent(VistaEvent *pEvent) {
 		if(pEvent->GetType() == VistaSystemEvent::GetTypeId()) {
 			if(pEvent->GetId() == VistaSystemEvent::VSE_POSTGRAPHICS) {
-				if(m_pHandTracker->IsTracking() && m_bFrameRecording) {
-					static int count = 0;
-				
-					std::stringstream sStream;
+				if(m_pHandTracker->IsTracking()) {
 
-					sStream << "resources/recordings/frame"
-							<< std::setw(6) << std::setfill('0')
-							<< count++ << ".jpg";				
+					UpdateHandRepresentation();
+
+					if(m_bFrameRecording) {
+						static int count = 0;
 				
-					m_pSystem->GetDisplayManager()->MakeScreenshot(
-						"MAIN_WINDOW", sStream.str());
+						std::stringstream sStream;
+
+						sStream << "resources/recordings/frame"
+								<< std::setw(6) << std::setfill('0')
+								<< count++ << ".jpg";				
+				
+						m_pSystem->GetDisplayManager()->MakeScreenshot(
+							"MAIN_WINDOW", sStream.str());
+					}
 				}
 			}
 		}
 	}
-}
+
+	void RHaPSODemo::UpdateHandRepresentation() {
+
+	}
+}	

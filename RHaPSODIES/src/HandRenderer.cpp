@@ -125,19 +125,12 @@ namespace rhapsodies {
 		
 		glBindVertexArray(0);
 
-		// initialize sphere and cylinder SSBOs for transformation matrices
+		// initialize SSBO for transformation matrices
 		glGenBuffers(1, &m_idSSBOTransforms);
-//		glGenBuffers(1, &m_idSSBOCylinderTransforms);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOTransforms);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*(22+16)*16*sizeof(float),
 					 NULL, GL_DYNAMIC_DRAW);
-
-		//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOCylinderTransforms);
-		// actually we have only 15 transforms per frame, but pad to
-		// 16 because of SSBO offset alignment restricitons
-		// glBufferData(GL_SHADER_STORAGE_BUFFER, 64*2*16*16*sizeof(float),
-		// 			 NULL, GL_DYNAMIC_DRAW);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -418,26 +411,40 @@ namespace rhapsodies {
 			iViewPortCount = 1; 
 		}			
 
-		// bind and fill sphere transform SSBO
-		size_t sizeSSBOSph =
-			sizeof(VistaTransformMatrix) *
-			iSpheresPerViewport *
-			iViewPortCount;
-		size_t sizeSSBOCyl =
-			sizeof(VistaTransformMatrix) *
-			iCylindersPerViewport *
-			iViewPortCount;
-
 		if(bTransformTransfer) {
+			// bind and fill sphere transform SSBO
+			size_t sizeSphereTransforms =
+				sizeof(VistaTransformMatrix) *
+				iSpheresPerViewport *
+				iViewPortCount;
+			size_t sizeCylinderTransforms =
+				sizeof(VistaTransformMatrix) *
+				iCylindersPerViewport *
+				iViewPortCount;
+
+			size_t sizeSpheresArray = 22*2*16;
+			float *data = new float[sizeSpheresArray];
+			for(size_t i = 0; i < sizeSpheresArray; ++i) {
+				data[i] = 0;
+			}			
+
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER,
 						 m_idSSBOTransforms);
 			glBufferSubData(GL_SHADER_STORAGE_BUFFER,
-							0, sizeSSBOSph,
+							0, sizeSphereTransforms,
 							&m_vSphereTransforms[0]);
-			glBufferSubData( GL_SHADER_STORAGE_BUFFER,
-							 sizeof(VistaTransformMatrix) *
-							 iSpheresPerViewport * 64, sizeSSBOCyl,
-							 &m_vCylinderTransforms[0]);
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER,
+							sizeof(VistaTransformMatrix) *
+							iSpheresPerViewport * 64, sizeCylinderTransforms,
+							&m_vCylinderTransforms[0]);
+			// glBufferSubData(GL_SHADER_STORAGE_BUFFER,
+			// 				0, sizeSphereTransforms,
+			// 				data);
+			// glBufferSubData(GL_SHADER_STORAGE_BUFFER,
+			// 				sizeof(VistaTransformMatrix) *
+			// 				iSpheresPerViewport * 64, sizeCylinderTransforms,
+			// 				data);
+			delete [] data;
 
 			m_vSphereTransforms.clear();
 			m_vCylinderTransforms.clear();

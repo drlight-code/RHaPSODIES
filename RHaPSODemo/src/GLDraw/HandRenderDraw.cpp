@@ -42,6 +42,8 @@ namespace rhapsodies {
 
 		m_pRenderer->PostDraw();
 
+		glFinish();
+
 		return true;
 	}
 

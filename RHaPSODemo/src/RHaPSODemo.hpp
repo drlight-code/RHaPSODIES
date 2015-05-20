@@ -43,6 +43,7 @@ namespace rhapsodies {
 	class HandRenderer;
 	class HandRenderDraw;
 	class HandTracker;
+	class HandModel;
 
 	class IDebugView;
 
@@ -69,6 +70,8 @@ namespace rhapsodies {
 		bool CheckForConfigSection(const VistaPropertyList &oPropList,
 								   const std::string &sSectionName);
 
+		void UpdateHandRepresentation();
+
 		VistaPropertyList m_oConfig;
 		
 		VistaSystem *m_pSystem;
@@ -76,6 +79,9 @@ namespace rhapsodies {
 
 		HandRenderDraw *m_pHandRenderDraw;
 		HandTracker    *m_pHandTracker;
+
+		HandModel *m_pModelLeft;
+		HandModel *m_pModelRight;
 
 		VistaTransformNode *m_pSceneTransform;
 		VistaTransformNode *m_pDiagramTransform;
