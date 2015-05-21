@@ -99,23 +99,23 @@ void Imitate(float phi_cognitive, float phi_social) {
 	}
 
 	// normalize quaternions
-	// vec4 qOri = normalize(vec4(HandModels.models[idx].modelstate[24],
-	// 						   HandModels.models[idx].modelstate[25],
-	// 						   HandModels.models[idx].modelstate[26],
-	// 						   HandModels.models[idx].modelstate[27]));
-	// HandModels.models[idx].modelstate[24] = qOri[0];
-	// HandModels.models[idx].modelstate[25] = qOri[1];
-	// HandModels.models[idx].modelstate[26] = qOri[2];
-	// HandModels.models[idx].modelstate[27] = qOri[3];
+	vec4 qOri = normalize(vec4(HandModels.models[idx].modelstate[24],
+							   HandModels.models[idx].modelstate[25],
+							   HandModels.models[idx].modelstate[26],
+							   HandModels.models[idx].modelstate[27]));
+	HandModels.models[idx].modelstate[24] = qOri[0];
+	HandModels.models[idx].modelstate[25] = qOri[1];
+	HandModels.models[idx].modelstate[26] = qOri[2];
+	HandModels.models[idx].modelstate[27] = qOri[3];
 
-	// qOri = normalize(vec4(HandModels.models[idx].modelstate[32+24],
-	// 					  HandModels.models[idx].modelstate[32+25],
-	// 					  HandModels.models[idx].modelstate[32+26],
-	// 					  HandModels.models[idx].modelstate[32+27]));
-	// HandModels.models[idx].modelstate[32+24] = qOri[0];
-	// HandModels.models[idx].modelstate[32+25] = qOri[1];
-	// HandModels.models[idx].modelstate[32+26] = qOri[2];
-	// HandModels.models[idx].modelstate[32+27] = qOri[3];
+	qOri = normalize(vec4(HandModels.models[idx].modelstate[32+24],
+						  HandModels.models[idx].modelstate[32+25],
+						  HandModels.models[idx].modelstate[32+26],
+						  HandModels.models[idx].modelstate[32+27]));
+	HandModels.models[idx].modelstate[32+24] = qOri[0];
+	HandModels.models[idx].modelstate[32+25] = qOri[1];
+	HandModels.models[idx].modelstate[32+26] = qOri[2];
+	HandModels.models[idx].modelstate[32+27] = qOri[3];
 }
 
 void GetBoundsByJointIndex(int index,
