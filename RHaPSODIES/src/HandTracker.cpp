@@ -1088,16 +1088,13 @@ namespace rhapsodies {
 			tStart = oTimer.GetMicroTime();
 			UpdateScores();
 
-			// update swarm if not in last iteration
-			if(gen < m_oConfig.iPSOGenerations - 1) {
-				fPhiCognitive = m_oConfig.fPhiCognitiveBegin +
-					float(gen)/float(m_oConfig.iPSOGenerations-1) *
-					(m_oConfig.fPhiCognitiveEnd - m_oConfig.fPhiCognitiveBegin);
-				fPhiSocial = 4.1f - fPhiCognitive;
+			fPhiCognitive = m_oConfig.fPhiCognitiveBegin +
+				float(gen)/float(m_oConfig.iPSOGenerations-1) *
+				(m_oConfig.fPhiCognitiveEnd - m_oConfig.fPhiCognitiveBegin);
+			fPhiSocial = 4.1f - fPhiCognitive;
 
-				UpdateSwarm(fPhiCognitive, fPhiSocial);
-				tSwarmUpdate += oTimer.GetMicroTime() - tStart;
-			}
+			UpdateSwarm(fPhiCognitive, fPhiSocial);
+			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 		}
 
 		UpdateBestMatch();
