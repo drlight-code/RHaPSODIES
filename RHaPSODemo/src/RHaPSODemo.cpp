@@ -269,8 +269,8 @@ namespace rhapsodies {
 		m_pHandTracker->SetDebugView(m_pDebugView);
 
 		success &= m_pHandTracker->Initialize();
-		// (*m_pModelLeft)  = *(m_pHandTracker->GetHandModelLeft());
-		// (*m_pModelRight) = *(m_pHandTracker->GetHandModelRight());
+		(*m_pModelLeft)  = *(m_pHandTracker->GetHandModelLeft());
+		(*m_pModelRight) = *(m_pHandTracker->GetHandModelRight());
 
 		// register frame update handler
 		m_pSystem->GetEventManager()->AddEventHandler(
@@ -458,6 +458,7 @@ namespace rhapsodies {
 	}
 
 	void RHaPSODemo::UpdateHandRepresentation() {
-
+		(*m_pModelLeft)  = *(m_pHandTracker->GetHandModelLeft());
+		(*m_pModelRight) = *(m_pHandTracker->GetHandModelRight());
 	}
 }	

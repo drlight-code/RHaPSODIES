@@ -397,19 +397,10 @@ namespace rhapsodies {
 		size_t iSpheresPerViewportUniform   = iSpheresPerViewport;
 		size_t iCylindersPerViewportUniform = iCylindersPerViewport;
 
-		if(iViewPortCount > 0) {
+		if(pViewPortData != NULL) {
 			glViewportArrayv(0, iViewPortCount,
 							 &pViewPortData[4*iBaseViewport]);
 		}
-		else {
-			// so instance id division always yields 0 in shader
-			iSpheresPerViewportUniform   = ~0;
-			iCylindersPerViewportUniform = ~0;
-
-			// we use 0 to mark not setting a viewport, but for
-			// following buffer size calculations we set it to 1 here!
-			iViewPortCount = 1; 
-		}			
 
 		if(bTransformTransfer) {
 			// bind and fill sphere transform SSBO
@@ -437,14 +428,8 @@ namespace rhapsodies {
 							sizeof(VistaTransformMatrix) *
 							iSpheresPerViewport * 64, sizeCylinderTransforms,
 							&m_vCylinderTransforms[0]);
-			// glBufferSubData(GL_SHADER_STORAGE_BUFFER,
-			// 				0, sizeSphereTransforms,
-			// 				data);
-			// glBufferSubData(GL_SHADER_STORAGE_BUFFER,
-			// 				sizeof(VistaTransformMatrix) *
-			// 				iSpheresPerViewport * 64, sizeCylinderTransforms,
-			// 				data);
-			delete [] data;
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2,
+							 m_idSSBOTransforms);
 
 			m_vSphereTransforms.clear();
 			m_vCylinderTransforms.clear();
@@ -478,6 +463,10 @@ namespace rhapsodies {
 		glDrawArraysInstanced(GL_TRIANGLES,
 							  m_szSphereData, m_szCylinderData,
 							  iCylindersPerViewport * iViewPortCount);
+
+		if(bTransformTransfer) {
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, 0);
+		}
 	}
 
 	void HandRenderer::PostDraw() {

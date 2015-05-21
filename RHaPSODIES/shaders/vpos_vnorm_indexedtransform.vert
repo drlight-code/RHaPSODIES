@@ -5,7 +5,7 @@ out int instance_id;
 const int ARRAY_SIZE = 4864; // 64*2*(22+16)
 uniform uint transform_offset;
 
-layout (std430, binding = 10) buffer TransformBlock {
+layout (std430, binding = 2) buffer TransformBlock {
   mat4 model_transform[ARRAY_SIZE];
 };
 
