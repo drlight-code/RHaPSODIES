@@ -132,7 +132,8 @@ namespace {
 
 			return false;
 		}
-		vstr::err() << "FrameBuffer status complete!" << std::endl;
+		vstr::debug() << "FrameBuffer status complete!"
+					  << std::endl << std::endl;
 		return true;
 	}
 
@@ -159,53 +160,55 @@ namespace {
 		GLint values[3];
 
 		glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, values);
-		vstr::out() << "MAX_COMPUTE_SHARED_MEMORY_SIZE:     " << values[0] << std::endl;
+		vstr::debug() << "MAX_COMPUTE_SHARED_MEMORY_SIZE:     " << values[0] << std::endl;
 
 		glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, values);
-		vstr::out() << "MAX_COMPUTE_WORK_GROUP_INVOCATIONS: " << values[0] << std::endl;
+		vstr::debug() << "MAX_COMPUTE_WORK_GROUP_INVOCATIONS: " << values[0] << std::endl;
 
 		for(size_t index = 0 ; index < 3 ; ++index)
 			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, index, values+index);
-		vstr::out() << "GL_MAX_COMPUTE_WORK_GROUP_COUNT:    "
-					<< "[" << values[0] << ", " << values[1] << ", " << values[2]
-					<< "]" << std::endl;
+		vstr::debug() << "GL_MAX_COMPUTE_WORK_GROUP_COUNT:    "
+					  << "[" << values[0] << ", " << values[1] << ", " << values[2]
+					  << "]" << std::endl;
 
 		for(size_t index = 0 ; index < 3 ; ++index)
 			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, index, values+index);
-		vstr::out() << "GL_MAX_COMPUTE_WORK_GROUP_SIZE:     "
-					<< "[" << values[0] << ", " << values[1] << ", " << values[2]
-					<< "]" << std::endl;
+		vstr::debug() << "GL_MAX_COMPUTE_WORK_GROUP_SIZE:     "
+					  << "[" << values[0] << ", " << values[1] << ", " << values[2]
+					  << "]" << std::endl;
 
 		glGetIntegerv(GL_MAX_VIEWPORTS, values);
-		vstr::out() << "GL_MAX_VIEWPORTS:                   " << values[0] << std::endl;
+		vstr::debug() << "GL_MAX_VIEWPORTS:                   " << values[0] << std::endl;
 
 		glGetIntegerv(GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS, values);
-		vstr::out() << "GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS: "
-					<< values[0] << std::endl;
+		vstr::debug() << "GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS: "
+					  << values[0] << std::endl;
 
 		glGetIntegerv(GL_MAX_COMBINED_SHADER_STORAGE_BLOCKS, values);
-		vstr::out() << "GL_MAX_COMBINED_SHADER_STORAGE_BLOCKS: "
-					<< values[0] << std::endl;
+		vstr::debug() << "GL_MAX_COMBINED_SHADER_STORAGE_BLOCKS: "
+					  << values[0] << std::endl;
 		
 		glGetIntegerv(GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, values);
-		vstr::out() << "GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS: "
-					<< values[0] << std::endl;
+		vstr::debug() << "GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS: "
+					  << values[0] << std::endl;
 		
 		glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, values);
-		vstr::out() << "GL_MAX_SHADER_STORAGE_BLOCK_SIZE: "
-					<< values[0] << std::endl;
+		vstr::debug() << "GL_MAX_SHADER_STORAGE_BLOCK_SIZE: "
+					  << values[0] << std::endl;
 
 		glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, values);
-		vstr::out() << "GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT: "
-					<< values[0] << std::endl;
+		vstr::debug() << "GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT: "
+					  << values[0] << std::endl;
 
 		glGetIntegerv(GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES, values);
-		vstr::out() << "GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES: "
-					<< values[0] << std::endl;
+		vstr::debug() << "GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES: "
+					  << values[0] << std::endl;
 
 		glGetIntegerv(GL_MAX_IMAGE_UNITS, values);
-		vstr::out() << "GL_MAX_IMAGE_UNITS: "
-					<< values[0] << std::endl;
+		vstr::debug() << "GL_MAX_IMAGE_UNITS: "
+					  << values[0] << std::endl;
+
+		vstr::debug() << std::endl;		
 	}
 
 	inline float WorldToScreenProjective(
@@ -218,6 +221,18 @@ namespace {
 		float zWorld, float zNear=0.1f, float zFar=1.1f) {
 		return (zWorld - zNear) / (zFar - zNear);
 	}
+
+	VistaPropertyList ReadConfigSubList(
+		VistaPropertyList oConfig,
+		std::string sSectionName) {
+		if(!oConfig.HasProperty(sSectionName)) {
+			throw std::runtime_error(
+				std::string() + "Config section ["
+				+ sSectionName
+				+ "] not found!");			
+		}
+		return oConfig.GetSubListCopy(sSectionName);
+	}
 }
 
 namespace rhapsodies {
@@ -229,8 +244,8 @@ namespace rhapsodies {
 	const std::string sPhiCognitiveBeginName = "PHI_COGNITIVE_BEGIN";
 	const std::string sPhiCognitiveEndName   = "PHI_COGNITIVE_END";
 
-	const std::string sRecordingName = "RECORDING";
-	const std::string sLoopName      = "LOOP";
+	const std::string sRecordingsName = "RECORDINGS";
+	const std::string sLoopName       = "LOOP";
 
 	const std::string sAutoTrackingName = "AUTO_TRACKING";
 
@@ -383,48 +398,10 @@ namespace rhapsodies {
 
 		const VistaPropertyList oConfig = oIniParser.GetPropertyList();
 
-		if(!oConfig.HasProperty(RHaPSODIES::sTrackerSectionName)) {
-			throw std::runtime_error(
-				std::string() + "Config section ["
-				+ RHaPSODIES::sTrackerSectionName
-				+ "] not found!");			
-		}
-
 		const VistaPropertyList oTrackerConfig =
-			oConfig.GetSubListConstRef(RHaPSODIES::sTrackerSectionName);
-
-		m_oConfig.iDepthLimit = oTrackerConfig.GetValueOrDefault(
-			sDepthLimitName, 500);
-		m_oConfig.iErosionSize = oTrackerConfig.GetValueOrDefault(
-			sErosionSizeName, 3);
-		m_oConfig.iDilationSize = oTrackerConfig.GetValueOrDefault(
-			sDilationSizeName, 5);
-
-		m_oConfig.iPSOGenerations = oTrackerConfig.GetValueOrDefault(
-			sPSOGenerationsName, 45);
-		m_oConfig.fPhiCognitiveBegin = oTrackerConfig.GetValueOrDefault(
-			sPhiCognitiveBeginName, 2.8);
-		m_oConfig.fPhiCognitiveEnd = oTrackerConfig.GetValueOrDefault(
-			sPhiCognitiveEndName, 2.8);
-
-		m_oConfig.sRecordingFile = oTrackerConfig.GetValueOrDefault(
-			sRecordingName, std::string(""));
-		m_pFramePlayer->SetInputFile(m_oConfig.sRecordingFile);
-
-		m_oConfig.bLoop = oTrackerConfig.GetValueOrDefault(
-			sLoopName, false);
-		m_pFramePlayer->SetLoop(m_oConfig.bLoop);
-
+			ReadConfigSubList(oConfig, RHaPSODIES::sTrackerSectionName);
 		m_oConfig.bAutoTracking = oTrackerConfig.GetValueOrDefault(
 			sAutoTrackingName, false);
-
-		const VistaPropertyList &oCameraConfig =
-			oConfig.GetSubListConstRef(RHaPSODIES::sCameraSectionName);
-
-		std::string sIntrinsicSection =
-			oCameraConfig.GetValue<std::string>("INTRINSICS");
-		m_oCameraIntrinsics = oConfig.GetSubListCopy(sIntrinsicSection);
-
 		m_oConfig.fPenaltyMin = oTrackerConfig.GetValueOrDefault(
 			sPenaltyMinName, 0.5f);
 		m_oConfig.fPenaltyMax = oTrackerConfig.GetValueOrDefault(
@@ -432,41 +409,92 @@ namespace rhapsodies {
 		m_oConfig.fPenaltyStart = oTrackerConfig.GetValueOrDefault(
 			sPenaltyStartName, 0.6f);
 
-		m_oConfig.iViewportBatch = oTrackerConfig.GetValueOrDefault(
+		const VistaPropertyList oCameraConfig =
+			ReadConfigSubList(oConfig, RHaPSODIES::sCameraSectionName);
+		std::string sIntrinsicSection =
+			oCameraConfig.GetValue<std::string>("INTRINSICS");
+		m_oCameraIntrinsics = oConfig.GetSubListCopy(sIntrinsicSection);
+
+		const VistaPropertyList oImageProcessingConfig =
+			ReadConfigSubList(oConfig, RHaPSODIES::sImageProcessingSectionName);
+		m_oConfig.iDepthLimit = oImageProcessingConfig.GetValueOrDefault(
+			sDepthLimitName, 500);
+		m_oConfig.iErosionSize = oImageProcessingConfig.GetValueOrDefault(
+			sErosionSizeName, 3);
+		m_oConfig.iDilationSize = oImageProcessingConfig.GetValueOrDefault(
+			sDilationSizeName, 5);
+
+		const VistaPropertyList oParticleSwarmConfig =
+			ReadConfigSubList(oConfig, RHaPSODIES::sParticleSwarmSectionName);
+		m_oConfig.iPSOGenerations = oParticleSwarmConfig.GetValueOrDefault(
+			sPSOGenerationsName, 45);
+		m_oConfig.fPhiCognitiveBegin = oParticleSwarmConfig.GetValueOrDefault(
+			sPhiCognitiveBeginName, 2.8);
+		m_oConfig.fPhiCognitiveEnd = oParticleSwarmConfig.GetValueOrDefault(
+			sPhiCognitiveEndName, 2.8);
+
+		const VistaPropertyList oRenderingConfig =
+			ReadConfigSubList(oConfig, RHaPSODIES::sRenderingSectionName);
+		m_oConfig.iViewportBatch = oRenderingConfig.GetValueOrDefault(
 			sViewportBatchName, 1);
+
+		const VistaPropertyList oEvaluationConfig =
+			ReadConfigSubList(oConfig, RHaPSODIES::sEvaluationSectionName);
+		m_oConfig.sRecordingFile = oEvaluationConfig.GetValueOrDefault(
+			sRecordingsName, std::string(""));
+		m_oConfig.bLoop = oEvaluationConfig.GetValueOrDefault(
+			sLoopName, false);
 	}
 
 	void HandTracker::PrintConfig() {
-		vstr::out() << "* HandTracker configuration" << std::endl;
-		vstr::out() << "Depth Limit: " << m_oConfig.iDepthLimit
+		vstr::out() << "RHaPSODIES configuration:" << std::endl;
+
+		vstr::out() << "- Hand tracker:" << std::endl;
+		vstr::out() << "Penalty min:   " << m_oConfig.fPenaltyMin << std::endl;
+		vstr::out() << "Penalty max:   " << m_oConfig.fPenaltyMax << std::endl;
+		vstr::out() << "Penalty start: " << m_oConfig.fPenaltyStart
+					<< std::endl;
+		vstr::out() << "Auto tracking: " << std::boolalpha
+					<< m_oConfig.bAutoTracking << std::endl << std::endl;
+		
+		
+		vstr::out() << "- Image processing:" << std::endl;
+		vstr::out() << "Depth Limit:   " << m_oConfig.iDepthLimit
 					<< std::endl;
 		vstr::out() << "Erosion Size:  " << m_oConfig.iErosionSize
 					<< std::endl;
 		vstr::out() << "Dilation Size: " << m_oConfig.iDilationSize
-					<< std::endl;
+					<< std::endl << std::endl;
 
+		vstr::out() << "- Rendering:" << std::endl;
+		vstr::out() << "Viewport batch:   " << m_oConfig.iViewportBatch
+					<< std::endl << std::endl;
+		
+		vstr::out() << "- Particle swarm:" << std::endl;
 		vstr::out() << "PSO Generations:    " << m_oConfig.iPSOGenerations
 					<< std::endl;
 		vstr::out() << "PhiCognitive Begin: " << m_oConfig.fPhiCognitiveBegin
 					<< std::endl;
 		vstr::out() << "PhiCognitive End:   " << m_oConfig.fPhiCognitiveEnd
-					<< std::endl;
+					<< std::endl << std::endl;
 
+		vstr::out() << "- Evaluation:" << std::endl;
 		vstr::out() << "Recording file: " << m_oConfig.sRecordingFile
 					<< std::endl;
 		vstr::out() << "Loop:           " << std::boolalpha << m_oConfig.bLoop
-					<< std::endl;
-		vstr::out() << "Auto tracking:  " << std::boolalpha
-					<< m_oConfig.bAutoTracking << std::endl;
-
+					<< std::endl << std::endl;
 	}
 
 	bool HandTracker::Initialize() {
-		vstr::out() << "Initializing RHaPSODIES HandTracker" << std::endl;
+		vstr::out() << "Initializing RHaPSODIES HandTracker"
+					<< std::endl << std::endl;
 
-		// parse config params into member variables
 		ReadConfig();
 		PrintConfig();
+
+		// @todo move this to some InitEvaluation
+		m_pFramePlayer->SetInputFile(m_oConfig.sRecordingFile);
+		m_pFramePlayer->SetLoop(m_oConfig.bLoop);
 		
 		InitSkinClassifiers();
 

@@ -14,6 +14,10 @@ namespace rhapsodies {
 		static const std::string sRDIniFile;
 		static const std::string sCameraSectionName;
 		static const std::string sTrackerSectionName;
+		static const std::string sImageProcessingSectionName;
+		static const std::string sRenderingSectionName;
+		static const std::string sParticleSwarmSectionName;
+		static const std::string sEvaluationSectionName;
 
 		static bool Initialize();
 		static ShaderRegistry *GetShaderRegistry();

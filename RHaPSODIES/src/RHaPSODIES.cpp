@@ -26,9 +26,21 @@ IVistaDeSerializer &operator>> ( IVistaDeSerializer & ser, const float* val )
 }
 
 namespace rhapsodies {
-	const std::string RHaPSODIES::sRDIniFile          = "configfiles/rhapsodies.ini";
-	const std::string RHaPSODIES::sCameraSectionName  = "CAMERA";
-	const std::string RHaPSODIES::sTrackerSectionName = "HANDTRACKER";
+	const std::string RHaPSODIES::sRDIniFile =
+		"configfiles/rhapsodies.ini";
+	const std::string RHaPSODIES::sCameraSectionName =
+		"CAMERA";
+	const std::string RHaPSODIES::sTrackerSectionName =
+		"HANDTRACKER";
+	const std::string RHaPSODIES::sImageProcessingSectionName =
+		"IMAGE_PROCESSING";
+	const std::string RHaPSODIES::sRenderingSectionName =
+		"RENDERING";
+	const std::string RHaPSODIES::sParticleSwarmSectionName =
+		"PARTICLE_SWARM";
+	const std::string RHaPSODIES::sEvaluationSectionName =
+		"EVALUATION";
+
 
 	ShaderRegistry *RHaPSODIES::S_pShaderRegistry = NULL;
 
