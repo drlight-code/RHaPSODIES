@@ -1,0 +1,9 @@
+#version 430 core
+
+layout (binding = 8,  r32ui) uniform restrict readonly uimage2D imgIn;
+layout (binding = 11, r32ui) uniform restrict writeonly uimage2D imgOut;
+
+const uint limit_x = 5;
+const uint limit_y = 1;
+const bool reduce_on_load = false;
+
