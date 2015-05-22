@@ -13,6 +13,7 @@ namespace rhapsodies {
 			TRANSFORM_TIME,			
 			RENDER_TIME,			
 			REDUCTION_TIME,			
+			REDUCTION_BANDWIDTH,			
 			SWARMUPDATE_TIME,			
 			PSO_TIME,
 			LOOP_TIME,

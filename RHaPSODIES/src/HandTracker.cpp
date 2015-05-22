@@ -1106,19 +1106,30 @@ namespace rhapsodies {
 		WriteDebug(IDebugView::RENDER_TIME,
 				   IDebugView::FormatString("Render time: ",
 											tRendering));
+
+		VistaType::microtime tReductionProfiler =
+			m_pProfiler->GetRoot()->GetChild("Reduction")->GetLastFrameTime();
 		WriteDebug(IDebugView::REDUCTION_TIME,
 				   IDebugView::FormatString("Reduction time: ",
-											tReduction));
-		WriteDebug(IDebugView::REDUCTION_TIME,
-				   IDebugView::FormatString("Reduction time: ",
-											m_pProfiler->GetRoot()->GetChild("Reduction")->GetLastFrameTime()));
+											tReductionProfiler));
+
+		size_t sizeMemoryTransferred =
+			((320*256+40*16+5*1)*sizeof(unsigned int) +
+			 (40*16+8*8)*sizeof(unsigned int)) * 64 * 40 * 3;
+		WriteDebug(
+			IDebugView::REDUCTION_BANDWIDTH,
+			IDebugView::FormatString(
+				"Reduction bandwidth: ",
+				sizeMemoryTransferred / tReductionProfiler /
+				1024.0f / 1024.0f / 1024.0f)  + " GB/s");
+					   
 		WriteDebug(IDebugView::SWARMUPDATE_TIME,
 				   IDebugView::FormatString("Swarm update time: ",
 											tSwarmUpdate));
 
 		WriteDebug(IDebugView::PENALTY,
-				   IDebugView::FormatString("Penalty: ",
-											m_pParticleBest->GetIBestPenalty()));
+				   IDebugView::FormatString(
+					   "Penalty: ", m_pParticleBest->GetIBestPenalty()));
 				
 	}
 
@@ -1191,9 +1202,8 @@ namespace rhapsodies {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320*8, 256*8,
 						GL_RED_INTEGER, GL_UNSIGNED_INT, data);
 #endif
-			
 		m_pProfiler->StartSection("Reduction");
-
+		
 		// first reduction: 320x256 -> 40x32
 		glUseProgram(m_idReduction0Program);
 		glDispatchCompute(320, 128, 1);
