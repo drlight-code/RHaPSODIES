@@ -1258,10 +1258,6 @@ namespace rhapsodies {
 		glBindTexture(GL_TEXTURE_2D, m_idReductionTextures320x256[0]);
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_SHORT, data);
 		vstr::err() << data[0] << std::endl;
-		unsigned int sum = 0;
-		for(int i = 0; i < 320*240; ++i)
-			sum += data[i];
-		vstr::err() << "sum:" << sum << std::endl;
 
 		glBindTexture(GL_TEXTURE_2D, m_idReductionTextures40x32[0]);
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_SHORT, data);
