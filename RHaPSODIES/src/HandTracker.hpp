@@ -227,9 +227,20 @@ namespace rhapsodies {
 		GLuint m_idGenerateTransformsProgram;
 
 		GLuint m_idPrepareReductionTexturesProgram;
+
 		GLuint m_idReduction0Program;
 		GLuint m_idReduction1Program;
 		GLuint m_idReduction2Program;
+
+		GLuint m_idReduction0DifferenceProgram;
+		GLuint m_idReduction1DifferenceProgram;
+		GLuint m_idReduction2DifferenceProgram;
+		GLuint m_idReduction0UnionProgram;
+		GLuint m_idReduction1UnionProgram;
+		GLuint m_idReduction2UnionProgram;
+		GLuint m_idReduction0IntersectionProgram;
+		GLuint m_idReduction1IntersectionProgram;
+		GLuint m_idReduction2IntersectionProgram;
 
 		GLuint m_idUpdateScoresProgram;
 		GLuint m_idUpdateGBestProgram;

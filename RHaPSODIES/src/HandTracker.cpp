@@ -311,9 +311,16 @@ namespace rhapsodies {
 
 		m_idPrepareReductionTexturesProgram =
 			m_pShaderReg->GetProgram("prepare_reduction_textures");
-		m_idReduction0Program = m_pShaderReg->GetProgram("reduction0");
-		m_idReduction1Program = m_pShaderReg->GetProgram("reduction1");
-		m_idReduction2Program = m_pShaderReg->GetProgram("reduction2");
+
+		m_idReduction0DifferenceProgram = m_pShaderReg->GetProgram("reduction0_difference");
+		m_idReduction1DifferenceProgram = m_pShaderReg->GetProgram("reduction1_difference");
+		m_idReduction2DifferenceProgram = m_pShaderReg->GetProgram("reduction2_difference");
+		m_idReduction0UnionProgram = m_pShaderReg->GetProgram("reduction0_union");
+		m_idReduction1UnionProgram = m_pShaderReg->GetProgram("reduction1_union");
+		m_idReduction2UnionProgram = m_pShaderReg->GetProgram("reduction2_union");
+		m_idReduction0IntersectionProgram = m_pShaderReg->GetProgram("reduction0_intersection");
+		m_idReduction1IntersectionProgram = m_pShaderReg->GetProgram("reduction1_intersection");
+		m_idReduction2IntersectionProgram = m_pShaderReg->GetProgram("reduction2_intersection");
 
 		m_idUpdateScoresProgram = m_pShaderReg->GetProgram("update_scores");
 		m_idUpdateGBestProgram  = m_pShaderReg->GetProgram("update_gbest");
@@ -695,10 +702,16 @@ namespace rhapsodies {
 		
 		delete [] data;
 
-		ValidateComputeShader(m_idReduction0Program);
-		ValidateComputeShader(m_idReduction1Program);
-		ValidateComputeShader(m_idReduction2Program);
-		
+		ValidateComputeShader(m_idReduction0DifferenceProgram);
+		ValidateComputeShader(m_idReduction1DifferenceProgram);
+		ValidateComputeShader(m_idReduction2DifferenceProgram);
+		ValidateComputeShader(m_idReduction0UnionProgram);
+		ValidateComputeShader(m_idReduction1UnionProgram);
+		ValidateComputeShader(m_idReduction2UnionProgram);
+		ValidateComputeShader(m_idReduction0IntersectionProgram);
+		ValidateComputeShader(m_idReduction1IntersectionProgram);
+		ValidateComputeShader(m_idReduction2IntersectionProgram);
+
 		return true;
 	}
 	
@@ -1204,22 +1217,31 @@ namespace rhapsodies {
 #endif
 		m_pProfiler->StartSection("Reduction");
 		
-		// first reduction: 320x256 -> 40x32
-		glUseProgram(m_idReduction0Program);
+		glUseProgram(m_idReduction0DifferenceProgram);
+		glDispatchCompute(320, 128, 1);
+		glUseProgram(m_idReduction0UnionProgram);
+		glDispatchCompute(320, 128, 1);
+		glUseProgram(m_idReduction0IntersectionProgram);
 		glDispatchCompute(320, 128, 1);
 //		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-		// second reduction: 40x32 -> 5x4
-		glUseProgram(m_idReduction1Program);
+		glUseProgram(m_idReduction1DifferenceProgram);
 		glDispatchCompute(40, 8, 1);
+		glUseProgram(m_idReduction1UnionProgram);
+		glDispatchCompute(40, 8, 1);
+		glUseProgram(m_idReduction1IntersectionProgram);
+		glDispatchCompute(40, 8, 1);	
 //		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-		// third reduction: 5x4 -> 1x1
-		glUseProgram(m_idReduction2Program);
+	
+		glUseProgram(m_idReduction2DifferenceProgram);
+		glDispatchCompute(8, 8, 1);
+		glUseProgram(m_idReduction2UnionProgram);
+		glDispatchCompute(8, 8, 1);
+		glUseProgram(m_idReduction2IntersectionProgram);
 		glDispatchCompute(8, 8, 1);
 //		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-		glFinish();
+		
+//		glFinish();
 		
 		m_pProfiler->StopSection();				
 

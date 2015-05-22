@@ -78,16 +78,42 @@ namespace rhapsodies {
 			{sShaderPath + "/indexed_viewport.geom"});
 
 		S_pShaderRegistry->RegisterShader(
-			"reduction0", GL_COMPUTE_SHADER,
-			{sShaderPath + "/reduction_header0.part",
+			"reduction0_difference", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header0_difference.part",
 			 sShaderPath + "/reduction.comp"});
 		S_pShaderRegistry->RegisterShader(
-			"reduction1", GL_COMPUTE_SHADER,
-			{sShaderPath + "/reduction_header1.part",
+			"reduction1_difference", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header1_difference.part",
 			 sShaderPath + "/reduction.comp"});
 		S_pShaderRegistry->RegisterShader(
-			"reduction2", GL_COMPUTE_SHADER,
-			{sShaderPath + "/reduction_header2.part",
+			"reduction2_difference", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header2_difference.part",
+			 sShaderPath + "/reduction.comp"});
+
+		S_pShaderRegistry->RegisterShader(
+			"reduction0_union", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header0_union.part",
+			 sShaderPath + "/reduction.comp"});
+		S_pShaderRegistry->RegisterShader(
+			"reduction1_union", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header1_union.part",
+			 sShaderPath + "/reduction.comp"});
+		S_pShaderRegistry->RegisterShader(
+			"reduction2_union", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header2_union.part",
+			 sShaderPath + "/reduction.comp"});
+
+		S_pShaderRegistry->RegisterShader(
+			"reduction0_intersection", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header0_intersection.part",
+			 sShaderPath + "/reduction.comp"});
+		S_pShaderRegistry->RegisterShader(
+			"reduction1_intersection", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header1_intersection.part",
+			 sShaderPath + "/reduction.comp"});
+		S_pShaderRegistry->RegisterShader(
+			"reduction2_intersection", GL_COMPUTE_SHADER,
+			{sShaderPath + "/reduction_header2_intersection.part",
 			 sShaderPath + "/reduction.comp"});
 
 		S_pShaderRegistry->RegisterShader(
@@ -124,16 +150,34 @@ namespace rhapsodies {
 		S_pShaderRegistry->RegisterProgram("prepare_reduction_textures", vec_shaders);
 
 		vec_shaders.clear();
-		vec_shaders.push_back("reduction0");
-		S_pShaderRegistry->RegisterProgram("reduction0", vec_shaders);
+		vec_shaders.push_back("reduction0_difference");
+		S_pShaderRegistry->RegisterProgram("reduction0_difference", vec_shaders);
+		vec_shaders.clear();
+		vec_shaders.push_back("reduction1_difference");
+		S_pShaderRegistry->RegisterProgram("reduction1_difference", vec_shaders);
+		vec_shaders.clear();
+		vec_shaders.push_back("reduction2_difference");
+		S_pShaderRegistry->RegisterProgram("reduction2_difference", vec_shaders);
 
 		vec_shaders.clear();
-		vec_shaders.push_back("reduction1");
-		S_pShaderRegistry->RegisterProgram("reduction1", vec_shaders);
+		vec_shaders.push_back("reduction0_union");
+		S_pShaderRegistry->RegisterProgram("reduction0_union", vec_shaders);
+		vec_shaders.clear();
+		vec_shaders.push_back("reduction1_union");
+		S_pShaderRegistry->RegisterProgram("reduction1_union", vec_shaders);
+		vec_shaders.clear();
+		vec_shaders.push_back("reduction2_union");
+		S_pShaderRegistry->RegisterProgram("reduction2_union", vec_shaders);
 
 		vec_shaders.clear();
-		vec_shaders.push_back("reduction2");
-		S_pShaderRegistry->RegisterProgram("reduction2", vec_shaders);
+		vec_shaders.push_back("reduction0_intersection");
+		S_pShaderRegistry->RegisterProgram("reduction0_intersection", vec_shaders);
+		vec_shaders.clear();
+		vec_shaders.push_back("reduction1_intersection");
+		S_pShaderRegistry->RegisterProgram("reduction1_intersection", vec_shaders);
+		vec_shaders.clear();
+		vec_shaders.push_back("reduction2_intersection");
+		S_pShaderRegistry->RegisterProgram("reduction2_intersection", vec_shaders);
 
 		vec_shaders.clear();
 		vec_shaders.push_back("generate_transforms");

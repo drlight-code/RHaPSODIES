@@ -5,7 +5,7 @@ layout (local_size_x = 8, local_size_y = 8) in;
 const uint block_length = 8*8;
 
 // work memory per 8*8 shader block
-shared uint work_memory[3][block_length];
+shared uint work_memory[block_length];
 
 void main() {
 	// read input textures into shared memory
@@ -18,76 +18,33 @@ void main() {
 				limit_x*gl_WorkGroupID.x + gl_LocalInvocationID.x,
 				limit_y*gl_WorkGroupID.y*2 + gl_LocalInvocationID.y);
 
-			work_memory[0][idx] =
-				imageLoad(imgInDifference, tex_position)[0] +
-				imageLoad(imgInDifference, tex_position+ivec2(0, limit_y))[0];
-			
-			work_memory[1][idx] =
-				imageLoad(imgInUnion, tex_position)[0] +
-				imageLoad(imgInUnion, tex_position+ivec2(0, limit_y))[0];
-		
-			work_memory[2][idx] =
-				imageLoad(imgInIntersection, tex_position)[0] +
-				imageLoad(imgInIntersection, tex_position+ivec2(0, limit_y))[0];
+			work_memory[idx] =
+				imageLoad(imgIn, tex_position)[0] +
+				imageLoad(imgIn, tex_position+ivec2(0, limit_y))[0];
 		}
 		else {
 			ivec2 tex_position = ivec2(
 				limit_x*gl_WorkGroupID.x + gl_LocalInvocationID.x,
 				limit_y*gl_WorkGroupID.y + gl_LocalInvocationID.y);
 
-			work_memory[0][idx] =
-				imageLoad(imgInDifference, tex_position)[0];
-			
-			work_memory[1][idx] =
-				imageLoad(imgInUnion, tex_position)[0];
-		
-			work_memory[2][idx] =
-				imageLoad(imgInIntersection, tex_position)[0];
+			work_memory[idx] =
+				imageLoad(imgIn, tex_position)[0];
 		}
 	}
 	else {
-		work_memory[0][idx] = 0;
-		work_memory[1][idx] = 0;
-		work_memory[2][idx] = 0;
+		work_memory[idx] = 0;
 	}
 
-//	for(uint stride = block_length/2 ; stride > 0 ; stride >>= 1) {
-//		if(idx < stride) {
-	work_memory[0][idx] += work_memory[0][idx + 32];
-	work_memory[1][idx] += work_memory[1][idx + 32];
-	work_memory[2][idx] += work_memory[2][idx + 32];
-
-	work_memory[0][idx] += work_memory[0][idx + 16];
-	work_memory[1][idx] += work_memory[1][idx + 16];
-	work_memory[2][idx] += work_memory[2][idx + 16];
-
-	work_memory[0][idx] += work_memory[0][idx + 8];
-	work_memory[1][idx] += work_memory[1][idx + 8];
-	work_memory[2][idx] += work_memory[2][idx + 8];
-
-	work_memory[0][idx] += work_memory[0][idx + 4];
-	work_memory[1][idx] += work_memory[1][idx + 4];
-	work_memory[2][idx] += work_memory[2][idx + 4];
-
-	work_memory[0][idx] += work_memory[0][idx + 2];
-	work_memory[1][idx] += work_memory[1][idx + 2];
-	work_memory[2][idx] += work_memory[2][idx + 2];
-
-	work_memory[0][idx] += work_memory[0][idx + 1];
-	work_memory[1][idx] += work_memory[1][idx + 1];
-	work_memory[2][idx] += work_memory[2][idx + 1];
-
-//		}
-//		barrier(); // sync writes to shared memory
-//	}
+	work_memory[idx] += work_memory[idx + 32];
+	work_memory[idx] += work_memory[idx + 16];
+	work_memory[idx] += work_memory[idx + 8];
+	work_memory[idx] += work_memory[idx + 4];
+	work_memory[idx] += work_memory[idx + 2];
+	work_memory[idx] += work_memory[idx + 1];
 
 	// store shared memory to result texture
 	if(gl_LocalInvocationID.xy == ivec2(0,0)) {
-		imageStore(imgOutDifference, ivec2(gl_WorkGroupID.xy),
-				   uvec4(work_memory[0][0], 0, 0, 0));
-		imageStore(imgOutUnion, ivec2(gl_WorkGroupID.xy),
-				   uvec4(work_memory[1][0], 0, 0, 0));
-		imageStore(imgOutIntersection, ivec2(gl_WorkGroupID.xy),
-				   uvec4(work_memory[2][0], 0, 0, 0));
+		imageStore(imgOut, ivec2(gl_WorkGroupID.xy),
+				   uvec4(work_memory[0], 0, 0, 0));
 	}
 }
