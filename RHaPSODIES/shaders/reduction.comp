@@ -27,8 +27,7 @@ void main() {
 				limit_x*gl_WorkGroupID.x + gl_LocalInvocationID.x,
 				limit_y*gl_WorkGroupID.y + gl_LocalInvocationID.y);
 
-			work_memory[idx] =
-				imageLoad(imgIn, tex_position)[0];
+			work_memory[idx] = imageLoad(imgIn, tex_position)[0];
 		}
 	}
 	else {
@@ -36,9 +35,13 @@ void main() {
 	}
 
 	work_memory[idx] += work_memory[idx + 32];
+	barrier();
 	work_memory[idx] += work_memory[idx + 16];
+	barrier();
 	work_memory[idx] += work_memory[idx + 8];
+	barrier();
 	work_memory[idx] += work_memory[idx + 4];
+	barrier();
 	work_memory[idx] += work_memory[idx + 2];
 	work_memory[idx] += work_memory[idx + 1];
 

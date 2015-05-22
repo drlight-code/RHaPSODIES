@@ -9,11 +9,11 @@ layout (binding = 1) uniform sampler2D texRenderedDepth;
 // work memory per 8*8 shader block
 shared uint work_memory_d[8*8]; // difference
 
-layout (binding = 0, r32ui) uniform restrict uimage2D imgReduceDifference;
-layout (binding = 1, r32ui) uniform restrict uimage2D imgReduceUnion;
-layout (binding = 2, r32ui) uniform restrict uimage2D imgReduceIntersection;
+layout (binding = 0, r16ui) uniform restrict uimage2D imgReduceDifference;
+layout (binding = 1, r16ui) uniform restrict uimage2D imgReduceUnion;
+layout (binding = 2, r16ui) uniform restrict uimage2D imgReduceIntersection;
 
-layout (binding = 12, r32ui) uniform restrict uimage2D imgDifference;
+layout (binding = 12, r16ui) uniform restrict uimage2D imgDifference;
 
 const float dM = 0.04;
 
@@ -58,7 +58,7 @@ void main() {
 		imageStore(imgReduceIntersection,
 				   posGlobal, uvec4(inter_val, 0, 0, 0));
 
-		imageStore(imgDifference, pos240, uvec4(clamped_difference/0.04f*0xffffffffu, 0, 0, 0));
+		imageStore(imgDifference, pos240, uvec4(clamped_difference/0.04f*0xffffu, 0, 0, 0));
 	}
 }
 

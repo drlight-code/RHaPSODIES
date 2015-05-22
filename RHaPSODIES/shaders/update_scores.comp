@@ -2,9 +2,9 @@
 
 layout (local_size_x = 8, local_size_y = 8) in;
 
-layout (binding = 9,  r32ui) uniform restrict readonly uimage2D imgResultDifference;
-layout (binding = 10, r32ui) uniform restrict readonly uimage2D imgResultUnion;
-layout (binding = 11, r32ui) uniform restrict readonly uimage2D imgResultIntersection;
+layout (binding = 9,  r16ui) uniform restrict readonly uimage2D imgResultDifference;
+layout (binding = 10, r16ui) uniform restrict readonly uimage2D imgResultUnion;
+layout (binding = 11, r16ui) uniform restrict readonly uimage2D imgResultIntersection;
 
 
 struct HandModel {
