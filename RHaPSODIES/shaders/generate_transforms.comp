@@ -420,10 +420,13 @@ void DrawHand() {
 	}
 
 	// draw the thumb
-	matTransform = TranslationMatrix(
-		vec3((-fPalmWidth/2.0f + fPalmWidth/2.0f)*fLRFactor,
-			 fPalmBottomRadius,
-			 0));
+	matTransform =
+		TranslationMatrix(
+			vec3((-fPalmWidth/2.0f + fPalmWidth/4.0f)*fLRFactor,
+				 fPalmBottomRadius,
+				 0)) *
+		AAAToTransformMatrix(
+			vec4(0, 1, 0, DegToRad(-60*fLRFactor)));
 			
 	DrawFinger(
 		matOrigin * matTransform,

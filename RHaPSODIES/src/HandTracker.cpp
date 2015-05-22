@@ -293,6 +293,11 @@ namespace rhapsodies {
 		m_pShaderReg = RHaPSODIES::GetShaderRegistry();
 
 		m_pHandGeometry = new HandGeometry;
+		std::vector<float> &vecExtents = m_pHandGeometry->GetExtents();
+		for(auto &e: vecExtents) {
+			e *= 0.9;
+		}
+		
 		m_pHandRenderer =
 			new HandRenderer(m_pShaderReg->GetProgram("indexedtransform"));
 
@@ -768,8 +773,10 @@ namespace rhapsodies {
 
 		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_F, 0);
 		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
-		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_MCP, 60);
-		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_IP, 60);
+		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_MCP, 40);
+		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_IP, 40);
+		// oParticle.GetHandModelRight().SetJointAngle(HandModel::T_MCP, 40);
+		// oParticle.GetHandModelRight().SetJointAngle(HandModel::T_IP, 40);
 
 		oParticle.GetHandModelRight().SetPosition(VistaVector3D(0.14, -0.1, 0.5));
 		oParticle.GetHandModelRight().SetJointAngle(HandModel::T_CMC_A, 60);

@@ -130,12 +130,12 @@ void GetBoundsByJointIndex(int index,
 	if(bThumb) {
 		if(index == 1) {
 			// adduction abduction dof
-			fMin =  0;
+			fMin = 15;
 			fMax = 70;
 		}
 		else {
 			// flexion dof
-			fMin =  0;
+			fMin = -30;
 			fMax = 90;
 		}
 	}

@@ -354,9 +354,14 @@ namespace rhapsodies {
 
 		// draw the thumb
 		matTransform.SetToTranslationMatrix(
-			VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/2.0f)*fLRFactor,
+			VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/4.0f)*fLRFactor,
 						  fPalmBottomRadius,
 						  0));
+
+		matTransform *=
+			VistaTransformMatrix(
+				VistaAxisAndAngle(VistaVector3D(0,1,0),
+								  Vista::DegToRad(-60*fLRFactor)));
 			
 		DrawFinger(
 			matOrigin * matTransform,
