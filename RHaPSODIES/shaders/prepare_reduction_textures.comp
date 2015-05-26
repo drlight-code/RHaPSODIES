@@ -7,11 +7,11 @@ layout (binding = 0) uniform sampler2D texCameraDepth;
 layout (binding = 1) uniform sampler2D texRenderedDepth;
 
 // work memory per 8*8 shader block
-shared uint work_memory_d[8*8]; // difference
+shared uint work_memory[3][8*8];
 
-layout (binding = 0, r16ui) uniform restrict uimage2D imgReduceDifference;
-layout (binding = 1, r16ui) uniform restrict uimage2D imgReduceUnion;
-layout (binding = 2, r16ui) uniform restrict uimage2D imgReduceIntersection;
+layout (binding = 3, r16ui) uniform restrict uimage2D imgReduceDifference;
+layout (binding = 4, r16ui) uniform restrict uimage2D imgReduceUnion;
+layout (binding = 5, r16ui) uniform restrict uimage2D imgReduceIntersection;
 
 layout (binding = 12, r16ui) uniform restrict uimage2D imgDifference;
 
@@ -23,43 +23,102 @@ const float zFar  = 1.1;
 float half_screen_to_world(float zScreen);
 
 void main() {
-	ivec2 posGlobal = ivec2(gl_GlobalInvocationID.xy);
+	if(gl_WorkGroupID.y % 16 != 15) {
 
-	uint mod256 = posGlobal.y % 256;
-	ivec2 pos240 =
-		ivec2(posGlobal.x,
-			  posGlobal.y / 256 * 240 + mod256);
-	
-	if(mod256 < 240) {
-		vec2  posScreen =
-			vec2(pos240) / vec2(320*8, 240*8);
+		ivec2 posGlobal = ivec2(
+			gl_GlobalInvocationID.x,
+			gl_WorkGroupID.y*16 + gl_LocalInvocationID.y);
+		ivec2 posGlobal2 = ivec2(
+			gl_GlobalInvocationID.x,
+			gl_WorkGroupID.y*16 + gl_LocalInvocationID.y + 8);
 
-		float renderedSample = texture(texRenderedDepth, posScreen)[0];
-		float cameraSample   = texture(texCameraDepth,   posScreen)[0];
+		ivec2 pos240   = ivec2(
+			posGlobal.x, posGlobal.y / 256 * 240 + posGlobal.y%256);
+		ivec2 pos240_2 = ivec2(
+			posGlobal2.x, posGlobal2.y / 256 * 240 + posGlobal2.y%256);
+		
+		vec2 posScreen = vec2(pos240) / vec2(320*8, 240*8);
+		vec2 posScreen2 = vec2(pos240_2) / vec2(320*8, 240*8);
+
+		float renderedSample  = texture(texRenderedDepth, posScreen)[0];
+		float renderedSample2 = texture(texRenderedDepth, posScreen2)[0];
+
+		float cameraSample  = texture(texCameraDepth,   posScreen)[0];
+		float cameraSample2 = texture(texCameraDepth,   posScreen2)[0];
 
 		// camera samples are already in world space.
 		// map rendered samples from screen to world space for depth
 		// clamping in mm.
-		renderedSample = half_screen_to_world(renderedSample);	
+		renderedSample  = half_screen_to_world(renderedSample);	
+		renderedSample2 = half_screen_to_world(renderedSample2);
 
 		uint inter_val =
 			(renderedSample < 1.0f && cameraSample < 1.0f) ? 1 : 0;
+		uint inter_val_2 =
+			(renderedSample2 < 1.0f && cameraSample2 < 1.0f) ? 1 : 0;
 
 		uint union_val =
 			(renderedSample < 1.0f || cameraSample < 1.0f) ? 1 : 0;
+		uint union_val_2 =
+			(renderedSample2 < 1.0f || cameraSample2 < 1.0f) ? 1 : 0;
 
 		float clamped_difference = union_val > 0 ?
 			min( abs(cameraSample-renderedSample), dM) : 0;
+		float clamped_difference_2 = union_val_2 > 0 ?
+			min( abs(cameraSample2-renderedSample2), dM) : 0;
 
-		imageStore(imgReduceDifference,
-				   posGlobal, uvec4(clamped_difference/dM*0x1ff, 0, 0, 0));
-		imageStore(imgReduceUnion,
-				   posGlobal, uvec4(union_val, 0, 0, 0));
-		imageStore(imgReduceIntersection,
-				   posGlobal, uvec4(inter_val, 0, 0, 0));
+		uint idx = 8 * gl_LocalInvocationID.y + gl_LocalInvocationID.x;
+		// work_memory[0][idx] = uint(
+		// 	clamped_difference/dM*0x1ff +
+		// 	clamped_difference_2/dM*0x1ff);
+		
+		work_memory[0][idx] = 511*2;
+		work_memory[1][idx] = union_val + union_val_2;
+		work_memory[2][idx] = inter_val + inter_val_2;
+		
+		work_memory[0][idx] += work_memory[0][idx + 32];
+		work_memory[1][idx] += work_memory[1][idx + 32];
+		work_memory[2][idx] += work_memory[2][idx + 32];
+		barrier();
 
-		imageStore(imgDifference, pos240, uvec4(clamped_difference/0.04f*0xffff, 0, 0, 0));
+		work_memory[0][idx] += work_memory[0][idx + 16];
+		work_memory[1][idx] += work_memory[1][idx + 16];
+		work_memory[2][idx] += work_memory[2][idx + 16];
+		barrier();
+		
+		work_memory[0][idx] += work_memory[0][idx + 8];
+		work_memory[1][idx] += work_memory[1][idx + 8];
+		work_memory[2][idx] += work_memory[2][idx + 8];
+		barrier();
+		
+		work_memory[0][idx] += work_memory[0][idx + 4];
+		work_memory[1][idx] += work_memory[1][idx + 4];
+		work_memory[2][idx] += work_memory[2][idx + 4];
+		barrier();
+
+		work_memory[0][idx] += work_memory[0][idx + 2];
+		work_memory[1][idx] += work_memory[1][idx + 2];
+		work_memory[2][idx] += work_memory[2][idx + 2];
+		
+		work_memory[0][idx] += work_memory[0][idx + 1];
+		work_memory[1][idx] += work_memory[1][idx + 1];
+		work_memory[2][idx] += work_memory[2][idx + 1];
+
+		if(gl_LocalInvocationID.xy == ivec2(0,0)) {
+			imageStore(imgReduceDifference,
+					   ivec2(gl_WorkGroupID.xy), uvec4(work_memory[0][0], 0, 0, 0));
+			imageStore(imgReduceUnion,
+					   ivec2(gl_WorkGroupID.xy), uvec4(work_memory[1][0], 0, 0, 0));
+			imageStore(imgReduceIntersection,
+					   ivec2(gl_WorkGroupID.xy), uvec4(work_memory[2][0], 0, 0, 0));
+		}
+
+		imageStore(imgDifference, posGlobal,
+				   uvec4(clamped_difference/0.04f*0xffff, 0, 0, 0));
+		imageStore(imgDifference, posGlobal2,
+				   uvec4(clamped_difference_2/0.04f*0xffff, 0, 0, 0));
 	}
+   
 }
 
 float half_screen_to_world(float zScreen) {

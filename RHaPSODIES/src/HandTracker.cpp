@@ -1219,7 +1219,7 @@ namespace rhapsodies {
 	
 	void HandTracker::ReduceDepthMaps() {
 		glUseProgram(m_idPrepareReductionTexturesProgram);
-		glDispatchCompute(320, 256, 1);
+		glDispatchCompute(320, 128, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 #ifdef PSO_TESTING
@@ -1238,14 +1238,6 @@ namespace rhapsodies {
 #endif
 		m_pProfiler->StartSection("Reduction");
 		
-		glUseProgram(m_idReduction0DifferenceProgram);
-		glDispatchCompute(320, 128, 1);
-		glUseProgram(m_idReduction0UnionProgram);
-		glDispatchCompute(320, 128, 1);
-		glUseProgram(m_idReduction0IntersectionProgram);
-		glDispatchCompute(320, 128, 1);
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
 		glUseProgram(m_idReduction1DifferenceProgram);
 		glDispatchCompute(40, 8, 1);
 		glUseProgram(m_idReduction1UnionProgram);
