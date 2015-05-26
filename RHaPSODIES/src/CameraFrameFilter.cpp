@@ -133,16 +133,15 @@ namespace rhapsodies {
 		image = image_processed.clone();
 		cv::dilate(image, image_processed, dilate_element);
 
+		// need to copy the frame since we write in different memory
+		// layout than we read and would be corrupting the array
+		// otherwise.
 		unsigned short depthFrameCopy[320*240];
 		memcpy(depthFrameCopy, depthFrame, 320*240*sizeof(unsigned short));
 		
 		short iDepthValue = 0x7fff;
 		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
 			if(image_processed.data[pixel] == 0) {
-				// m_pUVMapRGBBuffer[3*pixel+0] = 0;
-				// m_pUVMapRGBBuffer[3*pixel+1] = 0;
-				// m_pUVMapRGBBuffer[3*pixel+2] = 0;
-
 				iDepthValue = 0x7fff;
 			}
 			else {
