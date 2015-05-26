@@ -68,11 +68,9 @@ void main() {
 			min( abs(cameraSample2-renderedSample2), dM) : 0;
 
 		uint idx = 8 * gl_LocalInvocationID.y + gl_LocalInvocationID.x;
-		// work_memory[0][idx] = uint(
-		// 	clamped_difference/dM*0x1ff +
-		// 	clamped_difference_2/dM*0x1ff);
-		
-		work_memory[0][idx] = 511*2;
+		work_memory[0][idx] = uint(
+			clamped_difference/dM*0x1ff +
+			clamped_difference_2/dM*0x1ff);
 		work_memory[1][idx] = union_val + union_val_2;
 		work_memory[2][idx] = inter_val + inter_val_2;
 		
