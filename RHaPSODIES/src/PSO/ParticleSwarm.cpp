@@ -36,9 +36,9 @@ namespace rhapsodies {
 		VistaQuaternion qCenterOriR;
 		float fCenterVal;
 
-		float fMaxAngOffset = 5.0f;
+		float fMaxAngOffset = 10.0f;
 		float fMaxPosOffset = 0.02f;
-		float fMaxOriOffset = 0.03f;
+		float fMaxOriOffset = 0.05f;
 
 		// Particle oCenterReset = oCenter;
 		// oCenterReset.ResetPenalty();
