@@ -62,15 +62,19 @@ void main() {
 		uint union_val_2 =
 			(renderedSample2 < 1.0f || cameraSample2 < 1.0f) ? 1 : 0;
 
-		float clamped_difference = union_val > 0 ?
+		float union_difference = union_val > 0 ?
 			min( abs(cameraSample-renderedSample), dM) : 0;
-		float clamped_difference_2 = union_val_2 > 0 ?
+		float union_difference_2 = union_val_2 > 0 ?
+			min( abs(cameraSample2-renderedSample2), dM) : 0;
+		float inter_difference = inter_val > 0 ?
+			min( abs(cameraSample-renderedSample), dM) : 0;
+		float inter_difference_2 = inter_val_2 > 0 ?
 			min( abs(cameraSample2-renderedSample2), dM) : 0;
 
 		uint idx = 8 * gl_LocalInvocationID.y + gl_LocalInvocationID.x;
 		work_memory[0][idx] = uint(
-			clamped_difference/dM*0x1ff +
-			clamped_difference_2/dM*0x1ff);
+			inter_difference/dM*0x1ff +
+			inter_difference_2/dM*0x1ff);
 		work_memory[1][idx] = union_val + union_val_2;
 		work_memory[2][idx] = inter_val + inter_val_2;
 		
@@ -112,9 +116,9 @@ void main() {
 		}
 
 		imageStore(imgDifference, posGlobal,
-				   uvec4(clamped_difference/0.04f*0xffff, 0, 0, 0));
+				   uvec4(union_difference/0.04f*0xffff, 0, 0, 0));
 		imageStore(imgDifference, posGlobal2,
-				   uvec4(clamped_difference_2/0.04f*0xffff, 0, 0, 0));
+				   uvec4(union_difference_2/0.04f*0xffff, 0, 0, 0));
 	}
    
 }
