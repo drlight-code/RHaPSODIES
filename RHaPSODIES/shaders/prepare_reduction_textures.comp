@@ -52,13 +52,13 @@ void main() {
 			min( abs(cameraSample-renderedSample), dM) : 0;
 
 		imageStore(imgReduceDifference,
-				   posGlobal, uvec4(clamped_difference*0x7fffu, 0, 0, 0));
+				   posGlobal, uvec4(clamped_difference/dM*0x1ff, 0, 0, 0));
 		imageStore(imgReduceUnion,
 				   posGlobal, uvec4(union_val, 0, 0, 0));
 		imageStore(imgReduceIntersection,
 				   posGlobal, uvec4(inter_val, 0, 0, 0));
 
-		imageStore(imgDifference, pos240, uvec4(clamped_difference/0.04f*0xffffu, 0, 0, 0));
+		imageStore(imgDifference, pos240, uvec4(clamped_difference/0.04f*0xffff, 0, 0, 0));
 	}
 }
 

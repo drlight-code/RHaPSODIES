@@ -1,7 +1,7 @@
 #version 430 core
 
 layout (binding = 3, r16ui) uniform restrict readonly uimage2D imgIn;
-layout (binding = 6, r16ui) uniform restrict writeonly uimage2D imgOut;
+layout (binding = 6, r32ui) uniform restrict writeonly uimage2D imgOut;
 
 const uint limit_x = 8;
 const uint limit_y = 8;

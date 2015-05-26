@@ -619,6 +619,10 @@ namespace rhapsodies {
 		for(size_t i = 0; i < 320*256*8*8; ++i) {
 			data[i] = 0x0;
 		}
+		unsigned int *data_uint = new unsigned int[320*256*8*8];
+		for(size_t i = 0; i < 320*256*8*8; ++i) {
+			data_uint[i] = 0x0;
+		}
 
 		// first step: 320x256
 		glGenTextures(3, m_idReductionTextures320x256);
@@ -646,7 +650,14 @@ namespace rhapsodies {
 
 		// third step: 5x4
 		glGenTextures(3, m_idReductionTextures5x4);
-		for(size_t i = 0; i < 3; ++i) {
+		glBindTexture(GL_TEXTURE_2D, m_idReductionTextures5x4[0]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 5*8, 4*8);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 5*8, 4*8, GL_RED_INTEGER,
+						GL_UNSIGNED_SHORT, data_uint);
+		for(size_t i = 1; i < 3; ++i) {
 			glBindTexture(GL_TEXTURE_2D, m_idReductionTextures5x4[i]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -663,9 +674,9 @@ namespace rhapsodies {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-			glTexStorage2D(GL_TEXTURE_2D, 1, GL_R16UI, 8, 8);
+			glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 8, 8);
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 8, 8, GL_RED_INTEGER,
-							GL_UNSIGNED_SHORT, data);
+							GL_UNSIGNED_INT, data_uint);
 		}
 
 
@@ -856,7 +867,10 @@ namespace rhapsodies {
 							   m_idReductionTextures40x32[i],
 							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R16UI);
 		}
-		for(size_t i = 0; i < 3; ++i) {
+		glBindImageTexture(6,
+						   m_idReductionTextures5x4[0],
+						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
+		for(size_t i = 1; i < 3; ++i) {
 			glBindImageTexture(6 + i,
 							   m_idReductionTextures5x4[i],
 							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R16UI);
@@ -864,7 +878,7 @@ namespace rhapsodies {
 		for(size_t i = 0; i < 3; ++i) {
 			glBindImageTexture(9 + i,
 							   m_idReductionTextures1x1[i],
-							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R16UI);
+							   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
 		}
 		glBindImageTexture(12, m_idDifferenceTexture,
 						   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R16UI);
@@ -1267,11 +1281,13 @@ namespace rhapsodies {
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_SHORT, data);
 		vstr::err() << data[0] << std::endl;
 
+		unsigned int *data_uint = new unsigned int[8*8];
 		glBindTexture(GL_TEXTURE_2D, m_idReductionTextures1x1[0]);
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_SHORT, data);
-		vstr::err() << data[0] << std::endl;
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, data_uint);
+		vstr::err() << data_uint[0] << std::endl;
 
 		delete [] data;
+		delete [] data_uint;
 #endif
 	}
 
