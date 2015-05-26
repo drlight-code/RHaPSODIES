@@ -24,7 +24,6 @@
 #ifndef _RHAPSODIES_HANDTRACKER
 #define _RHAPSODIES_HANDTRACKER
 
-#include <list>
 #include <map>
 
 #include <VistaAspects/VistaPropertyList.h>
@@ -49,6 +48,7 @@ namespace rhapsodies {
 
 	class CameraFrameRecorder;
 	class CameraFramePlayer;
+	class CameraFrameFilter;
 	
 	class HandTracker {
 	public:
@@ -90,12 +90,8 @@ namespace rhapsodies {
 						 const unsigned short *depthFrame,
 						 const float          *uvMapFrame);
 
-		SkinClassifier *GetSkinClassifier();
 		void NextSkinClassifier();
 		void PrevSkinClassifier();
-
-		void ShowOpenCVImg();
-		void ToggleSkinMap();
 
 		void ToggleFrameRecording();
 		void ToggleFramePlayback();
@@ -130,7 +126,7 @@ namespace rhapsodies {
 
 		bool HasGLComputeCapabilities();
 
-		bool InitSkinClassifiers();
+		bool InitFrameFilter();
 		bool InitRendering();
 		bool InitGpuPSO();
 		bool InitReduction();
@@ -139,21 +135,12 @@ namespace rhapsodies {
 		void SetToInitialPose(Particle &oParticle);
 		void PerformPSOTracking();
 		void PerformStartPoseMatch();
-		
-		void ProcessCameraFrames(
+
+		void FrameRecordingAndPlayback(
 			const unsigned char  *colorFrame,
 			const unsigned short *depthFrame,
 			const float          *uvMapFrame);
 
-		void DepthToRGB(const unsigned short *depth,
-						unsigned char *rgb);
-
-		void UVMapToRGB(const float *uvmap,
-						const unsigned short *depth,
-						const unsigned char *color,
-						unsigned char *rgb);
-
-		void FilterSkinAreas();
 
 		void ResourcesBind();
 		void ResourcesUnbind();
@@ -169,15 +156,6 @@ namespace rhapsodies {
 		void UpdateBestMatch();
 		void UpdateSwarm(float fPhiCognitive, float fPhiSocial);
 		
-		float Penalty(HandModel& oModelLeft,
-					  HandModel& oModelRight,
-					  float fDiff,
-					  float fUnion,
-					  float fIntersection);
-		float PenaltyFromReduction(float fDiff,
-								   float fUnion,
-								   float fIntersection);
-		float PenaltyPrior(HandModel& oModel);
 		float PenaltyNormalize(float fPenalty);
 						  
 		void WriteDebug(IDebugView::Slot eSlot,
@@ -186,13 +164,8 @@ namespace rhapsodies {
 		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
 		MapPBO m_mapPBO;
 
-		typedef std::list<SkinClassifier*> ListSkinCl;
-		ListSkinCl m_lClassifiers;
-		ListSkinCl::iterator m_itCurrentClassifier;
 
 		bool m_bCameraUpdate;
-		bool m_bShowImage;
-		bool m_bShowSkinMap;
 
 		Config m_oConfig;
 		VistaPropertyList m_oCameraIntrinsics;
@@ -204,14 +177,7 @@ namespace rhapsodies {
 
 		unsigned char  *m_pColorBuffer;
 		unsigned short *m_pDepthBuffer;
-		unsigned int   *m_pDepthBufferUInt;
 		float          *m_pUVMapBuffer;
-
-		unsigned char m_pSkinMap[320*240];
-
-		// depth frame and uv map RGB buffers
-		unsigned char m_pDepthRGBBuffer[320*240*3];
-		unsigned char m_pUVMapRGBBuffer[320*240*3];
 
 		std::vector<float> m_vViewportData;
 
@@ -276,6 +242,8 @@ namespace rhapsodies {
 		bool m_bFramePlayback;
 		CameraFrameRecorder *m_pFrameRecorder;
 		CameraFramePlayer   *m_pFramePlayer;
+
+		CameraFrameFilter *m_pFrameFilter;
 
 		bool m_bTrackingEnabled;
 		Particle *m_pParticleBest;

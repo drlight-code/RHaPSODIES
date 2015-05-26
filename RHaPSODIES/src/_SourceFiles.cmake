@@ -13,6 +13,7 @@ set( DirFiles
 	HandTracker.cpp
 	CameraFramePlayer.cpp
 	CameraFrameRecorder.cpp
+	CameraFrameFilter.cpp
 	DebugViewConsole.cpp
 	_SourceFiles.cmake
 )

@@ -40,21 +40,8 @@
 
 #include <VistaKernel/DisplayManager/VistaSimpleTextOverlay.h>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
 #include "RHaPSODIES.hpp"
 #include "ShaderRegistry.hpp"
-
-#include "SkinClassifiers/SkinClassifierLogOpponentYIQ.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter0.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter1.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter2.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter3.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter4.hpp"
-#include "SkinClassifiers/SkinClassifierRedMatter5.hpp"
-#include "SkinClassifiers/SkinClassifierDhawale.hpp"
 
 #include "HandModel.hpp"
 #include "HandGeometry.hpp"
@@ -67,28 +54,20 @@
 #include "CameraFrameRecorder.hpp"
 #include "CameraFramePlayer.hpp"
 
+#include "SkinClassifiers/SkinClassifier.hpp"
+#include "CameraFrameFilter.hpp"
+
 #include "HandTracker.hpp"
 
 /*============================================================================*/
 /* MACROS AND DEFINES, CONSTANTS AND STATICS, FUNCTION-PROTOTYPES             */
 /*============================================================================*/
-#define PSO_TESTING
+//#define PSO_TESTING
 
 /*============================================================================*/
 /* LOCAL VARS AND FUNCS                                                       */
 /*============================================================================*/
 namespace {
-	// float MapRangeExp(float value) {
-	// 	// map range 0-1 exponentially
-	// 	float base = 0.01;
-	// 	float ret = (1 - pow(base, value))/(1-base);
-		
-	// 	// clamp
-	// 	ret = ret < 0.0 ? 0.0 : ret;
-	// 	ret = ret > 1.0 ? 1.0 : ret;
-
-	// 	return ret;
-	// }
 	bool CheckFrameBufferStatus(GLuint idFBO) {
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if(status != GL_FRAMEBUFFER_COMPLETE) {
@@ -211,17 +190,6 @@ namespace {
 		vstr::debug() << std::endl;		
 	}
 
-	inline float WorldToScreenProjective(
-		float zWorld, float zNear=0.1f, float zFar=1.1f) {
-		return ((zNear + zFar - 2.0f*zNear*zFar/zWorld /
-				 (zFar - zNear) + 1.0f) / 2.0f);
-	}
-
-	inline float WorldToScreenLinear(
-		float zWorld, float zNear=0.1f, float zFar=1.1f) {
-		return (zWorld - zNear) / (zFar - zNear);
-	}
-
 	VistaPropertyList ReadConfigSubList(
 		VistaPropertyList oConfig,
 		std::string sSectionName) {
@@ -273,8 +241,6 @@ namespace rhapsodies {
 /*============================================================================*/
 	HandTracker::HandTracker() :
 		m_bCameraUpdate(true),
-		m_bShowImage(false),
-		m_bShowSkinMap(false),
 		m_pShaderReg(NULL),
 		m_pHandGeometry(NULL),
 		m_pHandRenderer(NULL),
@@ -303,10 +269,9 @@ namespace rhapsodies {
 
 		m_pFrameRecorder = new CameraFrameRecorder;
 		m_pFramePlayer   = new CameraFramePlayer;
-		
+
 		m_pColorBuffer     = new unsigned char[320*240*3];
 		m_pDepthBuffer     = new unsigned short[320*240];
-		m_pDepthBufferUInt = new unsigned int[320*240];
 		m_pUVMapBuffer     = new float[320*240*2];
 
 		m_pRNG = VistaRandomNumberGenerator::GetStandardRNG();
@@ -351,16 +316,12 @@ namespace rhapsodies {
 		delete m_pSwarm;
 		delete m_pParticleBest;
 		
-		for(ListSkinCl::iterator it = m_lClassifiers.begin() ;
-			it != m_lClassifiers.end() ; ++it) {
-			delete *it;
-		}
-
 		delete [] m_pColorBuffer;
 		delete [] m_pDepthBuffer;
-		delete [] m_pDepthBufferUInt;
 		delete [] m_pUVMapBuffer;
 		
+		delete m_pFrameFilter;
+		delete m_pFramePlayer;
 		delete m_pFrameRecorder;
 		
 		delete m_pHandRenderer;
@@ -508,8 +469,7 @@ namespace rhapsodies {
 		m_pFramePlayer->SetInputFile(m_oConfig.sRecordingFile);
 		m_pFramePlayer->SetLoop(m_oConfig.bLoop);
 		
-		InitSkinClassifiers();
-
+		InitFrameFilter();
 		InitRendering();
 
 		if(HasGLComputeCapabilities()) {
@@ -532,20 +492,35 @@ namespace rhapsodies {
 		return GLEW_ARB_shader_image_load_store && GLEW_ARB_compute_shader;
 	}
 
+	bool HandTracker::InitFrameFilter() {
+		m_pFrameFilter = new CameraFrameFilter(m_oConfig.iDilationSize,
+											   m_oConfig.iErosionSize,
+											   m_oConfig.iDepthLimit);
+		
+		bool success = m_pFrameFilter->InitSkinClassifiers();
+		
+		WriteDebug(IDebugView::SKIN_CLASSIFIER,
+				   IDebugView::FormatString(
+					   "Skin classifier: ",
+					   m_pFrameFilter->GetSkinClassifier()->GetName()));
+
+		return success;		
+	}
+
 	bool HandTracker::InitRendering() {
 		// prepare texture and PBO for camera depth map
 		glGenTextures(1, &m_idCameraTexture);
 		glBindTexture(GL_TEXTURE_2D, m_idCameraTexture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16,
 					 320*8, 240*8, 0,
-					 GL_DEPTH_COMPONENT, GL_INT, NULL);
+					 GL_DEPTH_COMPONENT, GL_SHORT, NULL);
 
 		glGenBuffers(1, &m_idCameraTexturePBO);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_idCameraTexturePBO);
 		glBufferData(GL_PIXEL_UNPACK_BUFFER,
-					 320*240*4, 0, GL_DYNAMIC_DRAW);
+					 320*240*2, 0, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 		// prepare FBO rendering
@@ -554,7 +529,7 @@ namespace rhapsodies {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16,
 					 320*8, 240*8, 0,
 					 GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
 
@@ -720,42 +695,6 @@ namespace rhapsodies {
 		return true;
 	}
 	
-
-	bool HandTracker::InitSkinClassifiers() {
-		SkinClassifierLogOpponentYIQ *pSkinLOYIQ =
-			new SkinClassifierLogOpponentYIQ;
-		m_lClassifiers.push_back(pSkinLOYIQ);
-
-		SkinClassifier *pSkinCl = new SkinClassifierRedMatter0;
-		m_lClassifiers.push_back(pSkinCl);
-
-		pSkinCl = new SkinClassifierRedMatter1;
-		m_lClassifiers.push_back(pSkinCl);
-
-		pSkinCl = new SkinClassifierRedMatter2;
-		m_lClassifiers.push_back(pSkinCl);
-
-		pSkinCl = new SkinClassifierRedMatter3;
-		m_lClassifiers.push_back(pSkinCl);
-
-		pSkinCl = new SkinClassifierRedMatter4;
-		m_lClassifiers.push_back(pSkinCl);
-
-		pSkinCl = new SkinClassifierRedMatter5;
-		m_lClassifiers.push_back(pSkinCl);
-
-		pSkinCl = new SkinClassifierDhawale;
-		m_lClassifiers.push_back(pSkinCl);
-		
-		m_itCurrentClassifier = --m_lClassifiers.end();
-
-		WriteDebug(IDebugView::SKIN_CLASSIFIER,
-				   IDebugView::FormatString("Skin classifier: ",
-											(*m_itCurrentClassifier)->GetName()));
-
-		return true;
-	}
-
 	bool HandTracker::InitParticleSwarm() {
 		m_pParticleBest = new Particle;
 		SetToInitialPose(*m_pParticleBest);
@@ -792,16 +731,54 @@ namespace rhapsodies {
 								  const float          *uvMapFrame) {
 
 		m_pProfiler->NewFrame();
-		
+
 		const VistaTimer &oTimer = VistaTimeUtils::GetStandardTimer();
 		VistaType::microtime tStart;
 		VistaType::microtime tProcessFrames;
 		VistaType::microtime tPSO;
-		
+
+		FrameRecordingAndPlayback(colorFrame,
+								  depthFrame,
+								  uvMapFrame);
+
+		// ImagePBOOpenGLDraw *pPBODraw;
+		// pPBODraw = m_mapPBO[COLOR];;
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
+		// }
+
+		// pPBODraw = m_mapPBO[DEPTH];
+		// if(pPBODraw) {
+		//DepthToRGB(m_pDepthBuffer, m_pDepthRGBBuffer);
+		// 	pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
+		// }
+
 		tStart = oTimer.GetMicroTime();
-		ProcessCameraFrames(colorFrame, depthFrame, uvMapFrame);
+		m_pFrameFilter->ProcessFrames(m_pColorBuffer,
+									  m_pDepthBuffer,
+									  m_pUVMapBuffer);
 		tProcessFrames = oTimer.GetMicroTime() - tStart;
 
+		// pPBODraw = m_mapPBO[UVMAP];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
+		// }
+		
+		// pPBODraw = m_mapPBO[COLOR_SEGMENTED];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
+		// }
+
+		// pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
+		// }
+
+		// pPBODraw = m_mapPBO[UVMAP_SEGMENTED];
+		// if(pPBODraw) {
+		// 	pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
+		// }
+		
 		WriteDebug(IDebugView::CAMERAFRAMES_TIME,
 				   IDebugView::FormatString("Camera processing time: ",
 											tProcessFrames));
@@ -840,6 +817,29 @@ namespace rhapsodies {
 		// 	<< std::endl;			
 
 		return true;
+	}
+
+	void HandTracker::FrameRecordingAndPlayback(
+		const unsigned char  *colorFrame,
+		const unsigned short *depthFrame,
+		const float          *uvMapFrame) {
+
+		if(m_bFrameRecording)
+			m_pFrameRecorder->RecordFrames(colorFrame, depthFrame, uvMapFrame);
+
+		if(m_bFramePlayback) {
+			bool frameread = m_pFramePlayer->PlaybackFrames(m_pColorBuffer,
+															m_pDepthBuffer,
+															m_pUVMapBuffer);
+			
+			if(!frameread)
+				return;
+		}
+		else {
+			memcpy(m_pColorBuffer, colorFrame, 320*240*3);
+			memcpy(m_pDepthBuffer, depthFrame, 320*240*2);
+			memcpy(m_pUVMapBuffer, uvMapFrame, 320*240*4*2);
+		}
 	}
 
 	void HandTracker::ResourcesBind() {
@@ -944,7 +944,7 @@ namespace rhapsodies {
 		// upload camera image to tiled texture
  		m_pCameraTexturePBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
  										  GL_WRITE_ONLY);		
-		memcpy(m_pCameraTexturePBO, m_pDepthBufferUInt, 320*240*4);
+		memcpy(m_pCameraTexturePBO, m_pDepthBuffer, 320*240*2);
 		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 
 		glActiveTexture(GL_TEXTURE0);
@@ -953,7 +953,7 @@ namespace rhapsodies {
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 
 								320*col, 240*row, 320, 240,
 								GL_DEPTH_COMPONENT,
-								GL_INT, NULL);
+								GL_SHORT, NULL);
 			}
 		}
 	}
@@ -1312,50 +1312,6 @@ namespace rhapsodies {
 		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 	}
 
-	float HandTracker::Penalty(HandModel& oModelLeft,
-							   HandModel& oModelRight,
-							   float fDiff,
-							   float fUnion,
-							   float fIntersection) {
-		float fLambdaK = 2;
-		
-		float fPenalty =
-			PenaltyFromReduction(fDiff, fUnion, fIntersection) +
-			fLambdaK * (PenaltyPrior(oModelLeft) + PenaltyPrior(oModelRight));
-		
-		return fPenalty;
-	}
-
-	float HandTracker::PenaltyFromReduction(float fDiff,
-											float fUnion,
-											float fIntersection) {
-		float fLambda = 25;
-		float fDepthTerm = fDiff / (fUnion + 1e-6);
-		float fSkinTerm = (1 - 2*fIntersection / (fIntersection + fUnion + 1e-6));
-		float fPenalty = fLambda * fDepthTerm + fSkinTerm;
-
-		WriteDebug(IDebugView::DEPTH_TERM,
-				   IDebugView::FormatString("Depth term: ", fLambda*fDepthTerm));
-		WriteDebug(IDebugView::SKIN_TERM,
-				   IDebugView::FormatString("Skin term: ", fSkinTerm));
-
-		return fPenalty;
-	}
-
-	float HandTracker::PenaltyPrior(HandModel& oModel) {
-		float fPenaltySum = 0;
-
-		for(size_t dof = 5; dof < 17; dof += 4) {
-			fPenaltySum +=
-				-std::min(oModel.GetJointAngle(dof) -
-						  oModel.GetJointAngle(dof+4), 0.0f);
-		}	
-
-		fPenaltySum = Vista::DegToRad(fPenaltySum);
-
-		return fPenaltySum;
-	}
-
 	float HandTracker::PenaltyNormalize(float fPenalty) {
 		fPenalty -= m_oConfig.fPenaltyMin;
 		fPenalty /= (m_oConfig.fPenaltyMax - m_oConfig.fPenaltyMin);
@@ -1405,261 +1361,22 @@ namespace rhapsodies {
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
-	void HandTracker::ProcessCameraFrames(
-		const unsigned char  *colorFrame,
-		const unsigned short *depthFrame,
-		const float          *uvMapFrame) {
-
-		if(m_bFrameRecording)
-			m_pFrameRecorder->RecordFrames(colorFrame, depthFrame, uvMapFrame);
-
-		if(m_bFramePlayback) {
-			bool frameread = m_pFramePlayer->PlaybackFrames(m_pColorBuffer,
-															m_pDepthBuffer,
-															m_pUVMapBuffer);
-			
-			if(!frameread)
-				return;
-		}
-		else {
-			memcpy(m_pColorBuffer, colorFrame, 320*240*3);
-			memcpy(m_pDepthBuffer, depthFrame, 320*240*2);
-			memcpy(m_pUVMapBuffer, uvMapFrame, 320*240*4*2);
-		}
-
-		ImagePBOOpenGLDraw *pPBODraw;
-		// pPBODraw = m_mapPBO[COLOR];;
-		// if(pPBODraw) {
-		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
-		// }
-
-		// pPBODraw = m_mapPBO[DEPTH];
-		// if(pPBODraw) {
-		DepthToRGB(m_pDepthBuffer, m_pDepthRGBBuffer);
-		// 	pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
-		// }
-
-		pPBODraw = m_mapPBO[UVMAP];
-		if(pPBODraw) {
-			// UVMapToRGB(m_pUVMapBuffer, m_pDepthBuffer, m_pColorBuffer,
-			// 		   m_pUVMapRGBBuffer);
-			UVMapToRGB(m_pUVMapBuffer, m_pDepthBuffer, m_pColorBuffer,
-					   m_pUVMapRGBBuffer);
-			//pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
-		}
-
-		if(m_bShowImage) {
-			vstr::debug() << "showing opencv image" << std::endl;
-		
-			cv::Mat image = cv::Mat(240, 320, CV_8UC3, m_pColorBuffer);
-			cv::namedWindow( "window", CV_WINDOW_AUTOSIZE ); 
-			cv::imshow("window", image);
-
-			cv::waitKey(1);
-
-			m_bShowImage = false;
-		}
-		
-		FilterSkinAreas();
-		
-		// pPBODraw = m_mapPBO[COLOR_SEGMENTED];
-		// if(pPBODraw) {
-		// 	pPBODraw->FillPBOFromBuffer(m_pColorBuffer, 320, 240);
-		// }
-
-		// pPBODraw = m_mapPBO[DEPTH_SEGMENTED];
-		// if(pPBODraw) {
-		// 	pPBODraw->FillPBOFromBuffer(m_pDepthRGBBuffer, 320, 240);
-		// }
-
-		// pPBODraw = m_mapPBO[UVMAP_SEGMENTED];
-		// if(pPBODraw) {
-		// 	pPBODraw->FillPBOFromBuffer(m_pUVMapRGBBuffer, 320, 240);
-		// }
-	}
-	
-	void HandTracker::FilterSkinAreas() {
-		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
-			// don't filter the color map since it is considerably expensive
-			// if( (*m_itCurrentClassifier)->IsSkinPixel(colorImage+3*pixel) ) {
-			// 	// yay! skin!
-			// }
-			// else {
-			// 	colorImage[3*pixel+0] = 0;
-			// 	colorImage[3*pixel+1] = 0;
-			// 	colorImage[3*pixel+2] = 0;
-			// }
-			
-			if( (*m_itCurrentClassifier)->IsSkinPixel(m_pUVMapRGBBuffer+3*pixel) ) {
-				// yay! skin!
-				m_pSkinMap[pixel] = 255;
-			}
-			else {
-			 	m_pSkinMap[pixel] = 0;
-			}
-		}
-
-		// dilate the skin map with opencv
-		cv::Mat image = cv::Mat(240, 320, CV_8UC1, m_pSkinMap);
-		cv::Mat image_processed;
-		if(m_bShowSkinMap)
-			cv::imshow("Skin Map", image);
-
-		cv::Mat erode_element = getStructuringElement(
-			cv::MORPH_ELLIPSE,
-			cv::Size(m_oConfig.iErosionSize, m_oConfig.iErosionSize),
-			cv::Point(m_oConfig.iErosionSize/2));
-		cv::Mat dilate_element = getStructuringElement(
-			cv::MORPH_ELLIPSE,
-			cv::Size(m_oConfig.iDilationSize, m_oConfig.iDilationSize),
-			cv::Point(m_oConfig.iDilationSize/2));
-
-		cv::erode(image, image_processed, erode_element);
-		image = image_processed.clone();
-		cv::dilate(image, image_processed, dilate_element);
-	
-		if(m_bShowSkinMap) {
-			cv::imshow("Skin Map Dilated", image_processed);
-			cv::waitKey(1);
-		}
-
-		unsigned int uiDepthValue = 0x7fffffffu;
-		for(size_t pixel = 0 ; pixel < 76800 ; pixel++) {
-			// if( image_processed.data[pixel] == 0 ||
-			// 	m_pDepthBuffer[pixel] < 400 ||
-			// 	m_pDepthBuffer[pixel] > 600) {
-			if( image_processed.data[pixel] == 0) {
-				m_pDepthRGBBuffer[3*pixel+0] = 0;
-				m_pDepthRGBBuffer[3*pixel+1] = 0;
-				m_pDepthRGBBuffer[3*pixel+2] = 0;
-				
-				m_pUVMapRGBBuffer[3*pixel+0] = 0;
-				m_pUVMapRGBBuffer[3*pixel+1] = 0;
-				m_pUVMapRGBBuffer[3*pixel+2] = 0;
-
-				uiDepthValue = 0x7fffffffu;
-			}
-			else {
-				// transform depth value range, in millimeters:
-				// 100mm  -> 0
-				// 1100mm -> ffffffff
-				// @todo get rid of hard coding
-				
-				unsigned int zWorldMM = m_pDepthBuffer[pixel];
-				float zScreen = 1.0f;
-
-				// valid values [100,1100]
-				if( zWorldMM >= 100 && zWorldMM <= 1100 ) {
-//					zScreen = WorldToScreenProjective(float(zWorldMM)/1000.0f);
-					zScreen = WorldToScreenLinear(float(zWorldMM)/1000.0f);
-				}
-				// we correct for a more or less static 10cm depth offset here
-				// @todo get this right in accordance to cam specs!
-				uiDepthValue = (zScreen+0.1) * 0x7fffffffu;
-			}
-			int targetRow = 240 - 1 - (pixel/320);
-			int targetCol = pixel % 320;
-
-			m_pDepthBufferUInt[320*targetRow + targetCol] = uiDepthValue;
-		}
-	}
-
-	SkinClassifier *HandTracker::GetSkinClassifier() {
-		return *m_itCurrentClassifier;
-	}
-	
 	void HandTracker::NextSkinClassifier() {
-		m_itCurrentClassifier++;
-		if(m_itCurrentClassifier == m_lClassifiers.end())
-			m_itCurrentClassifier = m_lClassifiers.begin();
+		m_pFrameFilter->NextSkinClassifier();
 
 		WriteDebug(IDebugView::SKIN_CLASSIFIER,
-				   IDebugView::FormatString("Skin classifier: ",
-											(*m_itCurrentClassifier)->GetName()));
+				   IDebugView::FormatString(
+					   "Skin classifier: ",
+					   m_pFrameFilter->GetSkinClassifier()->GetName()));
 	}
 
 	void HandTracker::PrevSkinClassifier() {
-		if(m_itCurrentClassifier == m_lClassifiers.begin())
-			m_itCurrentClassifier = m_lClassifiers.end();
-		m_itCurrentClassifier--;
+		m_pFrameFilter->PrevSkinClassifier();
 
 		WriteDebug(IDebugView::SKIN_CLASSIFIER,
-				   IDebugView::FormatString("Skin classifier: ",
-											(*m_itCurrentClassifier)->GetName()));
-	}
-
-	void HandTracker::ShowOpenCVImg() {
-		m_bShowImage = true;
-	}
-	void HandTracker::ToggleSkinMap() {
-		vstr::debug() << "Toggling skin map rendering" << std::endl;
-		
-		m_bShowSkinMap = !m_bShowSkinMap;
-
-		if(m_bShowSkinMap) {
-			cv::namedWindow( "Skin Map", CV_WINDOW_AUTOSIZE );
-			cv::namedWindow( "Skin Map Dilated", CV_WINDOW_AUTOSIZE );
-		}
-		else {
-			cv::destroyWindow("Skin Map");
-			cv::destroyWindow("Skin Map Dilated");
-			cv::waitKey(1);
-
-			cv::Mat image = cv::Mat(240, 320, CV_8UC1, m_pSkinMap);
-			cv::imshow("Skin Map", image);
-			cv::imshow("Skin Map Dilated", image);
-		}
-	}
-	
-	void HandTracker::DepthToRGB(const unsigned short *depth,
-								 unsigned char *rgb) {
-		for(int i = 0 ; i < 76800 ; i++) {
-			unsigned short val = depth[i];
-
-			if(val > 0) {
-				float linearvalue = val/2000.0;
-//				float mappedvalue = MapRangeExp(linearvalue);
-				float mappedvalue = linearvalue;
-
-				rgb[3*i+0] = 255*(1-mappedvalue);
-				rgb[3*i+1] = 255*(1-mappedvalue);
-				rgb[3*i+2] = 0;
-			}
-			else {
-				rgb[3*i+0] = 0;
-				rgb[3*i+1] = 0;
-				rgb[3*i+2] = 0;
-			}
-		}
-	}
-
-	void HandTracker::UVMapToRGB(const float *uvmap,
-								 const unsigned short *depth,
-								 const unsigned char *color,
-								 unsigned char *rgb) {
-
-		int color_index_x, color_index_y, color_index;
-		float invalid = -std::numeric_limits<float>::max();
-
-		for(int i = 0 ; i < 76800 ; i++) {
-			color_index_x = 320*uvmap[2*i+0];
-			color_index_y = 240*uvmap[2*i+1];
-			color_index = 320*color_index_y + color_index_x;
-
-			if(uvmap[2*i+0] != invalid &&
-			   uvmap[2*i+1] != invalid &&
-			   depth[i] < m_oConfig.iDepthLimit) {
-
-				rgb[3*i+0] = color[3*color_index+0];
-				rgb[3*i+1] = color[3*color_index+1];
-				rgb[3*i+2] = color[3*color_index+2];
-			}
-			else {
-				rgb[3*i+0] = 200;
-				rgb[3*i+1] = 0;
-				rgb[3*i+2] = 200;
-			}
- 		}
+				   IDebugView::FormatString(
+					   "Skin classifier: ",
+					   m_pFrameFilter->GetSkinClassifier()->GetName()));
 	}
 
 	void HandTracker::StartTracking() {

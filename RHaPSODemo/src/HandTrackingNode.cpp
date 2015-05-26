@@ -125,14 +125,6 @@ namespace rhapsodies {
 			m_pTracker->PrevSkinClassifier();
 		}
 
-		if(m_sPortShowImage.HasNewData()) {
-			m_pTracker->ShowOpenCVImg();
-		}
-
-		if(m_sPortToggleSkinMap.HasNewData()) {
-			m_pTracker->ToggleSkinMap();
-		}
-
 		if(m_sPortRecordFrames.HasNewData()) {
 			m_pTracker->ToggleFrameRecording();
 		}
