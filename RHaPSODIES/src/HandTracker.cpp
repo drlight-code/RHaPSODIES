@@ -739,22 +739,16 @@ namespace rhapsodies {
 	void HandTracker::SetToInitialPose(Particle &oParticle) {
 		oParticle = Particle();
 		oParticle.GetHandModelLeft()->SetPosition(VistaVector3D(-0.14, -0.1, 0.5));
-		oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_CMC_A, 60);
-
-		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_F, 0);
-		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
-		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_MCP, 40);
-		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_IP, 40);
-		// oParticle.GetHandModelRight().SetJointAngle(HandModel::T_MCP, 40);
-		// oParticle.GetHandModelRight().SetJointAngle(HandModel::T_IP, 40);
+		// oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_CMC_A, 20);
+		// oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_CMC_F, 40);
+		oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_MCP, 40);
+		oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_IP, 40);
 
 		oParticle.GetHandModelRight()->SetPosition(VistaVector3D(0.14, -0.1, 0.5));
-		oParticle.GetHandModelRight()->SetJointAngle(HandModel::T_CMC_A, 60);
-
-		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::I_MCP_A, -20);
-		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::M_MCP_A,  20);
-		// oParticle.GetHandModelRight().SetJointAngle(HandModel::I_MCP_A, -20);
-		// oParticle.GetHandModelRight().SetJointAngle(HandModel::M_MCP_A,  20);
+		oParticle.GetHandModelRight()->SetJointAngle(HandModel::T_CMC_A, 20);
+		oParticle.GetHandModelRight()->SetJointAngle(HandModel::T_CMC_F, 40);
+		oParticle.GetHandModelRight()->SetJointAngle(HandModel::T_MCP, 40);
+		oParticle.GetHandModelRight()->SetJointAngle(HandModel::T_IP, 40);
 	}
 	
 	bool HandTracker::FrameUpdate(const unsigned char  *colorFrame,

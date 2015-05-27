@@ -194,6 +194,13 @@ namespace rhapsodies {
 			matModel = matOrigin * matTransform;
 
 			DrawSphere(matModel);
+
+			matOrigin *=
+				VistaTransformMatrix(
+					VistaAxisAndAngle(VistaVector3D(0,1,0),
+									  Vista::DegToRad(-40*fLRFactor)));
+			
+			
 		}
 		else {
 			matTransform.SetToScaleMatrix(
@@ -354,15 +361,11 @@ namespace rhapsodies {
 
 		// draw the thumb
 		matTransform.SetToTranslationMatrix(
-			VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/4.0f)*fLRFactor,
+//			VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/4.0f)*fLRFactor,
+			VistaVector3D((-fPalmWidth)*fLRFactor,
 						  fPalmBottomRadius,
 						  0));
 
-		matTransform *=
-			VistaTransformMatrix(
-				VistaAxisAndAngle(VistaVector3D(0,1,0),
-								  Vista::DegToRad(-60*fLRFactor)));
-			
 		DrawFinger(
 			matOrigin * matTransform,
 			fFingerDiameter*1.2, fLRFactor,

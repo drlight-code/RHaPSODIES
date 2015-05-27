@@ -272,6 +272,10 @@ void DrawFinger(mat4 matOrigin,
 		matModel = matOrigin * matTransform;
 
 		DrawSphere(matModel);
+
+		matOrigin *= AAAToTransformMatrix(
+			vec4(0, 1, 0, DegToRad(-40*fLRFactor)));
+
 	}
 	else {
 		matTransform =
@@ -286,6 +290,7 @@ void DrawFinger(mat4 matOrigin,
 	// move to second joint
 	matTransform = TranslationMatrix(
 		vec3(0, fLen1/1000.0f/2.0f, 0));
+
 	matOrigin *= matTransform;
 
 	// draw scaled sphere
@@ -424,9 +429,7 @@ void DrawHand() {
 		TranslationMatrix(
 			vec3((-fPalmWidth/2.0f + fPalmWidth/4.0f)*fLRFactor,
 				 fPalmBottomRadius,
-				 0)) *
-		AAAToTransformMatrix(
-			vec4(0, 1, 0, DegToRad(-60*fLRFactor)));
+				 0));
 			
 	DrawFinger(
 		matOrigin * matTransform,
