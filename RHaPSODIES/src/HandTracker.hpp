@@ -112,12 +112,12 @@ namespace rhapsodies {
 			std::string sRecordingFile;
 			bool bLoop;
 
-			bool bAutoTracking;
-
 			float fPenaltyMin;
 			float fPenaltyMax;
 			float fPenaltyStart;
-
+			bool bAutoTracking;
+			float fSmoothingFactor;
+			
 			unsigned int iViewportBatch;
 
 			float fPhiCognitiveBegin;
@@ -131,6 +131,7 @@ namespace rhapsodies {
 		bool InitGpuPSO();
 		bool InitReduction();
 		bool InitParticleSwarm();
+		bool InitOutputModel();
 
 		void SetToInitialPose(Particle &oParticle);
 		void PerformPSOTracking();
@@ -153,8 +154,11 @@ namespace rhapsodies {
 
 		void ReduceDepthMaps();
 		void UpdateScores();
-		void UpdateBestMatch();
 		void UpdateSwarm(float fPhiCognitive, float fPhiSocial);
+		void UpdateOutputModel();
+		void SmoothInterpolateModel(float fSmoothingFactor,
+									HandModel *pModelNew,
+									HandModel *pModelOld);
 		
 		float PenaltyNormalize(float fPenalty);
 						  
@@ -193,10 +197,6 @@ namespace rhapsodies {
 		GLuint m_idGenerateTransformsProgram;
 
 		GLuint m_idPrepareReductionTexturesProgram;
-
-		GLuint m_idReduction0Program;
-		GLuint m_idReduction1Program;
-		GLuint m_idReduction2Program;
 
 		GLuint m_idReduction0DifferenceProgram;
 		GLuint m_idReduction1DifferenceProgram;
@@ -248,6 +248,9 @@ namespace rhapsodies {
 		bool m_bTrackingEnabled;
 		Particle *m_pParticleBest;
 		ParticleSwarm *m_pSwarm;
+
+		HandModel *m_pHandModelLeft;
+		HandModel *m_pHandModelRight;
 
 		VistaRandomNumberGenerator *m_pRNG;
 		GLint m_locRandomOffsetUniform;

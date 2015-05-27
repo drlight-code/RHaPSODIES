@@ -13,13 +13,13 @@ namespace rhapsodies {
 		Particle();
 		~Particle();
 		
-		HandModel &GetHandModelLeft();
-		HandModel &GetHandModelRight();
+		HandModel *GetHandModelLeft();
+		HandModel *GetHandModelRight();
 
 		void UpdateIBest(float fPenalty);
 		float GetIBestPenalty();
-		HandModel &GetIBestModelLeft();
-		HandModel &GetIBestModelRight();
+		HandModel *GetIBestModelLeft();
+		HandModel *GetIBestModelRight();
 
 		void ResetPenalty();
 		void ResetVelocity();

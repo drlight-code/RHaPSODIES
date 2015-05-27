@@ -54,12 +54,12 @@ namespace rhapsodies {
 	}
 
 
-	HandModel& Particle::GetHandModelLeft() {
-		return m_oModelLeft;
+	HandModel* Particle::GetHandModelLeft() {
+		return &m_oModelLeft;
 	}
 
-	HandModel& Particle::GetHandModelRight() {
-		return m_oModelRight;
+	HandModel* Particle::GetHandModelRight() {
+		return &m_oModelRight;
 	}
 
 	void Particle::UpdateIBest(float fPenalty) {

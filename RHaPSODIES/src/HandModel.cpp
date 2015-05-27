@@ -42,6 +42,10 @@ namespace rhapsodies {
 		return m_vecJointAngles[eDOF];
 	}
 
+	std::vector<float>& HandModel::GetJointAngles() {
+		return m_vecJointAngles;
+	}
+
 	void HandModel::SetJointAngle(size_t eDOF, float fAngleDegrees) {
 		m_vecJointAngles[eDOF] = fAngleDegrees;
 	}

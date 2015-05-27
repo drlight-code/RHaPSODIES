@@ -78,6 +78,7 @@ namespace rhapsodies {
 	   * @return Angle in degrees.
 	   */
 	  float GetJointAngle(size_t eDOF);
+	  std::vector<float>& GetJointAngles();
 
 	  /**
 	   * Set a skeleton joint angle in degrees.

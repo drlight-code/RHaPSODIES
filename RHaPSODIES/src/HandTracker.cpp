@@ -221,6 +221,8 @@ namespace rhapsodies {
 	const std::string sPenaltyMaxName   = "PENALTY_MAX";
 	const std::string sPenaltyStartName = "PENALTY_START";
 
+	const std::string sSmoothingFactorName = "SMOOTHING_FACTOR";
+	
 	const std::string sViewportBatchName = "VIEWPORT_BATCH";
 
 	const int iSSBOHandModelsLocation         = 0;
@@ -253,6 +255,8 @@ namespace rhapsodies {
 		m_bTrackingEnabled(false),
 		m_pParticleBest(NULL),
 		m_pSwarm(NULL),
+		m_pHandModelLeft(NULL),
+		m_pHandModelRight(NULL),
 		m_pRNG(NULL),
 		m_pProfiler(new VistaBasicProfiler) {
 
@@ -338,11 +342,11 @@ namespace rhapsodies {
 	}
 	
 	HandModel *HandTracker::GetHandModelLeft() {
-		return &m_pParticleBest->GetHandModelLeft();
+		return m_pHandModelLeft;
 	}
 	
 	HandModel *HandTracker::GetHandModelRight() {
-		return &m_pParticleBest->GetHandModelRight();
+		return m_pHandModelRight;
 	}
 
 	HandGeometry *HandTracker::GetHandGeometry() {
@@ -381,6 +385,9 @@ namespace rhapsodies {
 			sPenaltyMaxName, 1.5f);
 		m_oConfig.fPenaltyStart = oTrackerConfig.GetValueOrDefault(
 			sPenaltyStartName, 0.6f);
+		m_oConfig.fSmoothingFactor = oTrackerConfig.GetValueOrDefault(
+			sSmoothingFactorName, 1.0f);
+
 
 		const VistaPropertyList oCameraConfig =
 			ReadConfigSubList(oConfig, RHaPSODIES::sCameraSectionName);
@@ -428,7 +435,9 @@ namespace rhapsodies {
 		vstr::out() << "Penalty start: " << m_oConfig.fPenaltyStart
 					<< std::endl;
 		vstr::out() << "Auto tracking: " << std::boolalpha
-					<< m_oConfig.bAutoTracking << std::endl << std::endl;
+					<< m_oConfig.bAutoTracking << std::endl;
+		vstr::out() << "Smoothing factor: "
+					<< m_oConfig.fSmoothingFactor << std::endl << std::endl;
 		
 		
 		vstr::out() << "- Image processing:" << std::endl;
@@ -484,6 +493,7 @@ namespace rhapsodies {
 		}
 
 		InitParticleSwarm();
+		InitOutputModel();
 		
 		return true;
 	}
@@ -716,10 +726,20 @@ namespace rhapsodies {
 		return true;
 	}
 
+	bool HandTracker::InitOutputModel() {
+		m_pHandModelLeft = new HandModel();
+		m_pHandModelRight = new HandModel();
+
+		*m_pHandModelLeft  = *m_pParticleBest->GetHandModelLeft();
+		*m_pHandModelRight = *m_pParticleBest->GetHandModelRight();
+
+		return true;
+	}
+
 	void HandTracker::SetToInitialPose(Particle &oParticle) {
 		oParticle = Particle();
-		oParticle.GetHandModelLeft().SetPosition(VistaVector3D(-0.14, -0.1, 0.5));
-		oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
+		oParticle.GetHandModelLeft()->SetPosition(VistaVector3D(-0.14, -0.1, 0.5));
+		oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_CMC_A, 60);
 
 		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_F, 0);
 		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::T_CMC_A, 60);
@@ -728,8 +748,8 @@ namespace rhapsodies {
 		// oParticle.GetHandModelRight().SetJointAngle(HandModel::T_MCP, 40);
 		// oParticle.GetHandModelRight().SetJointAngle(HandModel::T_IP, 40);
 
-		oParticle.GetHandModelRight().SetPosition(VistaVector3D(0.14, -0.1, 0.5));
-		oParticle.GetHandModelRight().SetJointAngle(HandModel::T_CMC_A, 60);
+		oParticle.GetHandModelRight()->SetPosition(VistaVector3D(0.14, -0.1, 0.5));
+		oParticle.GetHandModelRight()->SetJointAngle(HandModel::T_CMC_A, 60);
 
 		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::I_MCP_A, -20);
 		// oParticle.GetHandModelLeft().SetJointAngle(HandModel::M_MCP_A,  20);
@@ -1027,10 +1047,10 @@ namespace rhapsodies {
 		UploadHandModels();
 		
 		m_pHandRenderer->DrawHand(
-			&m_pParticleBest->GetHandModelLeft(),
+			m_pParticleBest->GetHandModelLeft(),
 			m_pHandGeometry);
 		m_pHandRenderer->DrawHand(
-			&m_pParticleBest->GetHandModelRight(),
+			m_pParticleBest->GetHandModelRight(),
 			m_pHandGeometry);
 
 		vViewportData.push_back(0);
@@ -1131,9 +1151,8 @@ namespace rhapsodies {
 			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 		}
 
-		UpdateBestMatch();
+		UpdateOutputModel();
 
-		
 		WriteDebug(IDebugView::TRANSFORM_TIME,
 				   IDebugView::FormatString("Transform time: ",
 											tTransform));
@@ -1146,16 +1165,6 @@ namespace rhapsodies {
 		WriteDebug(IDebugView::REDUCTION_TIME,
 				   IDebugView::FormatString("Reduction time: ",
 											tReductionProfiler));
-
-		size_t sizeMemoryTransferred =
-			((320*256+40*16+5*1)*sizeof(unsigned int) +
-			 (40*16+8*8)*sizeof(unsigned int)) * 64 * 40 * 3;
-		WriteDebug(
-			IDebugView::REDUCTION_BANDWIDTH,
-			IDebugView::FormatString(
-				"Reduction bandwidth: ",
-				sizeMemoryTransferred / tReductionProfiler /
-				1024.0f / 1024.0f / 1024.0f)  + " GB/s");
 					   
 		WriteDebug(IDebugView::SWARMUPDATE_TIME,
 				   IDebugView::FormatString("Swarm update time: ",
@@ -1357,7 +1366,8 @@ namespace rhapsodies {
 		// glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 	}
 
-	void HandTracker::UpdateBestMatch() {
+	void HandTracker::UpdateOutputModel() {
+		// get best match from gbest buffer
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsGBest);
 		float *aStateGBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
 												  GL_READ_ONLY));	
@@ -1365,8 +1375,39 @@ namespace rhapsodies {
 		Particle::StateArrayToParticle(*m_pParticleBest, aStateGBest);
 
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-		
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+		// do exponential smoothing on the output model
+		SmoothInterpolateModel(
+			m_oConfig.fSmoothingFactor,
+			m_pParticleBest->GetHandModelLeft(), m_pHandModelLeft);
+		SmoothInterpolateModel(
+			m_oConfig.fSmoothingFactor,
+			m_pParticleBest->GetHandModelRight(), m_pHandModelRight);
+	}
+
+	void HandTracker::SmoothInterpolateModel(
+		float fSmoothingFactor,
+		HandModel *pModelNew,
+		HandModel *pModelAccumulated) {
+		std::vector<float> &vecAnglesNew =
+			pModelNew->GetJointAngles();
+		std::vector<float> &vecAnglesAccumulated =
+			pModelAccumulated->GetJointAngles();
+
+		for(size_t i = 0; i < vecAnglesNew.size(); ++i) {
+			vecAnglesAccumulated[i] =
+				fSmoothingFactor*vecAnglesNew[i] +
+				(1-fSmoothingFactor)*vecAnglesAccumulated[i];				
+		}
+
+		pModelAccumulated->SetPosition(
+			fSmoothingFactor*pModelNew->GetPosition() +
+			(1-fSmoothingFactor)*pModelAccumulated->GetPosition());
+
+		pModelAccumulated->SetOrientation(
+			pModelAccumulated->GetOrientation().Slerp(
+				pModelNew->GetOrientation(), fSmoothingFactor));
 	}
 
 	void HandTracker::NextSkinClassifier() {
