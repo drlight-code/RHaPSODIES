@@ -976,9 +976,11 @@ namespace rhapsodies {
 	
 	void HandTracker::UploadCameraDepthMap() {
 		// upload camera image to tiled texture
- 		m_pCameraTexturePBO = glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
- 										  GL_WRITE_ONLY);		
-		memcpy(m_pCameraTexturePBO, m_pDepthBuffer, 320*240*2);
+ 		unsigned short *aCameraTexturePBO =
+			(unsigned short*)glMapBuffer(GL_PIXEL_UNPACK_BUFFER,
+										 GL_WRITE_ONLY);		
+		memcpy(aCameraTexturePBO, m_pDepthBuffer,
+			   320*240*sizeof(unsigned short));
 		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 
 		glActiveTexture(GL_TEXTURE0);
@@ -1095,8 +1097,12 @@ namespace rhapsodies {
 		VistaType::microtime tReduction = 0.0;
 		VistaType::microtime tSwarmUpdate = 0.0;
 
+		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
+		for(Particle &p : vecParticles) {
+			p.ResetVelocity();
+		}
 		m_pSwarm->InitializeAround(*m_pParticleBest);
-
+		
 		UploadHandModels();
 		
 		float fPhiCognitive;
@@ -1180,12 +1186,25 @@ namespace rhapsodies {
 		for(int row = 0 ; row < 8 ; row++) {
 			for(int col = 0 ; col < 8 ; col++) {
 				size_t index = row*8+col;
-				Particle::ParticleToStateArray(vecParticles[index],
+				Particle::ParticleToStateArray(&vecParticles[index],
 											   aBuffer + 64*index);
 			}
 		}
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
+		// upload HandModelVelocity
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsVelocity);
+		aBuffer = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+		for(int row = 0 ; row < 8 ; row++) {
+			for(int col = 0 ; col < 8 ; col++) {
+				size_t index = row*8+col;
+				memcpy(aBuffer + 64*index,
+					   &vecParticles[index].GetVelocity()[0],
+					   64*sizeof(float));
+			}
+		}
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		
 		// reset HandModelIBest penalty
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
 		aBuffer = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
@@ -1197,17 +1216,54 @@ namespace rhapsodies {
 		}
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		// reset HandModelVelocity
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsVelocity);
-		aBuffer = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-		memset(aBuffer, 0, 64*64*sizeof(float));
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-		
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
 	void HandTracker::DownloadHandModels() {
+		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
+		float *aBuffer;
+
+		// download HandModel
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
+		aBuffer = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+		for(int row = 0 ; row < 8 ; row++) {
+			for(int col = 0 ; col < 8 ; col++) {
+				size_t index = row*8+col;
+				Particle::StateArrayToParticle(&vecParticles[index],
+											   aBuffer + 64*index);
+			}
+		}
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+		// download HandModelVelocity
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsVelocity);
+		aBuffer = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+		for(int row = 0 ; row < 8 ; row++) {
+			for(int col = 0 ; col < 8 ; col++) {
+				size_t index = row*8+col;
+				memcpy(&vecParticles[index].GetVelocity()[0],
+					   aBuffer + 64*index, 64*sizeof(float));
+			}
+		}
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 		
+		// download HandModelIBest
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
+		aBuffer = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+		for(int row = 0 ; row < 8 ; row++) {
+			for(int col = 0 ; col < 8 ; col++) {
+				size_t index = row*8+col;
+				HandModel::StateArrayToHandModel(
+					vecParticles[index].GetIBestModelLeft(),
+					aBuffer + 64*index);
+				HandModel::StateArrayToHandModel(
+					vecParticles[index].GetIBestModelRight(),
+					aBuffer + 64*index + 32);
+			}
+		}
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 	
 	void HandTracker::GenerateTransforms() {
@@ -1362,7 +1418,7 @@ namespace rhapsodies {
 		float *aStateGBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
 												  GL_READ_ONLY));	
 
-		Particle::StateArrayToParticle(*m_pParticleBest, aStateGBest);
+		Particle::StateArrayToParticle(m_pParticleBest, aStateGBest);
 
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

@@ -86,37 +86,37 @@ namespace rhapsodies {
 		SetOrientation(qRot);
 	}
 
-	void HandModel::HandModelToStateArray(HandModel &model, float *aState) {
+	void HandModel::HandModelToStateArray(HandModel *pModel, float *aState) {
 		for(size_t dof = 0; dof < 20; ++dof) {
-			aState[ 0+dof] = model.GetJointAngle(dof);
+			aState[ 0+dof] = pModel->GetJointAngle(dof);
 		}
 
-		VistaVector3D vPos = model.GetPosition();
+		VistaVector3D vPos = pModel->GetPosition();
 		for(size_t dim = 0; dim < 4; ++dim) {
 			aState[20+dim] = vPos[dim];
 		}
 
-		VistaQuaternion qOri = model.GetOrientation();
+		VistaQuaternion qOri = pModel->GetOrientation();
 		for(size_t dim = 0; dim < 4; ++dim) {
 			aState[24+dim] = qOri[dim];
 		}
 	}
 
-	void HandModel::StateArrayToHandModel(HandModel &model, float *aState) {
+	void HandModel::StateArrayToHandModel(HandModel *pModel, float *aState) {
 		for(size_t dof = 0; dof < 20; ++dof) {
-			model.SetJointAngle(dof, aState[dof]);
+			pModel->SetJointAngle(dof, aState[dof]);
 		}
 
 		VistaVector3D vPos;
 		for(size_t dim = 0; dim < 4; ++dim) {
 			vPos[dim] = aState[20+dim];
 		}
-		model.SetPosition(vPos);
+		pModel->SetPosition(vPos);
 
 		VistaQuaternion qOri;
 		for(size_t dim = 0; dim < 4; ++dim) {
 			qOri[dim] = aState[24+dim];
 		}
-		model.SetOrientation(qOri);
+		pModel->SetOrientation(qOri);
 	}
 }

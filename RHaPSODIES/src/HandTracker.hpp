@@ -195,7 +195,6 @@ namespace rhapsodies {
 
 		GLuint m_idCameraTexture;		
 		GLuint m_idCameraTexturePBO;
-		void *m_pCameraTexturePBO;
 
 		GLuint m_idGenerateTransformsProgram;
 

@@ -4,15 +4,7 @@
 #include <vector>
 
 namespace rhapsodies {
-
 	class Particle;
-	
-	/**
-	 * updating and score propagation
-	 * different neighborhood topologies
-	 * constriction coefficients choice
-	 * 
-	 */
 	class ParticleSwarm {
     public:
 		typedef std::vector<Particle> ParticleVec;
@@ -26,10 +18,6 @@ namespace rhapsodies {
 		// around the "cluster-center" passed as argument.
 		void InitializeAround(Particle &oCenter);
 
-		void Evolve();
-
-		Particle GetBestMatch();
-		
     private:
 		ParticleVec m_vecParticles;
 	};
