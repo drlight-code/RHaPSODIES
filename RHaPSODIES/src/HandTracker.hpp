@@ -150,11 +150,14 @@ namespace rhapsodies {
 		void SetupProjection();
 
 		void UploadHandModels();
+		void DownloadHandModels();
+		
 		void GenerateTransforms();
 
 		void ReduceDepthMaps();
 		void UpdateScores();
 		void UpdateSwarm(float fPhiCognitive, float fPhiSocial);
+
 		void UpdateOutputModel();
 		void SmoothInterpolateModel(float fSmoothingFactor,
 									HandModel *pModelNew,

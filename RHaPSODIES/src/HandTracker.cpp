@@ -1095,20 +1095,13 @@ namespace rhapsodies {
 		VistaType::microtime tReduction = 0.0;
 		VistaType::microtime tSwarmUpdate = 0.0;
 
-		// as in the original paper, we initialize the swarm uniformly
-		// around the best match from the previous frame.  we might
-		// consider letting the particle swarm just do its work and
-		// keep the positions and velocities in between frames.
-		m_pParticleBest->ResetPenalty();
 		m_pSwarm->InitializeAround(*m_pParticleBest);
 
-		// upload hand models into SSBO
 		UploadHandModels();
 		
 		float fPhiCognitive;
 		float fPhiSocial;
 		for(unsigned gen = 0 ; gen < m_oConfig.iPSOGenerations ; gen++) {
-			// generate transform buffer in parallel 8*8*2
 			tStart = oTimer.GetMicroTime();
 			GenerateTransforms();
 			tTransform += oTimer.GetMicroTime() - tStart;
@@ -1151,6 +1144,7 @@ namespace rhapsodies {
 			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
 		}
 
+		DownloadHandModels();
 		UpdateOutputModel();
 
 		WriteDebug(IDebugView::TRANSFORM_TIME,
@@ -1178,48 +1172,44 @@ namespace rhapsodies {
 
 	void HandTracker::UploadHandModels() {
 		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
-		float aState[64];
+		float *aBuffer;
 
-		// upload randomized models with inf penalty to HandModels
+		// upload HandModel
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
+		aBuffer = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
 		for(int row = 0 ; row < 8 ; row++) {
 			for(int col = 0 ; col < 8 ; col++) {
 				size_t index = row*8+col;
-				
-				Particle::ParticleToStateArray(vecParticles[index], aState);
-
-				// 64 instead of 54 for alignment
-				glBufferSubData(GL_SHADER_STORAGE_BUFFER,
-								index*64*sizeof(float), 64*sizeof(float),
-								aState);
+				Particle::ParticleToStateArray(vecParticles[index],
+											   aBuffer + 64*index);
 			}
 		}
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		// upload randomized models with inf penalty to HandModelsIBest
+		// reset HandModelIBest penalty
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsIBest);
+		aBuffer = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
 		for(int row = 0 ; row < 8 ; row++) {
 			for(int col = 0 ; col < 8 ; col++) {
 				size_t index = row*8+col;
-				
-				Particle::ParticleToStateArray(vecParticles[index], aState);
-
-				// 64 instead of 54 for alignment
-				glBufferSubData(GL_SHADER_STORAGE_BUFFER,
-								index*64*sizeof(float), 64*sizeof(float),
-								aState);
+				aBuffer[64*index + 31] = 1e20;
 			}
 		}
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		// reset velocities
+		// reset HandModelVelocity
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModelsVelocity);
-		void *pVelocity = glMapBuffer(GL_SHADER_STORAGE_BUFFER,
-									  GL_WRITE_ONLY);
-		memset(pVelocity, 0, 64*64*sizeof(float));
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);		
-
+		aBuffer = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+		memset(aBuffer, 0, 64*64*sizeof(float));
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
+	void HandTracker::DownloadHandModels() {
+		
+	}
+	
 	void HandTracker::GenerateTransforms() {
 		glUseProgram(m_idGenerateTransformsProgram);
    		glDispatchCompute(64, 2, 1);
