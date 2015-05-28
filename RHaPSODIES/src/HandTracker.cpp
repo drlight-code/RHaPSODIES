@@ -741,8 +741,8 @@ namespace rhapsodies {
 		oParticle.GetHandModelLeft()->SetPosition(VistaVector3D(-0.14, -0.1, 0.5));
 		// oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_CMC_A, 20);
 		// oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_CMC_F, 40);
-		oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_MCP, 40);
-		oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_IP, 40);
+		oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_MCP, 50);
+		oParticle.GetHandModelLeft()->SetJointAngle(HandModel::T_IP, 50);
 
 		oParticle.GetHandModelRight()->SetPosition(VistaVector3D(0.14, -0.1, 0.5));
 		oParticle.GetHandModelRight()->SetJointAngle(HandModel::T_CMC_A, 20);

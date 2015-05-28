@@ -62,7 +62,9 @@
 #include <HandModel.hpp>
 #include <HandRenderer.hpp>
 #include <HandTracker.hpp>
-#include <HandTrackingNode.hpp>
+
+#include <DataFlowNet/HandTrackingNode.hpp>
+#include <DataFlowNet/HandModelTestingNode.hpp>
 
 #include <GLDraw/ImageDraw.hpp>
 #include <GLDraw/ImagePBOOpenGLDraw.hpp>
@@ -211,6 +213,9 @@ namespace rhapsodies {
 		VdfnNodeFactory *pNodeFac = VdfnNodeFactory::GetSingleton();
 		pNodeFac->SetNodeCreator( "HandTracker",
 								  new HandTrackingNodeCreate(m_pHandTracker) );
+		pNodeFac->SetNodeCreator( "HandModelTesting",
+								  new HandModelTestingNodeCreate(
+									  m_pHandTracker->GetHandModelLeft()) );
 		
 		return success;
 	}

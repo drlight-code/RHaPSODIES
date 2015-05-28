@@ -123,14 +123,19 @@ void GetBoundsByJointIndex(int index,
 	index %= 4;
 
 	if(bThumb) {
-		if(index == 1) {
+		if(index == 0) {
+			// base flexion dof
+			fMin = -60;
+			fMax = 40;
+		}
+		else if(index == 1) {
 			// adduction abduction dof
-			fMin = 15;
-			fMax = 70;
+			fMin = 10;
+			fMax = 90;
 		}
 		else {
-			// flexion dof
-			fMin = -30;
+			// tip flexion dof
+			fMin = 0;
 			fMax = 90;
 		}
 	}

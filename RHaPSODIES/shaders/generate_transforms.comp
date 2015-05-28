@@ -248,15 +248,19 @@ void DrawFinger(mat4 matOrigin,
 	if(!bThumb) {
 		DrawSphere(matModel);
 	}
-
-	// first joint flexion rotation
-	aaaX.w = DegToRad(-fAng1F);
-	matTransform = AAAToTransformMatrix(aaaX);
-	matOrigin *= matTransform;
+	else {
+		matOrigin *= AAAToTransformMatrix(
+			vec4(0, 1, 0, DegToRad(-90*fLRFactor)));
+	}
 
 	// first joint abduction rotation
 	aaaZ.w = DegToRad(fAng1A*fLRFactor);
 	matTransform = AAAToTransformMatrix(aaaZ);
+	matOrigin *= matTransform;
+
+	// first joint flexion rotation
+	aaaX.w = DegToRad(-fAng1F);
+	matTransform = AAAToTransformMatrix(aaaX);
 	matOrigin *= matTransform;
 		
 	// move to center of first segment
@@ -272,10 +276,6 @@ void DrawFinger(mat4 matOrigin,
 		matModel = matOrigin * matTransform;
 
 		DrawSphere(matModel);
-
-		matOrigin *= AAAToTransformMatrix(
-			vec4(0, 1, 0, DegToRad(-40*fLRFactor)));
-
 	}
 	else {
 		matTransform =

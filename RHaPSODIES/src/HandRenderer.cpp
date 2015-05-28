@@ -169,17 +169,23 @@ namespace rhapsodies {
 		if(!bThumb) {
 			DrawSphere(matModel);
 		}
-
-		// first joint flexion rotation
-		aaaX.m_fAngle = Vista::DegToRad(-fAng1F);
-		matTransform = VistaTransformMatrix(aaaX);
-		matOrigin *= matTransform;
+		else {
+			matOrigin *=
+				VistaTransformMatrix(
+					VistaAxisAndAngle(VistaVector3D(0,1,0),
+									  Vista::DegToRad(-90*fLRFactor)));
+		}
 
 		// first joint abduction rotation
 		aaaZ.m_fAngle = Vista::DegToRad(fAng1A*fLRFactor);
 		matTransform = VistaTransformMatrix(aaaZ);
 		matOrigin *= matTransform;
 		
+		// first joint flexion rotation
+		aaaX.m_fAngle = Vista::DegToRad(-fAng1F);
+		matTransform = VistaTransformMatrix(aaaX);
+		matOrigin *= matTransform;
+
 		// move to center of first segment
 		matTransform.SetToTranslationMatrix(
 			VistaVector3D(0, fLen1/1000.0f/2.0f, 0));
@@ -194,13 +200,6 @@ namespace rhapsodies {
 			matModel = matOrigin * matTransform;
 
 			DrawSphere(matModel);
-
-			matOrigin *=
-				VistaTransformMatrix(
-					VistaAxisAndAngle(VistaVector3D(0,1,0),
-									  Vista::DegToRad(-40*fLRFactor)));
-			
-			
 		}
 		else {
 			matTransform.SetToScaleMatrix(
@@ -361,8 +360,7 @@ namespace rhapsodies {
 
 		// draw the thumb
 		matTransform.SetToTranslationMatrix(
-//			VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/4.0f)*fLRFactor,
-			VistaVector3D((-fPalmWidth)*fLRFactor,
+			VistaVector3D((-fPalmWidth/2.0f + fPalmWidth/4.0f)*fLRFactor,
 						  fPalmBottomRadius,
 						  0));
 

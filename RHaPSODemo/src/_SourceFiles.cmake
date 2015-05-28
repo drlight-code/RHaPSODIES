@@ -2,13 +2,12 @@
 
 set( RelativeDir "src" )
 set( RelativeSourceGroup "source" )
-set( SubDirs GLDraw )
+set( SubDirs GLDraw DataFlowNet )
 
 set( DirFiles
 	main.cpp
 	RHaPSODemo.cpp
   	DebugViewTextOverlay.cpp
-	HandTrackingNode.cpp
 #	DepthHistogramHandler.cpp
 #	HistogramUpdater.cpp
 	_SourceFiles.cmake
