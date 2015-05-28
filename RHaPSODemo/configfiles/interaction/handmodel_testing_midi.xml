@@ -1,0 +1,58 @@
+<module>
+<nodespace>
+</nodespace>
+<graph>
+	<!-- midi control -->
+	<node name="midi_sensor" type="DriverSensor">
+		<param name="sensor_index" value="0"/>
+		<param name="driver" value="MIDI"/>
+	</node>
+
+	<node name="project_midi" type="HistoryProject">
+		<param name="project">CONTROLLER, VALUE</param>
+	</node>
+
+	<!-- <node name="typeconvert_midi_controller" type="TypeConvert[int,string]"/> -->
+	<!-- <node name="typeconvert_midi_value" type="TypeConvert[int,string]"/> -->
+		
+	<node name="log" type="Logger">
+		<param name="logtoconsole" value="true"/>
+		<param name="prefix"       value="midi"/>
+	</node>
+
+	<node name="substract_cc" type="Substract[int]" />
+	<node name="cc_offset" type="ConstantValue[int]">
+		<param name="value" value="23" />
+	</node>
+
+	<node name="demultiplex" type="Demultiplex[int]">
+		<param name="num_outports" value="3" />
+	</node>
+
+	<node name="handmodel_testing" type="HandModelTesting" />
+	
+</graph>
+<edges>
+
+<!-- midi control -->
+	<edge fromnode="midi_sensor"  tonode="project_midi" fromport="history" toport="history"/>
+
+	<!-- <edge fromnode="project_midi" tonode="typeconvert_midi_controller" fromport="CONTROLLER" toport="in"/> -->
+	<!-- <edge fromnode="project_midi" tonode="typeconvert_midi_value"      fromport="VALUE"      toport="in"/> -->
+
+	<!-- <edge fromnode="typeconvert_midi_controller" tonode="log" fromport="out" toport="controller"/> -->
+	<!-- <edge fromnode="typeconvert_midi_value"      tonode="log" fromport="out" toport="value"/> -->
+
+	<edge fromnode="project_midi" tonode="substract_cc" fromport="CONTROLLER" toport="first"/>
+	<edge fromnode="cc_offset"    tonode="substract_cc" fromport="value"      toport="second"/>
+
+	<edge fromnode="substract_cc" tonode="demultiplex" fromport="out" toport="select"/>
+
+	<edge fromnode="project_midi" tonode="demultiplex" fromport="VALUE" toport="value"/>
+
+	<edge fromnode="demultiplex" tonode="handmodel_testing" fromport="0" toport="thumb_adduction"/>
+	<edge fromnode="demultiplex" tonode="handmodel_testing" fromport="1" toport="thumb_flexion"/>
+	<edge fromnode="demultiplex" tonode="handmodel_testing" fromport="2" toport="thumb_roll"/>
+	
+</edges>
+</module>
