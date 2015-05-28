@@ -215,7 +215,8 @@ namespace rhapsodies {
 								  new HandTrackingNodeCreate(m_pHandTracker) );
 		pNodeFac->SetNodeCreator( "HandModelTesting",
 								  new HandModelTestingNodeCreate(
-									  m_pHandTracker->GetHandModelLeft()) );
+									  {m_pHandTracker->GetHandModelLeft(),
+									   m_pHandTracker->GetHandModelRight()} ) );
 		
 		return success;
 	}

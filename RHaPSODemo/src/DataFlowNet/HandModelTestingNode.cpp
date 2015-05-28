@@ -12,8 +12,10 @@ namespace {
 }
 
 namespace rhapsodies {
-	HandModelTestingNode::HandModelTestingNode(HandModel *pModel) :
-		m_pModel(pModel) {
+	HandModelTestingNode::HandModelTestingNode(
+		std::vector<HandModel*> vecModels) :
+		m_vecModels(vecModels) {
+
 		RegisterInPortPrototype( g_sPortThumbAdductionName,
 								 new TVdfnPortTypeCompare<TVdfnPort<int> > );
 		RegisterInPortPrototype( g_sPortThumbFlexionName,
@@ -43,22 +45,24 @@ namespace rhapsodies {
 	bool HandModelTestingNode::DoEvalNode() {
 
 		if(m_sPortThumbAdduction.HasNewData()) {
+			// @todo DRY store HandModel constraints in central
+			// location!
 			float fAbd =
 				m_sPortThumbAdduction.m_pPort->GetValue() / 127.0f *
 				80.0f + 10.0f;
 
-			vstr::out() << "Abduction angle: " << fAbd << std::endl;
-
-			m_pModel->SetJointAngle(HandModel::T_CMC_A, fAbd);
+			for(HandModel *pModel : m_vecModels) {
+				pModel->SetJointAngle(HandModel::T_CMC_A, fAbd);
+			}
 		}
 		if(m_sPortThumbFlexion.HasNewData()) {
 			float fFlx =
 				m_sPortThumbFlexion.m_pPort->GetValue() / 127.0f *
 				100.0f - 60;
 
-			vstr::out() << "Flexion angle: " << fFlx << std::endl;
-
-			m_pModel->SetJointAngle(HandModel::T_CMC_F, fFlx);
+			for(HandModel *pModel : m_vecModels) {
+				pModel->SetJointAngle(HandModel::T_CMC_F, fFlx);
+			}
 		}
 
 		
@@ -66,14 +70,15 @@ namespace rhapsodies {
 	}
 
 
-	HandModelTestingNodeCreate::HandModelTestingNodeCreate(HandModel *pModel) :
-		m_pModel(pModel) {
+	HandModelTestingNodeCreate::HandModelTestingNodeCreate(
+		std::vector<HandModel*> vecModels) :
+		m_vecModels(vecModels) {
 
 	}
 	
 	IVdfnNode *HandModelTestingNodeCreate::CreateNode(
 		const VistaPropertyList &oParams) const {
-		HandModelTestingNode *pNode = new HandModelTestingNode(m_pModel);
+		HandModelTestingNode *pNode = new HandModelTestingNode(m_vecModels);
 
 		return pNode;
 	}

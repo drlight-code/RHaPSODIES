@@ -13,7 +13,7 @@ namespace rhapsodies {
 	
 	class HandModelTestingNode : public IVdfnNode {
 	public:
-		HandModelTestingNode(HandModel *pModel);
+		HandModelTestingNode(std::vector<HandModel*> vecModels);
 		
 		virtual bool GetIsValid() const;
 		virtual bool PrepareEvaluationRun();
@@ -26,17 +26,17 @@ namespace rhapsodies {
 		sPortHlp<int> m_sPortThumbFlexion;
 		sPortHlp<int> m_sPortThumbRoll;
 
-		HandModel *m_pModel;
+		std::vector<HandModel*> m_vecModels;
 	};
 
 	class HandModelTestingNodeCreate : public VdfnNodeFactory::IVdfnNodeCreator
 	{
 	public:
-		HandModelTestingNodeCreate(HandModel *pModel);
+		HandModelTestingNodeCreate(std::vector<HandModel*> m_vecModels);
 		virtual IVdfnNode *CreateNode( const VistaPropertyList &oParams ) const;
 
 	private:
-		HandModel *m_pModel;
+		std::vector<HandModel*> m_vecModels;
 	};
 }
 
