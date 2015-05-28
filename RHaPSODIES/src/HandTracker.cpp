@@ -720,7 +720,7 @@ namespace rhapsodies {
 	bool HandTracker::InitParticleSwarm() {
 		m_pSwarm = new ParticleSwarm(64);
 		SetToInitialPose(m_pSwarm->GetParticleBest());
-		m_pSwarm->InitializeAround(m_pSwarm->GetParticleBest());
+		m_pSwarm->InitializeAroundBest();
 		
 		return true;
 	}
@@ -1090,11 +1090,7 @@ namespace rhapsodies {
 		VistaType::microtime tReduction = 0.0;
 		VistaType::microtime tSwarmUpdate = 0.0;
 
-		ParticleSwarm::ParticleVec &vecParticles = m_pSwarm->GetParticles();
-		for(Particle &p : vecParticles) {
-			p.ResetVelocity();
-		}
-		m_pSwarm->InitializeAround(m_pSwarm->GetParticleBest());
+		m_pSwarm->InitializeAroundBest();
 		
 		UploadHandModels();
 		

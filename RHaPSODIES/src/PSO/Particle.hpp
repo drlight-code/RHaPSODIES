@@ -27,6 +27,8 @@ namespace rhapsodies {
 		void SetVelocity(std::vector<float> &vecVelocity);
 		void ResetVelocity();
 		
+		void InitializeAround(Particle &oCenter);
+
 		static void StateArrayToParticle(Particle *pParticle, float *aState);
 		static void ParticleToStateArray(Particle *pParticle, float *aState);		
 
