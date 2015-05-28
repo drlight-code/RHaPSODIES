@@ -1253,6 +1253,8 @@ namespace rhapsodies {
 				HandModel::StateArrayToHandModel(
 					vecParticles[index].GetIBestModelRight(),
 					aBuffer + 64*index + 32);
+
+				vecParticles[index].SetIBestPenalty(aBuffer[64*index + 31]);
 			}
 		}
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
