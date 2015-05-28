@@ -13,6 +13,7 @@ namespace rhapsodies {
 		~ParticleSwarm();
 
 		ParticleVec& GetParticles();
+		Particle& GetParticleBest();
 
 		// Initialize the swarm with random perturbations of particles
 		// around the "cluster-center" passed as argument.
@@ -20,6 +21,7 @@ namespace rhapsodies {
 
     private:
 		ParticleVec m_vecParticles;
+		Particle m_oParticleBest;
 	};
 }
 

@@ -29,6 +29,10 @@ namespace rhapsodies {
 		return m_vecParticles;
 	}
 
+	Particle& ParticleSwarm::GetParticleBest() {
+		return m_oParticleBest;
+	}
+	
 	void ParticleSwarm::InitializeAround(Particle &oCenter) {
 		VistaVector3D vecCenterPosL;
 		VistaQuaternion qCenterOriL;

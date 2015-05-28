@@ -253,7 +253,6 @@ namespace rhapsodies {
 		m_pFrameRecorder(NULL),
 		m_pFramePlayer(NULL),
 		m_bTrackingEnabled(false),
-		m_pParticleBest(NULL),
 		m_pSwarm(NULL),
 		m_pHandModelLeft(NULL),
 		m_pHandModelRight(NULL),
@@ -318,7 +317,6 @@ namespace rhapsodies {
 
 	HandTracker::~HandTracker() {
 		delete m_pSwarm;
-		delete m_pParticleBest;
 		
 		delete [] m_pColorBuffer;
 		delete [] m_pDepthBuffer;
@@ -330,6 +328,9 @@ namespace rhapsodies {
 		
 		delete m_pHandRenderer;
 		delete m_pHandGeometry;
+
+		delete m_pHandModelLeft;
+		delete m_pHandModelRight;
 	}
 	
 	void HandTracker::SetViewPBODraw(ViewType type,
@@ -717,11 +718,9 @@ namespace rhapsodies {
 	}
 	
 	bool HandTracker::InitParticleSwarm() {
-		m_pParticleBest = new Particle;
-		SetToInitialPose(*m_pParticleBest);
-		
 		m_pSwarm = new ParticleSwarm(64);
-		m_pSwarm->InitializeAround(*m_pParticleBest);
+		SetToInitialPose(m_pSwarm->GetParticleBest());
+		m_pSwarm->InitializeAround(m_pSwarm->GetParticleBest());
 		
 		return true;
 	}
@@ -730,8 +729,8 @@ namespace rhapsodies {
 		m_pHandModelLeft = new HandModel();
 		m_pHandModelRight = new HandModel();
 
-		*m_pHandModelLeft  = *m_pParticleBest->GetHandModelLeft();
-		*m_pHandModelRight = *m_pParticleBest->GetHandModelRight();
+		*m_pHandModelLeft  = *m_pSwarm->GetParticleBest().GetHandModelLeft();
+		*m_pHandModelRight = *m_pSwarm->GetParticleBest().GetHandModelRight();
 
 		return true;
 	}
@@ -1043,10 +1042,10 @@ namespace rhapsodies {
 		UploadHandModels();
 		
 		m_pHandRenderer->DrawHand(
-			m_pParticleBest->GetHandModelLeft(),
+			m_pSwarm->GetParticleBest().GetHandModelLeft(),
 			m_pHandGeometry);
 		m_pHandRenderer->DrawHand(
-			m_pParticleBest->GetHandModelRight(),
+			m_pSwarm->GetParticleBest().GetHandModelRight(),
 			m_pHandGeometry);
 
 		vViewportData.push_back(0);
@@ -1095,7 +1094,7 @@ namespace rhapsodies {
 		for(Particle &p : vecParticles) {
 			p.ResetVelocity();
 		}
-		m_pSwarm->InitializeAround(*m_pParticleBest);
+		m_pSwarm->InitializeAround(m_pSwarm->GetParticleBest());
 		
 		UploadHandModels();
 		
@@ -1166,7 +1165,8 @@ namespace rhapsodies {
 
 		WriteDebug(IDebugView::PENALTY,
 				   IDebugView::FormatString(
-					   "Penalty: ", m_pParticleBest->GetIBestPenalty()));
+					   "Penalty: ",
+					   m_pSwarm->GetParticleBest().GetIBestPenalty()));
 				
 	}
 
@@ -1414,7 +1414,8 @@ namespace rhapsodies {
 		float *aStateGBest = (float*)(glMapBuffer(GL_SHADER_STORAGE_BUFFER,
 												  GL_READ_ONLY));	
 
-		Particle::StateArrayToParticle(m_pParticleBest, aStateGBest);
+		Particle::StateArrayToParticle(
+			&m_pSwarm->GetParticleBest(), aStateGBest);
 
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -1422,10 +1423,12 @@ namespace rhapsodies {
 		// do exponential smoothing on the output model
 		SmoothInterpolateModel(
 			m_oConfig.fSmoothingFactor,
-			m_pParticleBest->GetHandModelLeft(), m_pHandModelLeft);
+			m_pSwarm->GetParticleBest().GetHandModelLeft(),
+			m_pHandModelLeft);
 		SmoothInterpolateModel(
 			m_oConfig.fSmoothingFactor,
-			m_pParticleBest->GetHandModelRight(), m_pHandModelRight);
+			m_pSwarm->GetParticleBest().GetHandModelRight(),
+			m_pHandModelRight);
 	}
 
 	void HandTracker::SmoothInterpolateModel(
@@ -1481,7 +1484,7 @@ namespace rhapsodies {
 	void HandTracker::StopTracking() {
 		m_bTrackingEnabled = false;
 
-		SetToInitialPose(*m_pParticleBest);
+		SetToInitialPose(m_pSwarm->GetParticleBest());
 
 		WriteDebug(IDebugView::TRACKING,
 				   IDebugView::FormatString("Tracking: ",

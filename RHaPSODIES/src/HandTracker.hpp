@@ -248,7 +248,6 @@ namespace rhapsodies {
 		CameraFrameFilter *m_pFrameFilter;
 
 		bool m_bTrackingEnabled;
-		Particle *m_pParticleBest;
 		ParticleSwarm *m_pSwarm;
 
 		HandModel *m_pHandModelLeft;
