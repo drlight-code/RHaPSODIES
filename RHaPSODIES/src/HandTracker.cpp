@@ -725,7 +725,7 @@ namespace rhapsodies {
 	bool HandTracker::InitParticleSwarm() {
 		m_pSwarm = new ParticleSwarm(64);
 		SetToInitialPose(m_pSwarm->GetParticleBest());
-		m_pSwarm->InitializeAroundBest(1);
+		m_pSwarm->InitializeAroundBest(0);
 		
 		return true;
 	}

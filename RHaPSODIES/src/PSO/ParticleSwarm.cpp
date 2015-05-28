@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include <GL/glew.h>
 
 #include <VistaBase/VistaStreamUtils.h>
@@ -24,10 +26,25 @@ namespace rhapsodies {
 	}
 	
 	void ParticleSwarm::InitializeAroundBest(int iKeepKBest) {
-		*m_vecParticles.begin() = m_oParticleBest;
+		// sort by ibest score, keep best k entries, next-worst is set
+		// to best particle, rest is reset.
+		
+		std::sort(
+			m_vecParticles.begin(), m_vecParticles.end(),
+			[](Particle pA, Particle pB) {
+				return pA.GetIBestPenalty() > pB.GetIBestPenalty();   
+			});
 
-		for(auto it = m_vecParticles.begin()+1;
-			it != m_vecParticles.end(); ++it) {
+		auto it=m_vecParticles.begin();
+		for(; it != m_vecParticles.begin()+iKeepKBest; ++it) {
+			// keep state and velocity (do nothing) OR
+			// reset to ibest solution and reset velocity
+		}
+
+		*it = m_oParticleBest;
+		++it;
+
+		for(; it != m_vecParticles.end(); ++it) {
 			it->InitializeAround(m_oParticleBest);
 		}
 	}
