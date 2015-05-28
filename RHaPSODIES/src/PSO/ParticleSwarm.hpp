@@ -15,7 +15,7 @@ namespace rhapsodies {
 		ParticleVec& GetParticles();
 		Particle& GetParticleBest();
 
-		void InitializeAroundBest();
+		void InitializeAroundBest(int iKeepKBest);
 
     private:
 		ParticleVec m_vecParticles;

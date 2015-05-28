@@ -107,8 +107,6 @@ namespace rhapsodies {
 			unsigned int iErosionSize;  // erosion blob size
 			unsigned int iDilationSize; // dilation blob size
 
-			unsigned int iPSOGenerations; // max pso generation count
-
 			std::string sRecordingFile;
 			bool bLoop;
 
@@ -120,8 +118,10 @@ namespace rhapsodies {
 			
 			unsigned int iViewportBatch;
 
+			unsigned int iPSOGenerations;
 			float fPhiCognitiveBegin;
 			float fPhiCognitiveEnd;
+			unsigned int iKeepKBest;
 		};
 
 		bool HasGLComputeCapabilities();

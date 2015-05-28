@@ -211,6 +211,7 @@ namespace rhapsodies {
 	const std::string sPSOGenerationsName    = "PSO_GENERATIONS";
 	const std::string sPhiCognitiveBeginName = "PHI_COGNITIVE_BEGIN";
 	const std::string sPhiCognitiveEndName   = "PHI_COGNITIVE_END";
+	const std::string sKeepKBestName         = "KEEP_KBEST";
 
 	const std::string sRecordingsName = "RECORDINGS";
 	const std::string sLoopName       = "LOOP";
@@ -413,6 +414,8 @@ namespace rhapsodies {
 			sPhiCognitiveBeginName, 2.8);
 		m_oConfig.fPhiCognitiveEnd = oParticleSwarmConfig.GetValueOrDefault(
 			sPhiCognitiveEndName, 2.8);
+		m_oConfig.iKeepKBest = oParticleSwarmConfig.GetValueOrDefault(
+			sKeepKBestName, 0);
 
 		const VistaPropertyList oRenderingConfig =
 			ReadConfigSubList(oConfig, RHaPSODIES::sRenderingSectionName);
@@ -459,6 +462,8 @@ namespace rhapsodies {
 		vstr::out() << "PhiCognitive Begin: " << m_oConfig.fPhiCognitiveBegin
 					<< std::endl;
 		vstr::out() << "PhiCognitive End:   " << m_oConfig.fPhiCognitiveEnd
+					<< std::endl;
+		vstr::out() << "Keep k best:        " << m_oConfig.iKeepKBest
 					<< std::endl << std::endl;
 
 		vstr::out() << "- Evaluation:" << std::endl;
@@ -720,7 +725,7 @@ namespace rhapsodies {
 	bool HandTracker::InitParticleSwarm() {
 		m_pSwarm = new ParticleSwarm(64);
 		SetToInitialPose(m_pSwarm->GetParticleBest());
-		m_pSwarm->InitializeAroundBest();
+		m_pSwarm->InitializeAroundBest(1);
 		
 		return true;
 	}
@@ -1090,7 +1095,7 @@ namespace rhapsodies {
 		VistaType::microtime tReduction = 0.0;
 		VistaType::microtime tSwarmUpdate = 0.0;
 
-		m_pSwarm->InitializeAroundBest();
+		m_pSwarm->InitializeAroundBest(m_oConfig.iKeepKBest);
 		
 		UploadHandModels();
 		

@@ -23,7 +23,7 @@ namespace rhapsodies {
 		return m_oParticleBest;
 	}
 	
-	void ParticleSwarm::InitializeAroundBest() {
+	void ParticleSwarm::InitializeAroundBest(int iKeepKBest) {
 		*m_vecParticles.begin() = m_oParticleBest;
 
 		for(auto it = m_vecParticles.begin()+1;
