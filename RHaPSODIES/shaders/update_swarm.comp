@@ -40,7 +40,7 @@ const float w = 0.72984f;
 const uint rbuffer_size = 64*64*8;
 
 const bool bPartialRandomization = true;
-const float fProbPR = 0.002;
+const float fProbPR = 0.005;
 
 const float fConstraintThumbFlexionBaseMin = -60;
 const float fConstraintThumbFlexionBaseMax =  40;
