@@ -77,7 +77,7 @@ namespace rhapsodies {
 		VistaQuaternion qCenterOriR;
 		float fCenterVal;
 
-		float fMaxAngOffset = 10.0f;
+		float fMaxAngOffset = 1.0f;
 		float fMaxPosOffset = 0.02f;
 		float fMaxOriOffset = 0.05f;
 
