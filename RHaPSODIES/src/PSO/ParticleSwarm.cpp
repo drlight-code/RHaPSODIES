@@ -39,6 +39,8 @@ namespace rhapsodies {
 		for(; it != m_vecParticles.begin()+iKeepKBest; ++it) {
 			// keep state and velocity (do nothing) OR
 			// reset to ibest solution and reset velocity
+			*(it->GetHandModelLeft()) = *(it->GetIBestModelLeft());
+			it->ResetVelocity();
 		}
 
 		*it = m_oParticleBest;
