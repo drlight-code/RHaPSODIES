@@ -1117,8 +1117,6 @@ namespace rhapsodies {
 		VistaType::microtime tReduction = 0.0;
 		VistaType::microtime tSwarmUpdate = 0.0;
 
-		m_pSwarm->InitializeAroundBest(m_oConfig.iKeepKBest);
-		
 		UploadHandModels();
 		
 		float fPhiCognitive;
@@ -1169,6 +1167,10 @@ namespace rhapsodies {
 		DownloadHandModels();
 		UpdateOutputModel();
 
+		EvaluationStep();
+
+		m_pSwarm->InitializeAroundBest(m_oConfig.iKeepKBest);
+		
 		WriteDebug(IDebugView::TRANSFORM_TIME,
 				   IDebugView::FormatString("Transform time: ",
 											tTransform));
@@ -1476,6 +1478,10 @@ namespace rhapsodies {
 		pModelAccumulated->SetOrientation(
 			pModelAccumulated->GetOrientation().Slerp(
 				pModelNew->GetOrientation(), fSmoothingFactor));
+	}
+
+	void HandTracker::EvaluationStep() {
+
 	}
 
 	void HandTracker::NextSkinClassifier() {

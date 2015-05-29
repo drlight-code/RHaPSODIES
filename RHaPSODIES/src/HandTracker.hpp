@@ -166,6 +166,8 @@ namespace rhapsodies {
 		void SmoothInterpolateModel(float fSmoothingFactor,
 									HandModel *pModelNew,
 									HandModel *pModelOld);
+
+		void EvaluationStep();
 		
 		float PenaltyNormalize(float fPenalty);
 						  
