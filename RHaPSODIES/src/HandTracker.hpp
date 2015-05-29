@@ -107,8 +107,11 @@ namespace rhapsodies {
 			unsigned int iErosionSize;  // erosion blob size
 			unsigned int iDilationSize; // dilation blob size
 
-			std::string sRecordingFile;
-			bool bLoop;
+			std::string              sRecordingFile;
+			std::vector<std::string> vecPlaybackFiles;
+			unsigned int             iIterations;
+			std::string              sCondition;
+			bool                     bLoop;
 
 			float fPenaltyMin;
 			float fPenaltyMax;

@@ -213,7 +213,10 @@ namespace rhapsodies {
 	const std::string sPhiCognitiveEndName   = "PHI_COGNITIVE_END";
 	const std::string sKeepKBestName         = "KEEP_KBEST";
 
-	const std::string sRecordingsName = "RECORDINGS";
+	const std::string sRecordingName  = "RECORDING";
+	const std::string sPlaybackName   = "PLAYBACK";
+	const std::string sIterationsName = "ITERATIONS";
+	const std::string sConditionName  = "CONDITION";
 	const std::string sLoopName       = "LOOP";
 
 	const std::string sAutoTrackingName = "AUTO_TRACKING";
@@ -425,7 +428,13 @@ namespace rhapsodies {
 		const VistaPropertyList oEvaluationConfig =
 			ReadConfigSubList(oConfig, RHaPSODIES::sEvaluationSectionName);
 		m_oConfig.sRecordingFile = oEvaluationConfig.GetValueOrDefault(
-			sRecordingsName, std::string(""));
+			sRecordingName, std::string(""));
+		m_oConfig.vecPlaybackFiles = oEvaluationConfig.GetValueOrDefault(
+			sPlaybackName, std::vector<std::string>());
+		m_oConfig.iIterations = oEvaluationConfig.GetValueOrDefault(
+			sIterationsName, 1);
+		m_oConfig.sCondition = oEvaluationConfig.GetValueOrDefault(
+			sConditionName, std::string(""));
 		m_oConfig.bLoop = oEvaluationConfig.GetValueOrDefault(
 			sLoopName, false);
 	}
@@ -469,6 +478,14 @@ namespace rhapsodies {
 		vstr::out() << "- Evaluation:" << std::endl;
 		vstr::out() << "Recording file: " << m_oConfig.sRecordingFile
 					<< std::endl;
+
+		std::string sOut = "Playback files: ";
+		for(auto &s: m_oConfig.vecPlaybackFiles) {
+			sOut += s + " ";
+		}
+		vstr::out() << "Iterations:     " << m_oConfig.iIterations << std::endl;
+		vstr::out() << "Condition:      " << m_oConfig.sCondition << std::endl;
+		vstr::out() << sOut << std::endl;
 		vstr::out() << "Loop:           " << std::boolalpha << m_oConfig.bLoop
 					<< std::endl << std::endl;
 	}
