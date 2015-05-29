@@ -25,6 +25,7 @@
 #define _RHAPSODIES_HANDTRACKER
 
 #include <map>
+#include <fstream>
 
 #include <VistaAspects/VistaPropertyList.h>
 
@@ -81,7 +82,7 @@ namespace rhapsodies {
 		bool Initialize();
 		
 		void ReadConfig();
-		void PrintConfig();
+		void PrintConfig(std::ostream &out);
 
 		bool FrameUpdate(const unsigned char  *colorFrame,
 						 const unsigned short *depthFrame,
@@ -108,6 +109,7 @@ namespace rhapsodies {
 			std::vector<std::string> vecPlaybackFiles;
 			unsigned int             iIterations;
 			std::string              sCondition;
+			bool                     bEvaluate;
 			bool                     bLoop;
 
 			float fPenaltyMin;
@@ -133,16 +135,19 @@ namespace rhapsodies {
 		bool InitParticleSwarm();
 		bool InitOutputModel();
 		bool InitEvaluation();
-
+		
 		void SetToInitialPose(Particle &oParticle);
 		void PerformPSOTracking();
 		void PerformStartPoseMatch();
 
+		void PrepareEvaluationFiles();
+		void EvaluationStep();
+		void EvaluationPostFrame();
+		
 		void FrameRecordingAndPlayback(
 			const unsigned char  *colorFrame,
 			const unsigned short *depthFrame,
 			const float          *uvMapFrame);
-
 
 		void ResourcesBind();
 		void ResourcesUnbind();
@@ -163,8 +168,6 @@ namespace rhapsodies {
 		void SmoothInterpolateModel(float fSmoothingFactor,
 									HandModel *pModelNew,
 									HandModel *pModelOld);
-
-		void EvaluationStep();
 		
 		float PenaltyNormalize(float fPenalty);
 						  
@@ -246,6 +249,10 @@ namespace rhapsodies {
 
 		CameraFrameFilter *m_pFrameFilter;
 
+		std::ofstream m_osEvalOutput;
+		std::vector<std::string>::const_iterator m_itCurPlayback;
+		unsigned int m_iEvalIteration;
+		
 		bool m_bTrackingEnabled;
 		ParticleSwarm *m_pSwarm;
 

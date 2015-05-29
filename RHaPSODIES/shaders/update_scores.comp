@@ -41,6 +41,11 @@ void main() {
 							 union_result,
 							 intersection_result);
 
+	unsigned int idx =
+		(gl_LocalInvocationID.y*8 +
+		 gl_LocalInvocationID.x);
+	HandModels.models[idx].modelstate[31] = fPenalty;
+	
 	UpdateIBest(fPenalty);
 }
 

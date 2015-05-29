@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <fstream>
 #include <limits>
 #include <exception>
 #include <algorithm>
@@ -217,6 +218,7 @@ namespace rhapsodies {
 	const std::string sPlaybackName   = "PLAYBACK";
 	const std::string sIterationsName = "ITERATIONS";
 	const std::string sConditionName  = "CONDITION";
+	const std::string sEvaluateName   = "EVALUATE";
 	const std::string sLoopName       = "LOOP";
 
 	const std::string sAutoTrackingName = "AUTO_TRACKING";
@@ -238,6 +240,8 @@ namespace rhapsodies {
 	const int iSSBORandomLocation             = 7;
 	const int iSSBODebugLocation              = 8;
 
+	const std::string sEvalOutputSuffix = ".out";
+
 /*============================================================================*/
 /* CONSTRUCTORS / DESTRUCTOR                                                  */
 /*============================================================================*/
@@ -256,6 +260,8 @@ namespace rhapsodies {
 		m_bFramePlayback(false),
 		m_pFrameRecorder(NULL),
 		m_pFramePlayer(NULL),
+		m_pFrameFilter(NULL),
+		m_iEvalIteration(0),
 		m_bTrackingEnabled(false),
 		m_pSwarm(NULL),
 		m_pHandModelLeft(NULL),
@@ -430,59 +436,63 @@ namespace rhapsodies {
 			sIterationsName, 1);
 		m_oConfig.sCondition = oEvaluationConfig.GetValueOrDefault(
 			sConditionName, std::string(""));
+		m_oConfig.bEvaluate = oEvaluationConfig.GetValueOrDefault(
+			sEvaluateName, false);
 		m_oConfig.bLoop = oEvaluationConfig.GetValueOrDefault(
 			sLoopName, false);
 	}
 
-	void HandTracker::PrintConfig() {
-		vstr::out() << "RHaPSODIES configuration:" << std::endl;
+	void HandTracker::PrintConfig(std::ostream &out) {
+		out << "RHaPSODIES configuration:" << std::endl;
 
-		vstr::out() << "- Hand tracker:" << std::endl;
-		vstr::out() << "Penalty min:   " << m_oConfig.fPenaltyMin << std::endl;
-		vstr::out() << "Penalty max:   " << m_oConfig.fPenaltyMax << std::endl;
-		vstr::out() << "Penalty start: " << m_oConfig.fPenaltyStart
+		out << "- Hand tracker:" << std::endl;
+		out << "Penalty min:   " << m_oConfig.fPenaltyMin << std::endl;
+		out << "Penalty max:   " << m_oConfig.fPenaltyMax << std::endl;
+		out << "Penalty start: " << m_oConfig.fPenaltyStart
 					<< std::endl;
-		vstr::out() << "Auto tracking: " << std::boolalpha
+		out << "Auto tracking: " << std::boolalpha
 					<< m_oConfig.bAutoTracking << std::endl;
-		vstr::out() << "Smoothing factor: "
+		out << "Smoothing factor: "
 					<< m_oConfig.fSmoothingFactor << std::endl << std::endl;
 		
 		
-		vstr::out() << "- Image processing:" << std::endl;
-		vstr::out() << "Depth Limit:   " << m_oConfig.iDepthLimit
+		out << "- Image processing:" << std::endl;
+		out << "Depth Limit:   " << m_oConfig.iDepthLimit
 					<< std::endl;
-		vstr::out() << "Erosion Size:  " << m_oConfig.iErosionSize
+		out << "Erosion Size:  " << m_oConfig.iErosionSize
 					<< std::endl;
-		vstr::out() << "Dilation Size: " << m_oConfig.iDilationSize
+		out << "Dilation Size: " << m_oConfig.iDilationSize
 					<< std::endl << std::endl;
 
-		vstr::out() << "- Rendering:" << std::endl;
-		vstr::out() << "Viewport batch:   " << m_oConfig.iViewportBatch
+		out << "- Rendering:" << std::endl;
+		out << "Viewport batch:   " << m_oConfig.iViewportBatch
 					<< std::endl << std::endl;
 		
-		vstr::out() << "- Particle swarm:" << std::endl;
-		vstr::out() << "PSO Generations:    " << m_oConfig.iPSOGenerations
+		out << "- Particle swarm:" << std::endl;
+		out << "PSO Generations:    " << m_oConfig.iPSOGenerations
 					<< std::endl;
-		vstr::out() << "PhiCognitive Begin: " << m_oConfig.fPhiCognitiveBegin
+		out << "PhiCognitive Begin: " << m_oConfig.fPhiCognitiveBegin
 					<< std::endl;
-		vstr::out() << "PhiCognitive End:   " << m_oConfig.fPhiCognitiveEnd
+		out << "PhiCognitive End:   " << m_oConfig.fPhiCognitiveEnd
 					<< std::endl;
-		vstr::out() << "Keep k best:        " << m_oConfig.iKeepKBest
+		out << "Keep k best:        " << m_oConfig.iKeepKBest
 					<< std::endl << std::endl;
 
-		vstr::out() << "- Evaluation:" << std::endl;
-		vstr::out() << "Recording file: " << m_oConfig.sRecordingFile
+		out << "- Evaluation:" << std::endl;
+		out << "Recording file: " << m_oConfig.sRecordingFile
 					<< std::endl;
 
 		std::string sOut = "Playback files: ";
 		for(auto &s: m_oConfig.vecPlaybackFiles) {
 			sOut += s + " ";
 		}
-		vstr::out() << "Iterations:     " << m_oConfig.iIterations << std::endl;
-		vstr::out() << "Condition:      " << m_oConfig.sCondition << std::endl;
-		vstr::out() << sOut << std::endl;
-		vstr::out() << "Loop:           " << std::boolalpha << m_oConfig.bLoop
-					<< std::endl << std::endl;
+		out << "Iterations:     " << m_oConfig.iIterations << std::endl;
+		out << "Condition:      " << m_oConfig.sCondition << std::endl;
+		out << sOut << std::endl;
+		out << "Evaluate:       " << std::boolalpha << m_oConfig.bEvaluate
+			<< std::endl;
+		out << "Loop:           " << std::boolalpha << m_oConfig.bLoop
+			<< std::endl << std::endl;
 	}
 
 	bool HandTracker::Initialize() {
@@ -490,7 +500,7 @@ namespace rhapsodies {
 					<< std::endl << std::endl;
 
 		ReadConfig();
-		PrintConfig();
+		PrintConfig(vstr::out());
 
 		InitFrameFilter();
 		InitRendering();
@@ -509,7 +519,8 @@ namespace rhapsodies {
 		InitParticleSwarm();
 		InitOutputModel();
 
-		InitEvaluation();
+		if(m_oConfig.bEvaluate)
+			InitEvaluation();
 		
 		return true;
 	}
@@ -751,12 +762,37 @@ namespace rhapsodies {
 	}
 
 	bool HandTracker::InitEvaluation() {
-		m_pFramePlayer->SetInputFile(m_oConfig.sRecordingFile);
 		m_pFramePlayer->SetLoop(m_oConfig.bLoop);
+		m_itCurPlayback = m_oConfig.vecPlaybackFiles.begin();
 
-		
+		PrepareEvaluationFiles();
+
+		m_pFramePlayer->SetInputFile(*m_itCurPlayback);
+		m_pFramePlayer->StartPlayback();
 
 		return true;
+	}
+
+	void HandTracker::PrepareEvaluationFiles() {
+		std::string sPlayback = *m_itCurPlayback;
+		std::string sPlaybackBase =
+ 			sPlayback.substr(sPlayback.find_last_of('/')+1, std::string::npos);
+		sPlaybackBase = sPlaybackBase.substr(0, sPlaybackBase.find_last_of('.'));
+
+		std::string sEvalOutput = "resources/results/";
+		sEvalOutput += sPlaybackBase + "-";
+		sEvalOutput += m_oConfig.sCondition + "-";
+		sEvalOutput += std::to_string(m_oConfig.iIterations);
+
+		vstr::out() << "Recording score data to " << sEvalOutput
+					<< sEvalOutputSuffix << std::endl;
+		m_osEvalOutput.open(sEvalOutput+sEvalOutputSuffix,
+							std::ios_base::out | std::ios_base::binary);
+
+		std::ofstream osEvalConfig;
+		osEvalConfig.open(sEvalOutput+".txt");
+		PrintConfig(osEvalConfig);
+		osEvalConfig.close();
 	}
 
 	void HandTracker::SetToInitialPose(Particle &oParticle) {
@@ -1159,12 +1195,15 @@ namespace rhapsodies {
 
 			UpdateSwarm(fPhiCognitive, fPhiSocial);
 			tSwarmUpdate += oTimer.GetMicroTime() - tStart;
+
+			if(m_oConfig.bEvaluate)
+				EvaluationStep();
 		}
 
 		DownloadHandModels();
 		UpdateOutputModel();
 
-		EvaluationStep();
+		EvaluationPostFrame();
 
 		m_pSwarm->InitializeAroundBest(m_oConfig.iKeepKBest);
 		
@@ -1478,7 +1517,38 @@ namespace rhapsodies {
 	}
 
 	void HandTracker::EvaluationStep() {
-		
+		// write out HandModel scores
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_idSSBOHandModels);
+		float *aBuffer =
+			(float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+		for(int row = 0 ; row < 8 ; row++) {
+			for(int col = 0 ; col < 8 ; col++) {
+				size_t index = row*8+col;
+				m_osEvalOutput << aBuffer[64*index + 31];
+			}
+		}
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+	void HandTracker::EvaluationPostFrame() {
+		if(m_pFramePlayer->GetIsStopped()) {
+			if(++m_iEvalIteration < m_oConfig.iIterations) {
+				m_pFramePlayer->StartPlayback();
+			}
+			else {
+				m_itCurPlayback++;
+				if(m_itCurPlayback != m_oConfig.vecPlaybackFiles.end()) {
+					PrepareEvaluationFiles();
+					m_pFramePlayer->SetInputFile(*m_itCurPlayback);
+					m_pFramePlayer->StartPlayback();
+				}
+				else {
+					m_osEvalOutput.close();
+					m_oConfig.bEvaluate = false;
+				}
+			}
+		}
 	}
 
 	void HandTracker::NextSkinClassifier() {

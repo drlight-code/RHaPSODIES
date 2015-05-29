@@ -27,7 +27,8 @@ namespace rhapsodies {
 			m_sInputFile, std::ios_base::in | std::ios_base::binary);
 
 		if(!m_iStream.good()) {
-			vstr::out() << "[CameraFramePlayer] Failed to open input stream"
+			vstr::out() << "[CameraFramePlayer] Failed to open input stream: "
+						<< m_sInputFile
 						<< std::endl;
 		}			
 
