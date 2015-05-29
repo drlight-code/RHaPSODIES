@@ -95,7 +95,8 @@ void Imitate(float phi_cognitive, float phi_social) {
 			if(HandModels.models[idx].modelstate[dim] +
 			   HandModelsVelocity.models[idx].modelstate[dim] < fMinAngle ||
 			   HandModels.models[idx].modelstate[dim] +
-			   HandModelsVelocity.models[idx].modelstate[dim] > fMaxAngle) {
+			   HandModelsVelocity.models[idx].modelstate[dim] > fMaxAngle ||
+				idx == 63 || idx == 62) {
 				HandModelsVelocity.models[idx].modelstate[dim] = 0;
 			}
 		}
@@ -109,19 +110,21 @@ void Imitate(float phi_cognitive, float phi_social) {
 				 gl_LocalInvocationID.x*64 +
 				 rbuffer_size/4 + dim) % rbuffer_size;
 			float r3 = Random.numbers[r3_idx];
-		
-			if(dim%32 >= 0  && dim%32 < 20 && r3 < fProbPR) {
-				uint r4_idx =
-					(iRandomOffset +
-					 gl_LocalInvocationID.x*64 +
-					 rbuffer_size/2 + dim) % rbuffer_size;
-				float r4 = Random.numbers[r4_idx];
-			
-				HandModels.models[idx].modelstate[dim] =
-					fMinAngle + r4*(fMaxAngle - fMinAngle);
 
-				// also reset velocity here?
-				HandModelsVelocity.models[idx].modelstate[dim] = 0;
+			if(idx != 63 && idx != 62) {
+				if(dim%32 >= 0  && dim%32 < 20 && r3 < fProbPR) {
+					uint r4_idx =
+						(iRandomOffset +
+						 gl_LocalInvocationID.x*64 +
+						 rbuffer_size/2 + dim) % rbuffer_size;
+					float r4 = Random.numbers[r4_idx];
+			
+					HandModels.models[idx].modelstate[dim] =
+						fMinAngle + r4*(fMaxAngle - fMinAngle);
+
+					// also reset velocity here?
+					HandModelsVelocity.models[idx].modelstate[dim] = 0;
+				}
 			}
 		}
 	}
