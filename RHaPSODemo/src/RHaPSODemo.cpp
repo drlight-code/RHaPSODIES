@@ -334,7 +334,7 @@ namespace rhapsodies {
 		// m_pColorDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,1,0));
 
 		// ImageDraw: depth image
-		ImagePBOOpenGLDraw *pPBODraw;
+		//ImagePBOOpenGLDraw *pPBODraw;
 		//= new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
 		// m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH, pPBODraw); 
 
@@ -343,11 +343,11 @@ namespace rhapsodies {
 //		m_pDepthHistogramHandler = new DepthHistogramHandler(pPBODraw);
 
 		// ImageDraw: UV map
-		pPBODraw = new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
-		m_pHandTracker->SetViewPBODraw(HandTracker::UVMAP, pPBODraw); 
+		// pPBODraw = new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
+		// m_pHandTracker->SetViewPBODraw(HandTracker::UVMAP, pPBODraw); 
 
-		m_pUVMapDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pUVMapDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,2,0));
+		// m_pUVMapDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		// m_pUVMapDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,2,0));
 		
 
 		// ImageDraw: segmented color image
@@ -358,11 +358,11 @@ namespace rhapsodies {
 		// m_pColorSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(-2,-1,0));
 
 		// ImageDraw: segmented depth image
-		pPBODraw = new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
-		m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_SEGMENTED, pPBODraw); 
+		// pPBODraw = new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
+		// m_pHandTracker->SetViewPBODraw(HandTracker::DEPTH_SEGMENTED, pPBODraw); 
 
-		m_pDepthSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
-		m_pDepthSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,2,0));
+		// m_pDepthSegDraw = new ImageDraw(m_pSceneTransform, pPBODraw, pSG);
+		// m_pDepthSegDraw->GetTransformNode()->SetTranslation(VistaVector3D(0,2,0));
 
 		// ImageDraw: segmented UV map
 		// pPBODraw = new ImagePBOOpenGLDraw(320, 240, m_pShaderReg);
