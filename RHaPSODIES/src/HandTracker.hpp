@@ -34,7 +34,6 @@ class VistaRandomNumberGenerator;
 class VistaBasicProfiler;
 
 namespace rhapsodies {
-	class ImagePBOOpenGLDraw;
 	class SkinClassifier;
 
 	class HandModel;
@@ -77,8 +76,6 @@ namespace rhapsodies {
 		GLuint GetIntersectionTextureId();
 		
 		void SetDebugView(IDebugView *pDebugView);
-		void SetViewPBODraw(ViewType type,
-							ImagePBOOpenGLDraw *pPBODraw);
 		void SetHandRenderer(HandRenderer *pRenderer);
 
 		bool Initialize();
@@ -173,10 +170,6 @@ namespace rhapsodies {
 						  
 		void WriteDebug(IDebugView::Slot eSlot,
 						std::string sMessage);
-
-		typedef std::map<ViewType, ImagePBOOpenGLDraw*> MapPBO;
-		MapPBO m_mapPBO;
-
 
 		bool m_bCameraUpdate;
 

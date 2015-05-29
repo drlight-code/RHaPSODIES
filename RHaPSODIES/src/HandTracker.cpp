@@ -337,11 +337,6 @@ namespace rhapsodies {
 		delete m_pHandModelRight;
 	}
 	
-	void HandTracker::SetViewPBODraw(ViewType type,
-									 ImagePBOOpenGLDraw *pPBODraw) {
-		m_mapPBO[type] = pPBODraw;
-	}
-
 	void HandTracker::SetDebugView(IDebugView *pDebugView) {
 		m_pDebugView = pDebugView;
 	}
@@ -758,6 +753,8 @@ namespace rhapsodies {
 	bool HandTracker::InitEvaluation() {
 		m_pFramePlayer->SetInputFile(m_oConfig.sRecordingFile);
 		m_pFramePlayer->SetLoop(m_oConfig.bLoop);
+
+		
 
 		return true;
 	}
@@ -1481,7 +1478,7 @@ namespace rhapsodies {
 	}
 
 	void HandTracker::EvaluationStep() {
-
+		
 	}
 
 	void HandTracker::NextSkinClassifier() {
