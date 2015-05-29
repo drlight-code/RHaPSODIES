@@ -40,7 +40,7 @@ const float w = 0.72984f;
 const uint rbuffer_size = 64*64*8;
 
 const bool bPartialRandomization = true;
-const float fProbPR = 0.0015;
+const float fProbPR = 0.002;
 
 const float fConstraintThumbFlexionBaseMin = -60;
 const float fConstraintThumbFlexionBaseMax =  40;
@@ -89,15 +89,13 @@ void Imitate(float phi_cognitive, float phi_social) {
 
 		float fMinAngle = 0;
 		float fMaxAngle = 0;
-		if((dim%32 >= 0  && dim%32 < 20)) {
+		if(dim%32 >= 0  && dim%32 < 20) {
 			GetBoundsByJointIndex(dim, fMinAngle, fMaxAngle);
 				
-			if(HandModels.models[idx].modelstate[dim] < fMinAngle &&
-			   HandModelsVelocity.models[idx].modelstate[dim] < 0) {
-				HandModelsVelocity.models[idx].modelstate[dim] = 0;
-			}
-			if(HandModels.models[idx].modelstate[dim] > fMaxAngle &&
-			   HandModelsVelocity.models[idx].modelstate[dim] > 0) {
+			if(HandModels.models[idx].modelstate[dim] +
+			   HandModelsVelocity.models[idx].modelstate[dim] < fMinAngle ||
+			   HandModels.models[idx].modelstate[dim] +
+			   HandModelsVelocity.models[idx].modelstate[dim] > fMaxAngle) {
 				HandModelsVelocity.models[idx].modelstate[dim] = 0;
 			}
 		}
@@ -108,14 +106,14 @@ void Imitate(float phi_cognitive, float phi_social) {
 		if(bPartialRandomization) {
 			uint r3_idx =
 				(iRandomOffset +
-				 gl_LocalInvocationID.x*64*2 +
+				 gl_LocalInvocationID.x*64 +
 				 rbuffer_size/4 + dim) % rbuffer_size;
 			float r3 = Random.numbers[r3_idx];
 		
 			if(dim%32 >= 0  && dim%32 < 20 && r3 < fProbPR) {
 				uint r4_idx =
 					(iRandomOffset +
-					 gl_LocalInvocationID.x*64*2 +
+					 gl_LocalInvocationID.x*64 +
 					 rbuffer_size/2 + dim) % rbuffer_size;
 				float r4 = Random.numbers[r4_idx];
 			
@@ -128,7 +126,6 @@ void Imitate(float phi_cognitive, float phi_social) {
 		}
 	}
 
-	// normalize quaternions
 	vec4 qOri = normalize(vec4(HandModels.models[idx].modelstate[24],
 							   HandModels.models[idx].modelstate[25],
 							   HandModels.models[idx].modelstate[26],
@@ -159,29 +156,24 @@ void GetBoundsByJointIndex(int index,
 
 	if(bThumb) {
 		if(index == 0) {
-			// base flexion dof
 			fMin = fConstraintThumbFlexionBaseMin;
 			fMax = fConstraintThumbFlexionBaseMax;
 		}
 		else if(index == 1) {
-			// adduction abduction dof
 			fMin = fConstraintThumbAdductionMin;
 			fMax = fConstraintThumbAdductionMax;
 		}
 		else {
-			// tip flexion dof
 			fMin = fConstraintThumbFlexionTipMin;
 			fMax = fConstraintThumbFlexionTipMax;
 		}
 	}
 	else {
 		if(index == 1) {
-			// adduction abduction dof
 			fMin = fConstraintFingerAdductionMin;
 			fMax = fConstraintFingerAdductionMax;
 		}
 		else {
-			// flexion dof
 			fMin = fConstraintFingerFlexionMin;
 			fMax = fConstraintFingerFlexionMax;
 		}
