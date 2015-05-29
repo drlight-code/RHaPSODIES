@@ -1503,6 +1503,8 @@ namespace rhapsodies {
 		m_bTrackingEnabled = false;
 
 		SetToInitialPose(m_pSwarm->GetParticleBest());
+		*m_pHandModelLeft  = *m_pSwarm->GetParticleBest().GetHandModelLeft();
+		*m_pHandModelRight = *m_pSwarm->GetParticleBest().GetHandModelRight();
 
 		WriteDebug(IDebugView::TRACKING,
 				   IDebugView::FormatString("Tracking: ",
