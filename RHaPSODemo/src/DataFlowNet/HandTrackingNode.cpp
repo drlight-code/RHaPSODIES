@@ -134,7 +134,7 @@ namespace rhapsodies {
 		}
 		
 		if(m_sPortToggleTracking.HasNewData()) {
-			if(m_pTracker->IsTracking())
+			if(m_pTracker->GetIsTracking())
 				m_pTracker->StopTracking();
 			else
 				m_pTracker->StartTracking();

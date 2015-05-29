@@ -12,6 +12,8 @@ namespace rhapsodies {
 	  void StartPlayback();
 	  void StopPlayback();
 
+	  bool GetIsStopped();
+
 	  bool PlaybackFrames(
 		  unsigned char  *pColorBuffer,
 		  unsigned short *pDepthBuffer,
@@ -19,6 +21,7 @@ namespace rhapsodies {
 	  
   private:
 	  bool m_bLoop;
+	  bool m_bStopped;
 
 	  std::string m_sInputFile;
 	  std::ifstream m_iStream;

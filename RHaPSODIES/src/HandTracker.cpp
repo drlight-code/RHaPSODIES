@@ -497,10 +497,6 @@ namespace rhapsodies {
 		ReadConfig();
 		PrintConfig();
 
-		// @todo move this to some InitEvaluation
-		m_pFramePlayer->SetInputFile(m_oConfig.sRecordingFile);
-		m_pFramePlayer->SetLoop(m_oConfig.bLoop);
-		
 		InitFrameFilter();
 		InitRendering();
 
@@ -517,6 +513,8 @@ namespace rhapsodies {
 
 		InitParticleSwarm();
 		InitOutputModel();
+
+		InitEvaluation();
 		
 		return true;
 	}
@@ -753,6 +751,13 @@ namespace rhapsodies {
 
 		*m_pHandModelLeft  = *m_pSwarm->GetParticleBest().GetHandModelLeft();
 		*m_pHandModelRight = *m_pSwarm->GetParticleBest().GetHandModelRight();
+
+		return true;
+	}
+
+	bool HandTracker::InitEvaluation() {
+		m_pFramePlayer->SetInputFile(m_oConfig.sRecordingFile);
+		m_pFramePlayer->SetLoop(m_oConfig.bLoop);
 
 		return true;
 	}
@@ -1095,7 +1100,7 @@ namespace rhapsodies {
 		glUseProgram(m_idColorFragProgram);
 		glUniform3f(m_locColorUniform, fRed, fGreen, 0.0f);
 
-		if(m_oConfig.bAutoTracking && !IsTracking()) {
+		if(m_oConfig.bAutoTracking && !GetIsTracking()) {
 			if(fPenalty < m_oConfig.fPenaltyStart)
 				StartTracking();
 		}
@@ -1511,7 +1516,7 @@ namespace rhapsodies {
 											m_bTrackingEnabled));
 	}
 
-	bool HandTracker::IsTracking() {
+	bool HandTracker::GetIsTracking() {
 		return m_bTrackingEnabled;
 	}
 

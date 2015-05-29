@@ -98,7 +98,7 @@ namespace rhapsodies {
 
 		void StartTracking();
 		void StopTracking();
-		bool IsTracking();
+		bool GetIsTracking();
 		
 	private:
 		struct Config {
@@ -135,6 +135,7 @@ namespace rhapsodies {
 		bool InitReduction();
 		bool InitParticleSwarm();
 		bool InitOutputModel();
+		bool InitEvaluation();
 
 		void SetToInitialPose(Particle &oParticle);
 		void PerformPSOTracking();

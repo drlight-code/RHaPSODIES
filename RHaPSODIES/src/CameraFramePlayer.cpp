@@ -8,7 +8,8 @@
 namespace rhapsodies {
 
 	CameraFramePlayer::CameraFramePlayer() :
-		m_bLoop(false) {
+		m_bLoop(false),
+		m_bStopped(true) {
 
 	}
 
@@ -21,6 +22,7 @@ namespace rhapsodies {
 	}
 	
 	void CameraFramePlayer::StartPlayback() {
+		m_bStopped = false;
 		m_iStream.open(
 			m_sInputFile, std::ios_base::in | std::ios_base::binary);
 
@@ -39,6 +41,11 @@ namespace rhapsodies {
 
 	void CameraFramePlayer::StopPlayback() {
 		m_iStream.close();
+		m_bStopped = true;
+	}
+
+	bool CameraFramePlayer::GetIsStopped() {
+		return m_bStopped;
 	}
 
 	bool CameraFramePlayer::PlaybackFrames(

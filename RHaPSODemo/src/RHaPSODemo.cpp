@@ -433,7 +433,7 @@ namespace rhapsodies {
 	void RHaPSODemo::HandleEvent(VistaEvent *pEvent) {
 		if(pEvent->GetType() == VistaSystemEvent::GetTypeId()) {
 			if(pEvent->GetId() == VistaSystemEvent::VSE_POSTGRAPHICS) {
-				if(m_pHandTracker->IsTracking()) {
+				if(m_pHandTracker->GetIsTracking()) {
 					if(m_bFrameRecording) {
 						static int count = 0;
 				
