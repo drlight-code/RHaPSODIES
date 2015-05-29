@@ -39,6 +39,20 @@ uniform float fPhiSocial;
 const float w = 0.72984f;
 const uint rbuffer_size = 64*64*8;
 
+const bool bPartialRandomization = true;
+const float fProbPR = 0.0015;
+
+const float fConstraintThumbFlexionBaseMin = -60;
+const float fConstraintThumbFlexionBaseMax =  40;
+const float fConstraintThumbAdductionMin = 10;
+const float fConstraintThumbAdductionMax = 90;
+const float fConstraintThumbFlexionTipMin = 0;
+const float fConstraintThumbFlexionTipMax = 90;
+
+const float fConstraintFingerAdductionMin = -30;
+const float fConstraintFingerAdductionMax =  30;
+const float fConstraintFingerFlexionMin = 0;
+const float fConstraintFingerFlexionMax = 90;
 
 void Imitate(float phi_cognitive, float phi_social);
 void GetBoundsByJointIndex(int index,
@@ -73,10 +87,9 @@ void Imitate(float phi_cognitive, float phi_social) {
 			   phi_social*r2*(HandModelsGBest.model.modelstate[dim] -
 							  HandModels.models[idx].modelstate[dim]));
 
+		float fMinAngle = 0;
+		float fMaxAngle = 0;
 		if((dim%32 >= 0  && dim%32 < 20)) {
-			float fMinAngle = 0;
-			float fMaxAngle = 0;
-
 			GetBoundsByJointIndex(dim, fMinAngle, fMaxAngle);
 				
 			if(HandModels.models[idx].modelstate[dim] < fMinAngle &&
@@ -91,6 +104,28 @@ void Imitate(float phi_cognitive, float phi_social) {
 
 		HandModels.models[idx].modelstate[dim] +=
 			HandModelsVelocity.models[idx].modelstate[dim];
+
+		if(bPartialRandomization) {
+			uint r3_idx =
+				(iRandomOffset +
+				 gl_LocalInvocationID.x*64*2 +
+				 rbuffer_size/4 + dim) % rbuffer_size;
+			float r3 = Random.numbers[r3_idx];
+		
+			if(dim%32 >= 0  && dim%32 < 20 && r3 < fProbPR) {
+				uint r4_idx =
+					(iRandomOffset +
+					 gl_LocalInvocationID.x*64*2 +
+					 rbuffer_size/2 + dim) % rbuffer_size;
+				float r4 = Random.numbers[r4_idx];
+			
+				HandModels.models[idx].modelstate[dim] =
+					fMinAngle + r4*(fMaxAngle - fMinAngle);
+
+				// also reset velocity here?
+				HandModelsVelocity.models[idx].modelstate[dim] = 0;
+			}
+		}
 	}
 
 	// normalize quaternions
@@ -125,30 +160,30 @@ void GetBoundsByJointIndex(int index,
 	if(bThumb) {
 		if(index == 0) {
 			// base flexion dof
-			fMin = -60;
-			fMax = 40;
+			fMin = fConstraintThumbFlexionBaseMin;
+			fMax = fConstraintThumbFlexionBaseMax;
 		}
 		else if(index == 1) {
 			// adduction abduction dof
-			fMin = 10;
-			fMax = 90;
+			fMin = fConstraintThumbAdductionMin;
+			fMax = fConstraintThumbAdductionMax;
 		}
 		else {
 			// tip flexion dof
-			fMin = 0;
-			fMax = 90;
+			fMin = fConstraintThumbFlexionTipMin;
+			fMax = fConstraintThumbFlexionTipMax;
 		}
 	}
 	else {
 		if(index == 1) {
 			// adduction abduction dof
-			fMin = -30;
-			fMax =  30;
+			fMin = fConstraintFingerAdductionMin;
+			fMax = fConstraintFingerAdductionMax;
 		}
 		else {
 			// flexion dof
-			fMin = 0;
-			fMax = 90;
+			fMin = fConstraintFingerFlexionMin;
+			fMax = fConstraintFingerFlexionMax;
 		}
 	}
 }
