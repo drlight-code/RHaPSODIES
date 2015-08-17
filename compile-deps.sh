@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for dir in ../VistaCoreLibs ../VistaFlowLib ../VflModules/VflTextRendering ../VflModules/Vfl2DDiagrams ; do
+for dir in ../VistaCoreLibs ; do
 	DIR=$(pwd)
 
 	cd $dir/build-debug
